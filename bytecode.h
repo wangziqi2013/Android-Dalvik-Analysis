@@ -50,8 +50,44 @@ public:
 	void OnStart();
 	void OnFinish();
 	
-	void OnNop();
+	void OnNop(unsigned char null);
+	
+	// Move word
 	void OnMove(unsigned char dest, unsigned char src);
+	void OnMoveFrom16(unsigned char dest, unsigned short src);
+	void OnMove16(unsigned short dest, unsigned short src);
+	
+	// Move dword
+	void OnMoveWide(unsigned char dest, unsigned char src);
+	void OnMoveWideFrom16(unsigned char dest, unsigned short src);
+	void OnMoveWide16(unsigned short dest, unsigned short src);
+	
+	// Move object
+	void OnMoveObject(unsigned char dest, unsigned char src);
+	void OnMoveObjectFrom16(unsigned char dest, unsigned short src);
+	void OnMoveObject16(unsigned short dest, unsigned short src);
+	
+	// Move result
+	void OnMoveResult(unsigned char dest);
+	void OnMoveResultWide(unsigned char dest);
+	void OnMoveResultObject(unsigned char dest);
+	
+	// Move exception - this is pnlu valid as the first instruction 
+	// of the exception handler
+	void OnMoveException(unsigned char dest);
+	
+	// Return
+	void OnReturnVoid(unsigned char null);
+	void OnReturn(unsigned char dest);
+	void OnReturnWide(unsigned char dest);
+	void OnReturnObject(unsigned char dest);
+	
+	// Load const into register
+	void OnConst4(unsigned char dest, int value);
+	void OnConst16(unsigned char dest, int value);
+	// Since the 32 bit literal in already encoded this is 
+	// likely to be an unsigned int
+	void OnConst(unsigned char dest, unsigned int value);
 };
 
 #endif
