@@ -19,9 +19,12 @@ do { \
 		fprintf(stdout, "Assertion Fail @ Line %d File %s\n", \
 			            __LINE__,  \
 						__FILE__); \
-		fprintf(log_fp, "Assertion Fail @ Line %d File %s\n", \
-			            __LINE__,  \
-						__FILE__); \
+		if(log_fp) \
+		{ \
+			fprintf(log_fp, "Assertion Fail @ Line %d File %s\n", \
+				            __LINE__,  \
+							__FILE__); \
+		} \
 		exit(1); \
 	} \
 } while(0);
@@ -112,6 +115,7 @@ DalvikExecutable::DalvikExecutable(const char *filename)
  *
  * - Close DEX file pointer
  * - If no other instances are referencing the log, close log file as well
+ * - Cleanup nested structures 
  */
 DalvikExecutable::~DalvikExecutable()
 {
@@ -288,6 +292,133 @@ void DalvikExecutable::ReadTypeList(short_type_id_t **list_pp,
 /////////////////////////////////////////////////////////////
 
 /*
+ * ReadBytecodeForMethod() - Read byte code given the method instance
+ *
+ * Byte code is associated with methods in a 1-to-1 correspondence
+ * and are stored in an array inside the method instance
+ *
+ * We assume all other necessary information has been read into the method
+ * instance by previous function calls
+ */
+void DalvikExecutable::ReadBytecodeForMethod(MethodDef *md_p)
+{
+	// It is possible for a method to have not code
+	// maybe a native or abstract method
+	if(md_p->code_offset == 0)
+	{
+		// This is important - the destructor would check this
+		md_p->bytecode = NULL;
+		md_p->debug_info_offset = 0;
+		md_p->input_word_count = 0;
+		md_p->instruction_size_16bit = 0;
+		md_p->output_word_count = 0;
+		md_p->register_count = 0;
+		md_p->try_item_count = 0;
+		
+		return;	
+	}
+	
+	dex_assert(fseek(this->fp, md_p->code_offset, SEEK_SET) == 0);
+	
+	// Number of registers used by this method
+	dex_assert(fread(&md_p->register_count,
+			   	     sizeof(md_p->register_count),
+					 1,
+					 this->fp) == 1);
+	// Number of words taken by input variables
+	dex_assert(fread(&md_p->input_word_count,
+					 sizeof(md_p->input_word_count),
+					 1,
+					 this->fp) == 1);
+	// Number of words taken by output variables
+	dex_assert(fread(&md_p->output_word_count,
+					 sizeof(md_p->output_word_count),
+					 1,
+					 this->fp) == 1);
+	// Number of try items
+	dex_assert(fread(&md_p->try_item_count,
+					 sizeof(md_p->try_item_count),
+					 1,
+					 this->fp) == 1);
+	// Location of debug information
+	dex_assert(fread(&md_p->debug_info_offset,
+					 sizeof(md_p->debug_info_offset),
+					 1,
+					 this->fp) == 1);
+					 
+	// Number of 16 bit words taken by instruction byte code
+	dex_assert(fread(&md_p->instruction_size_16bit,
+				     sizeof(md_p->instruction_size_16bit),
+					 1,
+					 this->fp) == 1);
+	
+	// Next we allocate space for byte code
+	md_p->bytecode = new(unsigned char [md_p->instruction_size_16bit * 2]);
+	dex_assert(md_p->bytecode);
+	
+	// Read byte code into memory
+	dex_assert(fread(md_p->bytecode,
+					 md_p->instruction_size_16bit * 2,
+					 1,
+					 this->fp) == 1);
+					 
+	// If there is try block, and instruction size in 16 bit 
+	// is an odd number
+	unsigned short padding;
+	if(md_p->try_item_count != 0 && (md_p->instruction_size_16bit % 2))
+	{
+		dex_assert(fread(&padding,
+						 sizeof(padding),
+						 1,
+						 this->fp) == 1);
+		dex_assert(padding == 0x0000);	
+	}
+	
+	MethodItem *mi_p = this->method_item_list + md_p->method;
+	dex_printf("Bytecode for cls: %s, name: %s, size: %u bytes",
+			   this->GetTypeString(mi_p->cls),
+			   this->GetString(mi_p->name),
+			   md_p->instruction_size_16bit * 2);
+	
+	//TODO: READ TRY BLOCK (as stated in header file)
+	
+	return;
+}
+
+/*
+ * ReadBytecode() - Read bytecode for all classes and all methods
+ *
+ * This is a wrapper function to traverse all classes and all methods,
+ * and read byte code for each method by invoking separate functions
+ */
+void DalvikExecutable::ReadBytecode()
+{
+	// Traverse on classes
+	for(unsigned int i = 0;
+		i < this->classdef_id_count; 
+		i++)
+	{
+		ClassdefItem *ci_p = this->classdef_item_list + i;
+		
+		// Traverse on direct methods
+		// If there is no class data area then the count is 0
+		for(unsigned int j = 0;j < ci_p->direct_method_count;j++)
+		{
+			MethodDef *md_p = ci_p->direct_method_list + j; 
+			this->ReadBytecodeForMethod(md_p);
+		}
+		
+		// Traverse on virtual methods
+		for(unsigned int j = 0;j < ci_p->virtual_method_count;j++)
+		{
+			MethodDef *md_p = ci_p->virtual_method_list + j; 
+			this->ReadBytecodeForMethod(md_p);
+		}
+	}
+	return;	
+}
+
+/*
  * ReadEncodedMEthodTable() - Encoded ULEB128 elements
  *
  * Similar to ReadEncodedFieldTable()
@@ -296,6 +427,8 @@ void DalvikExecutable::ReadEncodedMethodTable(MethodDef **md_pp,
 										      unsigned int method_count,
 											  const char *category)
 {
+	// If there is not any method table just set it to NULL and
+	// we will jump that array when traversing
 	if(method_count == 0)
 	{
 		*md_pp = NULL;
@@ -959,6 +1092,7 @@ int main()
 	de.ReadFieldIdTable();
 	de.ReadMethodIdTable();
 	de.ReadClassdefTable();
+	de.ReadBytecode();
 	
 	return 0;
 }

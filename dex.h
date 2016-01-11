@@ -106,7 +106,7 @@ struct FieldItem
 {
 	short_type_id_t cls;
 	short_type_id_t type;
-	str_id_t name;	
+	str_id_t name;
 };
 
 /*
@@ -116,7 +116,7 @@ struct MethodItem
 {
 	short_type_id_t cls;
 	short_proto_id_t proto;
-	str_id_t name;	
+	str_id_t name;
 };
 
 /*
@@ -136,6 +136,41 @@ struct MethodDef
 	method_id_t method;
 	access_flag_t access_flag;
 	unsigned int code_offset;
+	
+	// Next is code object - We again make it more compact by merging
+	// code item into method def - 1 to 1 correspondence
+	// Number of registered used in this method
+	unsigned short register_count;
+	// Size of input variables in WORD size
+	unsigned short input_word_count;
+	unsigned short output_word_count;
+	unsigned short try_item_count;
+	
+	unsigned int debug_info_offset;
+	// Size of instructions in 16 bits (i.e. * 2 to get byte size)
+	unsigned int instruction_size_16bit;
+	// Actual byte code
+	unsigned char *bytecode;
+	
+	// TODO: ADD TRY AND HANDLER
+	
+	// That's the few places where we define destructor
+	// This is done to prevent deep loops in destructor of the 
+	// container class
+	// However in order to prevent delete <-> delete[] confusion
+	// we do this in a restricted manner
+	~MethodDef()
+	{
+		// Only one suffices, but we want stronger condition
+		// to make it less error-prone
+		if(this->bytecode && this->code_offset == 0)
+		{
+			delete[] this->bytecode;
+		}
+		
+		return;
+	}
+	
 };
 
 /*
@@ -150,9 +185,9 @@ struct ClassdefItem
 	// Points to a type list structure
 	unsigned int intf_offset;
 	str_id_t source_file;
-	unsigned int annotation_offset;
+	unsigned int annotation_offset;   // TODO: READ ANNOTATION
 	unsigned int cls_data_offset;
-	unsigned int static_value_offset;
+	unsigned int static_value_offset; // TODO: READ STATIC VALUE INTO MEMORY
 	
 	// Derived fields in the raw file
 	unsigned int intf_count;
@@ -213,6 +248,10 @@ struct DalvikExecutable
 	~DalvikExecutable();
 	
 	void OpenFile(const char *filename);
+	
+	// This is only defined for non-short version
+	// It should work with short indices since they
+	// can be simply 0 extended without any problem
 	char *GetTypeString(type_id_t t) 
 	{ 
 		return this->string_item_list[this->type_item_list[t]].data; 
@@ -240,6 +279,7 @@ struct DalvikExecutable
 	void ReadEncodedMethodTable(MethodDef **md_pp, 
 								unsigned int method_count,
 								const char *category);
+	void ReadBytecode();
 
 // Helper functions, not "really" private
 private:
@@ -250,6 +290,7 @@ private:
 	void ReadTypeList(short_type_id_t **list_pp, 
 					  unsigned int *type_count,
 					  const char *category);
+	void ReadBytecodeForMethod(MethodDef *md_p);
 };
 
 #endif

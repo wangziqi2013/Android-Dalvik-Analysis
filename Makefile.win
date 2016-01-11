@@ -1,4 +1,4 @@
-# Project: DexReader
+# Project: DexAnalysis
 # Makefile created by Dev-C++ 5.10
 
 CPP      = g++.exe -D__DEBUG__
@@ -6,12 +6,12 @@ CC       = gcc.exe -D__DEBUG__
 WINDRES  = windres.exe
 OBJ      = dex.o
 LINKOBJ  = dex.o
-LIBS     = -L"D:/Dev-Cpp/MinGW64/lib32" -L"D:/Dev-Cpp/MinGW64/x86_64-w64-mingw32/lib32" -static-libgcc -m32 -g3
-INCS     = -I"D:/Dev-Cpp/MinGW64/include" -I"D:/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"D:/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.8.1/include"
-CXXINCS  = -I"D:/Dev-Cpp/MinGW64/include" -I"D:/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"D:/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.8.1/include" -I"D:/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.8.1/include/c++"
-BIN      = DexReader.exe
-CXXFLAGS = $(CXXINCS) -m32 -g3  -Wno-vla
-CFLAGS   = $(INCS) -m32 -g3  -Wno-vla
+LIBS     = -L"d:/Dev-Cpp/MinGW64/lib32" -L"d:/Dev-Cpp/MinGW64/x86_64-w64-mingw32/lib32" -static-libgcc -m32 -g3
+INCS     = -I"d:/Dev-Cpp/MinGW64/include" -I"d:/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"d:/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.8.1/include"
+CXXINCS  = -I"d:/Dev-Cpp/MinGW64/include" -I"d:/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"d:/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.8.1/include" -I"d:/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.8.1/include/c++"
+BIN      = DexAnalysis.exe
+CXXFLAGS = $(CXXINCS) -m32 -g3 -Wno-vla
+CFLAGS   = $(INCS) -m32 -g3 -Wno-vla
 RM       = rm.exe -f
 
 .PHONY: all all-before all-after clean clean-custom
