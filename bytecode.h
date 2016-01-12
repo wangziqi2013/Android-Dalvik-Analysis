@@ -88,6 +88,33 @@ public:
 	// Since the 32 bit literal in already encoded this is 
 	// likely to be an unsigned int
 	void OnConst(unsigned char dest, unsigned int value);
+	void OnConstHigh16(unsigned char dest, unsigned int value);
+	// The value is extended to 64 bits
+	void OnConstWide16(unsigned char dest, long long value); 
+	void OnConstWide32(unsigned char dest, long long value);
+	void OnConstWide(unsigned char dest, unsigned long long value);
+	void OnConstWideHigh16(unsigned char dest, unsigned long long value);
+	
+	// Load object reference into register
+	void OnConstString(unsigned char dest, unsigned short index);
+	void OnConstStringJumbo(unsigned char dest, unsigned int index);
+	void OnConstClass(unsigned char dest, unsigned short index);
+	
+	// Monitor
+	void OnMonitorEnter(unsigned char reg);
+	void OnMonitorExit(unsigned char reg);
+	
+	// Class hierarchy
+	void OnCheckCast(unsigned char reg, unsigned short index);
+	void OnInstanceOf(unsigned char dest, 
+					  unsigned char reg, 
+					  unsigned short index);
+	
+	void OnArrayLength(unsigned char dest, unsigned char reg);
+	void OnNewInstance(unsigned char dest, unsigned short index);
+	void OnNewArray(unsigned char dest, 
+					unsigned char size, 
+					unsigned short index);
 };
 
 #endif
