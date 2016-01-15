@@ -674,7 +674,7 @@ void BytecodeSegment::OnNewArray(unsigned char dest,
 								 unsigned short index)
 {
 	this->PrintLineNum();
-	fprintf(this->out_file, "new-array v%u, v%u, type@%u", dest, size, index);
+	fprintf(this->out_file, "new-array v%u, v%u, type@%u\n", dest, size, index);
 }
 
 void BytecodeSegment::OnInvokeVirtual(unsigned short index, 
@@ -683,7 +683,7 @@ void BytecodeSegment::OnInvokeVirtual(unsigned short index,
 {
 	this->PrintLineNum();
 	fprintf(this->out_file, 
-			"invoke-virtual/range{v%.4X..v%.4X}, method@%u",
+			"invoke-virtual/range{v%.4X..v%.4X}, method@%u\n",
 			start,
 			start + count - 1,
 			index);	
@@ -695,7 +695,7 @@ void BytecodeSegment::OnInvokeSuper(unsigned short index,
 {
 	this->PrintLineNum();
 	fprintf(this->out_file, 
-			"invoke-super/range{v%.4X..v%.4X}, method@%u",
+			"invoke-super/range{v%.4X..v%.4X}, method@%u\n",
 			start,
 			start + count - 1,
 			index);	
@@ -707,7 +707,7 @@ void BytecodeSegment::OnInvokeDirect(unsigned short index,
 {
 	this->PrintLineNum();
 	fprintf(this->out_file, 
-			"invoke-direct/range{v%.4X..v%.4X}, method@%u",
+			"invoke-direct/range{v%.4X..v%.4X}, method@%u\n",
 			start,
 			start + count - 1,
 			index);	
@@ -719,7 +719,7 @@ void BytecodeSegment::OnInvokeStatic(unsigned short index,
 {
 	this->PrintLineNum();
 	fprintf(this->out_file, 
-			"invoke-static/range{v%.4X..v%.4X}, method@%u",
+			"invoke-static/range{v%.4X..v%.4X}, method@%u\n",
 			start,
 			start + count - 1,
 			index);	
@@ -731,7 +731,7 @@ void BytecodeSegment::OnInvokeInterface(unsigned short index,
 {
 	this->PrintLineNum();
 	fprintf(this->out_file, 
-			"invoke-interface/range{v%.4X..v%.4X}, method@%u",
+			"invoke-interface/range{v%.4X..v%.4X}, method@%u\n",
 			start,
 			start + count - 1,
 			index);	
@@ -765,7 +765,7 @@ void BytecodeSegment::Dispatch()
 		long long lld1;
 		unsigned long long llu1;
 		
-		fprintf(out_file, "%.2X\n", byte1);
+		//fprintf(out_file, "%.2X\n", byte1);
 		switch(byte1)
 		{
 			case 0x00:
@@ -1033,7 +1033,7 @@ void BytecodeSegment::Skip(unsigned char opcode)
 	this->OnSkip();
 	// Move forward R/W pointer
 	this->current_ptr += this->GetOperandSize(opcode);
-	fprintf(this->out_file, "%.2X, %d\n", opcode, this->GetOperandSize(opcode)); 
+	//fprintf(this->out_file, "%.2X, %d\n", opcode, this->GetOperandSize(opcode)); 
 	
 	return;
 }
