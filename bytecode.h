@@ -11,6 +11,55 @@
 
 using namespace std;
 
+/*
+ * Defines symbolic names for instruction types
+ */
+enum
+{
+	_10x,
+	_12x,
+	_11n,
+	_11x,
+	_10t,
+	_20t,
+	_20bc,
+	_22x,
+	_21t,
+	_21s,
+	_21h,
+	_21c,
+	_23x,
+	_22b,
+	_22t,
+	_22s,
+	_22c,
+	_22cs,
+	_30t,
+	_32x,
+	_31i,
+	_31t,
+	_31c,
+	_35c,
+	_35ms,
+	_35mi,
+	_3rc,
+	_3rms,
+	_3rmi,
+	_51l,
+};
+
+struct BytecodeFormat
+{
+	int operand_size;
+	int operand_num;
+	
+	BytecodeFormat(int osize)
+	{
+		this->operand_size = osize;
+		return;	
+	}
+};
+
 struct BytecodeSegment
 {
 	// Input buffer
@@ -33,9 +82,12 @@ struct BytecodeSegment
 	~BytecodeSegment();
 	
 	void Dispatch();
+	
+	int GetOperandSize(unsigned char opcode);
+	void Skip(unsigned char opcode);
 
 private:
-	inline void Assert(bool cond);
+	inline void Assert(bool cond, int linenum);
 	inline unsigned char GetNextByte();
 	inline unsigned short GetNextShort();
 	inline unsigned int GetNextInt();
@@ -49,6 +101,7 @@ public:
 	
 	void OnStart();
 	void OnFinish();
+	void OnSkip();
 	
 	void OnNop(unsigned char null);
 	
@@ -115,6 +168,23 @@ public:
 	void OnNewArray(unsigned char dest, 
 					unsigned char size, 
 					unsigned short index);
+	
+	// Method invokation
+	void OnInvokeVirtual(unsigned short index, 
+						 unsigned short start, 
+						 unsigned char count);
+	void OnInvokeSuper(unsigned short index, 
+					   unsigned short start, 
+					   unsigned char count);
+	void OnInvokeDirect(unsigned short index, 
+						unsigned short start, 
+						unsigned char count);
+	void OnInvokeStatic(unsigned short index, 
+						unsigned short start, 
+						unsigned char count);
+	void OnInvokeInterface(unsigned short index, 
+						   unsigned short start, 
+						   unsigned char count);
 };
 
 #endif

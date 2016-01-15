@@ -1,5 +1,6 @@
 
 #include "dex.h"
+#include "bytecode.h"
 
 static bool dex_stdout_print_flag = false;
 static bool dex_log_print_flag = true;
@@ -1093,6 +1094,41 @@ int main()
 	de.ReadMethodIdTable();
 	de.ReadClassdefTable();
 	de.ReadBytecode();
+	
+	FILE *out_file = fopen("dump.txt", "wb");
+	dex_assert(out_file);
+	
+	for(unsigned int i = 0;
+		i < de.classdef_id_count; 
+		i++)
+	{
+		ClassdefItem *ci_p = de.classdef_item_list + i;
+		
+		// Traverse on direct methods
+		// If there is no class data area then the count is 0
+		for(unsigned int j = 0;j < ci_p->direct_method_count;j++)
+		{
+			MethodDef *md_p = ci_p->direct_method_list + j; 
+			if(md_p->instruction_size_16bit == 0) continue;
+			BytecodeSegment bs(md_p->bytecode,
+							   md_p->instruction_size_16bit * 2,
+							   out_file,
+							   stderr);
+			bs.Dispatch();
+		}
+		
+		// Traverse on virtual methods
+		for(unsigned int j = 0;j < ci_p->virtual_method_count;j++)
+		{
+			MethodDef *md_p = ci_p->virtual_method_list + j; 
+			if(md_p->instruction_size_16bit == 0) continue;
+			BytecodeSegment bs(md_p->bytecode,
+							   md_p->instruction_size_16bit * 2,
+							   out_file,
+							   stderr);
+			bs.Dispatch();
+		}
+	}
 	
 	return 0;
 }
