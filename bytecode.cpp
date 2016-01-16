@@ -607,7 +607,7 @@ void BytecodeSegment::OnSparseSwitchPayload(unsigned short size)
         int offset = (int)this->GetNextInt();
         
         fprintf(this->out_file,
-                "%d: %.8X\n",
+                "%d: 0x%.8X\n",
                 buffer[i],
                 (int)this->current_opcode_offset + offset * 2);
     }
@@ -1014,7 +1014,7 @@ void BytecodeSegment::OnPackedSwitch(unsigned char reg, int offset)
 {
     this->PrintLineNum();
     fprintf(this->out_file, 
-            "packed-switch v%u, %.8X\n",
+            "packed-switch v%u, 0x%.8X\n",
             reg, 
             (int)this->current_opcode_offset + offset * 2);
 }
@@ -1023,7 +1023,7 @@ void BytecodeSegment::OnSparseSwitch(unsigned char reg, int offset)
 {
     this->PrintLineNum();
     fprintf(this->out_file,
-            "sparse-switch v%u, %.8X\n",
+            "sparse-switch v%u, 0x%.8X\n",
             reg,
             (int)this->current_opcode_offset + offset * 2);    
 }
@@ -1094,7 +1094,7 @@ void BytecodeSegment::OnIfEq(unsigned char reg1,
 {
     this->PrintLineNum();
     fprintf(this->out_file,
-            "if-eq v%u, v%u, %.8X\n",
+            "if-eq v%u, v%u, 0x%.8X\n",
             reg1, 
             reg2,
             (int)this->current_opcode_offset + offset * 2);
@@ -1106,7 +1106,7 @@ void BytecodeSegment::OnIfNe(unsigned char reg1,
 {
     this->PrintLineNum();
     fprintf(this->out_file,
-            "if-ne v%u, v%u, %.8X\n",
+            "if-ne v%u, v%u, 0x%.8X\n",
             reg1, 
             reg2,
             (int)this->current_opcode_offset + offset * 2);
@@ -1118,7 +1118,7 @@ void BytecodeSegment::OnIfLt(unsigned char reg1,
 {
     this->PrintLineNum();
     fprintf(this->out_file,
-            "if-lt v%u, v%u, %.8X\n",
+            "if-lt v%u, v%u, 0x%.8X\n",
             reg1, 
             reg2,
             (int)this->current_opcode_offset + offset * 2);
@@ -1130,7 +1130,7 @@ void BytecodeSegment::OnIfGe(unsigned char reg1,
 {
     this->PrintLineNum();
     fprintf(this->out_file,
-            "if-ge v%u, v%u, %.8X\n",
+            "if-ge v%u, v%u, 0x%.8X\n",
             reg1, 
             reg2,
             (int)this->current_opcode_offset + offset * 2);
@@ -1142,7 +1142,7 @@ void BytecodeSegment::OnIfGt(unsigned char reg1,
 {
     this->PrintLineNum();
     fprintf(this->out_file,
-            "if-gt v%u, v%u, %.8X\n",
+            "if-gt v%u, v%u, 0x%.8X\n",
             reg1, 
             reg2,
             (int)this->current_opcode_offset + offset * 2);
@@ -1154,7 +1154,7 @@ void BytecodeSegment::OnIfLe(unsigned char reg1,
 {
     this->PrintLineNum();
     fprintf(this->out_file,
-            "if-le v%u, v%u, %.8X\n",
+            "if-le v%u, v%u, 0x%.8X\n",
             reg1, 
             reg2,
             (int)this->current_opcode_offset + offset * 2);
@@ -1165,7 +1165,7 @@ void BytecodeSegment::OnIfNeZ(unsigned char reg,
 {
     this->PrintLineNum();
     fprintf(this->out_file,
-            "if-nez v%u, %.8X\n",
+            "if-nez v%u, 0x%.8X\n",
             reg,
             (int)this->current_opcode_offset + offset * 2);    
 }
@@ -1175,7 +1175,7 @@ void BytecodeSegment::OnIfLtZ(unsigned char reg,
 {
     this->PrintLineNum();
     fprintf(this->out_file,
-            "if-ltz v%u, %.8X\n",
+            "if-ltz v%u, 0x%.8X\n",
             reg,
             (int)this->current_opcode_offset + offset * 2);    
 }
@@ -1185,7 +1185,7 @@ void BytecodeSegment::OnIfGeZ(unsigned char reg,
 {
     this->PrintLineNum();
     fprintf(this->out_file,
-            "if-gez v%u, %.8X\n",
+            "if-gez v%u, 0x%.8X\n",
             reg,
             (int)this->current_opcode_offset + offset * 2);    
 }
@@ -1195,7 +1195,7 @@ void BytecodeSegment::OnIfGtZ(unsigned char reg,
 {
     this->PrintLineNum();
     fprintf(this->out_file,
-            "if-gtz v%u, %.8X\n",
+            "if-gtz v%u, 0x%.8X\n",
             reg,
             (int)this->current_opcode_offset + offset * 2);    
 }
@@ -1205,7 +1205,7 @@ void BytecodeSegment::OnIfLeZ(unsigned char reg,
 {
     this->PrintLineNum();
     fprintf(this->out_file,
-            "if-lez v%u, %.8X\n",
+            "if-lez v%u, 0x%.8X\n",
             reg,
             (int)this->current_opcode_offset + offset * 2);    
 }
@@ -1215,7 +1215,7 @@ void BytecodeSegment::OnIfEqZ(unsigned char reg,
 {
     this->PrintLineNum();
     fprintf(this->out_file,
-            "if-eqz v%u, %.8X\n",
+            "if-eqz v%u, 0x%.8X\n",
             reg,
             (int)this->current_opcode_offset + offset * 2);    
 }
@@ -2727,6 +2727,234 @@ void BytecodeSegment::OnRemDouble2addr(unsigned char reg1,
             reg2); 
 }
 
+void BytecodeSegment::OnAddIntlit16(unsigned char reg1,
+                                    unsigned char reg2,
+                                    int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "add-int/lit16 v%u, v%u, %d\n",
+            reg1, 
+            reg2, 
+            value); 
+}
+
+void BytecodeSegment::OnRsubInt(unsigned char reg1,
+                                unsigned char reg2,
+                                int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "rsub-int v%u, v%u, %d\n",
+            reg1, 
+            reg2, 
+            value); 
+}
+
+void BytecodeSegment::OnMulIntlit16(unsigned char reg1,
+                                    unsigned char reg2,
+                                    int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "mul-int/lit16 v%u, v%u, %d\n",
+            reg1, 
+            reg2, 
+            value); 
+}
+
+void BytecodeSegment::OnDivIntlit16(unsigned char reg1,
+                                    unsigned char reg2,
+                                    int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "div-int/lit16 v%u, v%u, %d\n",
+            reg1, 
+            reg2, 
+            value); 
+}
+
+void BytecodeSegment::OnRemIntlit16(unsigned char reg1,
+                                    unsigned char reg2,
+                                    int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "rem-int/lit16 v%u, v%u, %d\n",
+            reg1, 
+            reg2, 
+            value); 
+}
+
+void BytecodeSegment::OnAndIntlit16(unsigned char reg1,
+                                    unsigned char reg2,
+                                    int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "and-int/lit16 v%u, v%u, %d\n",
+            reg1, 
+            reg2, 
+            value); 
+}
+
+void BytecodeSegment::OnOrIntlit16(unsigned char reg1,
+                                   unsigned char reg2,
+                                   int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "or-int/lit16 v%u, v%u, %d\n",
+            reg1, 
+            reg2, 
+            value); 
+}
+
+void BytecodeSegment::OnXorIntlit16(unsigned char reg1,
+                                    unsigned char reg2,
+                                    int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "xor-int/lit16 v%u, v%u, %d\n",
+            reg1, 
+            reg2, 
+            value); 
+}
+
+void BytecodeSegment::OnAddIntlit8(unsigned char dest,
+                                   unsigned char src,
+                                   int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "add-int/lit8 v%u, v%u, %d\n",
+            dest, 
+            src, 
+            value); 
+}
+
+void BytecodeSegment::OnRsubIntlit8(unsigned char dest,
+                                    unsigned char src,
+                                    int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "rsub-int/lit8 v%u, v%u, %d\n",
+            dest, 
+            src, 
+            value); 
+}
+
+void BytecodeSegment::OnMulIntlit8(unsigned char dest,
+                                   unsigned char src,
+                                   int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "mul-int/lit8 v%u, v%u, %d\n",
+            dest, 
+            src, 
+            value); 
+}
+
+void BytecodeSegment::OnDivIntlit8(unsigned char dest,
+                                   unsigned char src,
+                                   int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "div-int/lit8 v%u, v%u, %d\n",
+            dest, 
+            src, 
+            value); 
+}
+
+void BytecodeSegment::OnRemIntlit8(unsigned char dest,
+                                   unsigned char src,
+                                   int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "rem-int/lit8 v%u, v%u, %d\n",
+            dest, 
+            src, 
+            value); 
+}
+
+void BytecodeSegment::OnAndIntlit8(unsigned char dest,
+                                   unsigned char src,
+                                   int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "and-int/lit8 v%u, v%u, %d\n",
+            dest, 
+            src, 
+            value); 
+}
+
+void BytecodeSegment::OnOrIntlit8(unsigned char dest,
+                                  unsigned char src,
+                                  int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "or-int/lit8 v%u, v%u, %d\n",
+            dest, 
+            src, 
+            value); 
+}
+
+void BytecodeSegment::OnXorIntlit8(unsigned char dest,
+                                   unsigned char src,
+                                   int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "xor-int/lit8 v%u, v%u, %d\n",
+            dest, 
+            src, 
+            value); 
+}
+
+void BytecodeSegment::OnShlIntlit8(unsigned char dest,
+                                   unsigned char src,
+                                   int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "shl-int/lit8 v%u, v%u, %d\n",
+            dest, 
+            src, 
+            value); 
+}
+
+void BytecodeSegment::OnShrIntlit8(unsigned char dest,
+                                   unsigned char src,
+                                   int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "shr-int/lit8 v%u, v%u, %d\n",
+            dest, 
+            src, 
+            value); 
+}
+
+void BytecodeSegment::OnUshrIntlit8(unsigned char dest,
+                                    unsigned char src,
+                                    int value)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "ushr-int/lit8 v%u, v%u, %d\n",
+            dest, 
+            src, 
+            value); 
+}
+
 ////////////////////////////////////////////////////////////////
 // Call back function block end ////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -3831,8 +4059,141 @@ void BytecodeSegment::Dispatch()
                 }
                 
                 break;
+            case 0xD0:
+            case 0xD1:
+            case 0xD2:
+            case 0xD3:
+            case 0xD4:
+            case 0xD5:
+            case 0xD6:
+            case 0xD7:
+                byte2 = this->GetNextByte();
+                byte3 = byte2 >> 4;
+                byte2 &= 0x0F;
+                word1 = this->GetNextShort();
+                int1 = ((int)(((unsigned int)word1) << 16)) >> 16;
+                
+                switch(byte1)
+                {
+                    case 0xD0:
+                        this->OnAddIntlit16(byte2, byte3, int1);
+                        break;
+                    case 0xD1:
+                        this->OnRsubInt(byte2, byte3, int1);
+                        break;
+                    case 0xD2:
+                        this->OnMulIntlit16(byte2, byte3, int1);
+                        break;
+                    case 0xD3:
+                        this->OnDivIntlit16(byte2, byte3, int1);
+                        break;
+                    case 0xD4:
+                        this->OnRemIntlit16(byte2, byte3, int1);
+                        break;
+                    case 0xD5:
+                        this->OnAndIntlit16(byte2, byte3, int1);
+                        break;
+                    case 0xD6:
+                        this->OnOrIntlit16(byte2, byte3, int1);
+                        break;
+                    case 0xD7:
+                        this->OnXorIntlit16(byte2, byte3, int1);
+                        break;
+                    default:
+                        this->Assert(false, __LINE__);
+                        break;
+                }
+                
+                break;
+            case 0xD8:
+            case 0xD9:
+            case 0xDA:
+            case 0xDB:
+            case 0xDC:
+            case 0xDD:
+            case 0xDE:
+            case 0xDF:
+            case 0xE0:
+            case 0xE1:
+            case 0xE2:
+                byte2 = this->GetNextByte();
+                byte3 = this->GetNextByte();
+                byte4 = this->GetNextByte();
+                int1 = ((int)(((unsigned int)byte4) << 24)) >> 24;
+                
+                switch(byte1)
+                {
+                    case 0xD8:
+                        this->OnAddIntlit8(byte2, byte3, int1);
+                        break;
+                    case 0xD9:
+                        this->OnRsubIntlit8(byte2, byte3, int1);
+                        break;
+                    case 0xDA:
+                        this->OnMulIntlit8(byte2, byte3, int1);
+                        break;
+                    case 0xDB:
+                        this->OnDivIntlit8(byte2, byte3, int1);
+                        break;
+                    case 0xDC:
+                        this->OnRemIntlit8(byte2, byte3, int1);
+                        break;
+                    case 0xDD:
+                        this->OnAndIntlit8(byte2, byte3, int1);
+                        break;
+                    case 0xDE:
+                        this->OnOrIntlit8(byte2, byte3, int1);
+                        break;
+                    case 0xDF:
+                        this->OnXorIntlit8(byte2, byte3, int1);
+                        break;
+                    case 0xE0:
+                        this->OnShlIntlit8(byte2, byte3, int1);
+                        break;
+                    case 0xE1:
+                        this->OnShrIntlit8(byte2, byte3, int1);
+                        break;
+                    case 0xE2:
+                        this->OnUshrIntlit8(byte2, byte3, int1);
+                        break;
+                }
+                
+                break;
+                
+                case 0xE3:
+                case 0xE4:
+                case 0xE5:
+                case 0xE6:
+                case 0xE7:
+                case 0xE8:
+                case 0xE9:
+                case 0xEA:
+                case 0xEB:
+                case 0xEC:
+                case 0xED:
+                case 0xEE:
+                case 0xEF:
+                case 0xF0:
+                case 0xF1:
+                case 0xF2:
+                case 0xF3:
+                case 0xF4:
+                case 0xF5:
+                case 0xF6:
+                case 0xF7:
+                case 0xF8:
+                case 0xF9:
+                case 0xFA:
+                case 0xFB:
+                case 0xFC:
+                case 0xFD:
+                case 0xFE:
+                case 0xFF:
+                    byte2 = this->GetNextByte();
+                    this->OnUnused(byte2);
+                    break;
             default:
-                this->Skip(byte1);
+                this->Assert(false, __LINE__);
                 break;
         } // switch
         

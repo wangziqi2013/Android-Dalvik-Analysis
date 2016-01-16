@@ -598,6 +598,67 @@ public:
     void OnMulDouble2addr(unsigned char reg1, unsigned char reg2);
     void OnDivDouble2addr(unsigned char reg1, unsigned char reg2);
     void OnRemDouble2addr(unsigned char reg1, unsigned char reg2);
+    
+    // Immediate arithmetic
+    void OnAddIntlit16(unsigned char reg1, 
+                       unsigned char reg2, 
+                       int value);
+    void OnRsubInt(unsigned char reg1, 
+                   unsigned char reg2, 
+                   int value);
+    void OnMulIntlit16(unsigned char reg1, 
+                       unsigned char reg2, 
+                       int value);
+    void OnDivIntlit16(unsigned char reg1, 
+                       unsigned char reg2, 
+                       int value);
+    void OnRemIntlit16(unsigned char reg1, 
+                       unsigned char reg2, 
+                       int value);
+    void OnAndIntlit16(unsigned char reg1, 
+                       unsigned char reg2, 
+                       int value);
+    void OnOrIntlit16(unsigned char reg1, 
+                      unsigned char reg2, 
+                      int value);
+    void OnXorIntlit16(unsigned char reg1, 
+                       unsigned char reg2, 
+                       int value);
+                       
+    // 8 bit immediate arithmetic
+    void OnAddIntlit8(unsigned char dest, 
+                      unsigned char src, 
+                      int value);
+    void OnRsubIntlit8(unsigned char dest, 
+                       unsigned char src, 
+                       int value);
+    void OnMulIntlit8(unsigned char dest, 
+                      unsigned char src, 
+                      int value);
+    void OnDivIntlit8(unsigned char dest, 
+                      unsigned char src, 
+                      int value);
+    void OnRemIntlit8(unsigned char dest, 
+                      unsigned char src, 
+                      int value);
+    void OnAndIntlit8(unsigned char dest, 
+                      unsigned char src, 
+                      int value);
+    void OnOrIntlit8(unsigned char dest, 
+                     unsigned char src, 
+                     int value);
+    void OnXorIntlit8(unsigned char dest, 
+                      unsigned char src, 
+                      int value);
+    void OnShlIntlit8(unsigned char dest, 
+                      unsigned char src, 
+                      int value);
+    void OnShrIntlit8(unsigned char dest, 
+                      unsigned char src, 
+                      int value);
+    void OnUshrIntlit8(unsigned char dest, 
+                       unsigned char src, 
+                       int value);
 };
 
 #endif
