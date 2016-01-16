@@ -131,6 +131,69 @@ struct FieldDef
     access_flag_t access_flag;
 };
 
+/*
+ * struct TryItem - Try block item definition, inside one method
+ *
+ * A try structure is described by the start address and end address
+ * (i.e. covered length), and also its handler offset is included
+ * for exception handling
+ */
+struct TryItem
+{
+    // Start address inside method code, in 16 bit word
+    unsigned int start_word_address;
+    // Covered length in 16 bit word
+    unsigned short word_length;
+    // The handler of this item in handler list
+    // Since handlers are not equi-lengthed this offset
+    // is necessary instead of an index
+    unsigned short handler_byte_offset;
+};
+
+/*
+ * struct TypedHandlerItem
+ *
+ * Typed (or, all typed) handler
+ */
+struct TypedHandlerItem
+{
+    unsigned int type;
+    // The offset in byte code
+    unsigned int word_offset;
+};
+
+/*
+ * struct HandlerItem
+ *
+ * Handler items for try block inside a method
+ */
+struct HandlerItem
+{
+    // If this is set to true then the last handler in
+    // the array is all type handler
+    bool all_type_handler_flag;
+    // The offset into byte code of all typed handler
+    unsigned int all_type_handler_word_offset;
+    
+    unsigned int pair_count;
+    TypedHandlerItem *typed_handler_list;
+    
+    // Offset in the array, used in try block to identify
+    // handler item
+    unsigned int array_offset;
+    
+    ~HandlerItem()
+    {
+        delete[] typed_handler_list;
+    }
+};
+
+/*
+ * struct MethodDef
+ *
+ * Defines a method's input, output, bytecode, try, exception handler
+ * and other parameters
+ */
 struct MethodDef
 {
     method_id_t method;
@@ -152,7 +215,21 @@ struct MethodDef
     // Actual byte code
     unsigned char *bytecode;
     
-    // TODO: ADD TRY AND HANDLER
+    unsigned int try_offset;
+    
+    // A list of try item. Also need to be released
+    TryItem *tries;
+    
+    // Encoded as the first ULEB128 in handler list
+    // NOTE: Handler and try may not have the same count
+    // because one try could have multiple handlers for different
+    // types. But number of handler is always greater than or equal to
+    // the number of types, which implies that if try number is more than 0
+    // then handler is also more than 0
+    // If try handler is 0 then handler is also zero
+    unsigned int handler_count;
+    
+    HandlerItem *handler_list;
     
     // That's the few places where we define destructor
     // This is done to prevent deep loops in destructor of the 
@@ -166,6 +243,8 @@ struct MethodDef
         if(this->bytecode && this->code_offset == 0)
         {
             delete[] this->bytecode;
+            delete[] this->tries;
+            delete[] this->handler_list;
         }
         
         return;
@@ -279,7 +358,7 @@ struct DalvikExecutable
     void ReadEncodedMethodTable(MethodDef **md_pp, 
                                 unsigned int method_count,
                                 const char *category);
-    void ReadBytecode();
+    void ReadBytecodeForAll();
 
 // Helper functions, not "really" private
 private:
@@ -291,6 +370,7 @@ private:
                       unsigned int *type_count,
                       const char *category);
     void ReadBytecodeForMethod(MethodDef *md_p);
+    void ReadTryAndHandlerForMethod(MethodDef *md_p);
 };
 
 #endif

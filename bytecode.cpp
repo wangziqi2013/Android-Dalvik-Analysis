@@ -496,27 +496,49 @@ unsigned int BytecodeSegment::ResolveOffsetToCount(unsigned int base,
 // The following code does not have comment header
 // Please refer to the header file for information
 
+/*
+ * OnStart() - Called when dispatching starts
+ *
+ * Set environmental variables such as starting counter, starting
+ * offset and offset-counter map
+ */
 void BytecodeSegment::OnStart()
 {
-    fprintf(this->out_file, "Dispatch starts\n");
-    
     // Line number starts at 1, but we initialize it to 0
     // since it will be increased by 1 before printing
     this->instruction_counter = 0;
     this->current_opcode_offset = 0;
     this->instruction_counter_map.clear();
     this->instruction_offset_map.clear();
+    
+    this->PrintLineNum();
+    fprintf(this->out_file, "Dispatch starts\n");
+    
+    return;
 }
 
+/*
+ * OnFinish() - Called when diapatch finishes
+ *
+ * The current pointer now points to the last byte + 1 position
+ */
 void BytecodeSegment::OnFinish()
 {
+    this->PrintLineNum();
     fprintf(this->out_file, "Dispatch finishes\n");
+    
+    return;
 }
 
+/*
+ * OnSkip() - Called when an instruction is skipped
+ */
 void BytecodeSegment::OnSkip()
 {
     this->PrintLineNum();
-    fprintf(this->out_file, "[Skipped]\n");    
+    fprintf(this->out_file, "[Skipped]\n");
+    
+    return;    
 }
 
 /*
@@ -4216,7 +4238,12 @@ void BytecodeSegment::Dispatch()
 }
 
 /*
- * GetOperandSize() - Return the size of opernad, not including opcode itself 
+ * GetOperandSize() - Return the size of opernad, not including opcode itself
+ *
+ * This is usually used to compute the starting offset of an operand
+ * when we have already read its operands
+ *
+ * Or used when skipping instructions
  */
 int BytecodeSegment::GetOperandSize(unsigned char opcode)
 {

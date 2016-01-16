@@ -292,6 +292,124 @@ void DalvikExecutable::ReadTypeList(short_type_id_t **list_pp,
 /////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////
 
+void DalvikExecutable::ReadTryAndHandlerForMethod(MethodDef *md_p)
+{
+    // First make sure there is a try block
+    // If there is not this should be dealt with in upper level function
+    dex_assert(md_p->try_item_count != 0);
+    dex_assert(md_p->try_offset != 0);
+    
+    dex_assert(fseek(this->fp, md_p->try_offset, SEEK_SET) == 0);
+    
+    md_p->tries = new(TryItem [md_p->try_item_count]);
+    dex_assert(md_p->tries != NULL);
+    
+    for(unsigned int i = 0;i < md_p->try_item_count;i++)
+    {
+        // Try item pointer we are currently reading
+        TryItem *ti_p = md_p->tries + i;
+        
+        dex_assert(fread(&ti_p->start_word_address, 
+                         sizeof(ti_p->start_word_address),
+                         1,
+                         this->fp) == 1);
+        dex_assert(fread(&ti_p->word_length,
+                         sizeof(ti_p->word_length),
+                         1,
+                         this->fp) == 1);
+        dex_assert(fread(&ti_p->handler_byte_offset,
+                         sizeof(ti_p->handler_byte_offset),
+                         1,
+                         this->fp) == 1);
+        
+        dex_printf("%d Try block start: 0x%.8X, len: 0x%X," \
+                   " handler offset: %u",
+                   i, 
+                   ti_p->start_word_address * 2,
+                   ti_p->word_length * 2,
+                   ti_p->handler_byte_offset);
+    }
+    
+    ///////////////////////////////////////
+    // Next we read handler
+    ///////////////////////////////////////
+    
+    // Array offset of handler item for identification in a try block
+    unsigned int fp_base = ftell(this->fp);
+    
+    md_p->handler_count = this->ReadULEB128(false);
+    md_p->handler_list = new(HandlerItem [md_p->handler_count]);
+    dex_assert(md_p->handler_list);
+    
+    for(unsigned int i = 0;i < md_p->handler_count;i++)
+    {
+        // Absolute address of the start of an item
+        unsigned int fp_next = ftell(this->fp);
+        HandlerItem *hi_p = md_p->handler_list + i;
+        
+        hi_p->array_offset = fp_next - fp_base;
+        hi_p->all_type_handler_flag = false;
+        
+        // NOTE: It is encoded with SLEB128, i.e. sign extension ULEB128    
+        int pair_count_raw = this->ReadULEB128(true);
+        
+        // When the value is 0 we know there is all typed handler but no
+        // other handlers. We avoid allocating memory for typed handler
+        if(pair_count_raw <= 0)
+        {
+            hi_p->all_type_handler_flag = true;
+            // For 0 this is also 0
+            pair_count_raw = -pair_count_raw;
+        }
+        
+        hi_p->pair_count = (unsigned int)pair_count_raw;
+        
+        hi_p->typed_handler_list = NULL;
+        // It is possible that there is no typed handler 
+        // but a all handler
+        // In this case the count would be 0
+        if(hi_p->pair_count != 0)
+        {
+            // At this pointer handler_count_raw must be positive
+            hi_p->typed_handler_list = \
+                new(TypedHandlerItem [hi_p->pair_count]);
+            dex_assert(hi_p->typed_handler_list);
+        }
+        
+        dex_printf("%u Handler count typed: %u, all type: %u," \
+                   " array offset = %u",
+                   i,
+                   hi_p->pair_count, 
+                   hi_p->all_type_handler_flag,
+                   hi_p->array_offset);
+        
+        unsigned int j;
+        for(j = 0;j < hi_p->pair_count;j++)
+        {
+            TypedHandlerItem *thi_p = hi_p->typed_handler_list + j;
+            
+            thi_p->type = this->ReadULEB128(false);
+            thi_p->word_offset = this->ReadULEB128(false);
+            
+            dex_printf("\t%u Typed handler type: %s, offset: 0x%.8X",
+                       j,
+                       this->GetTypeString(thi_p->type),
+                       thi_p->word_offset * 2);
+        }
+        
+        if(hi_p->all_type_handler_flag)
+        {
+            hi_p->all_type_handler_word_offset = \
+                this->ReadULEB128(false);
+            dex_printf("\t%u All typed handler offset: 0x%.8X",
+                       j, // This case j is 1 more than the last
+                       hi_p->all_type_handler_word_offset);
+        }
+    }
+    
+    return;
+}
+
 /*
  * ReadBytecodeForMethod() - Read byte code given the method instance
  *
@@ -315,8 +433,13 @@ void DalvikExecutable::ReadBytecodeForMethod(MethodDef *md_p)
         md_p->output_word_count = 0;
         md_p->register_count = 0;
         md_p->try_item_count = 0;
+        md_p->try_offset = 0;
         
-        return;    
+        // This is implied by number of tries
+        md_p->handler_count = 0;
+        md_p->handler_list = NULL;
+        
+        return;
     }
     
     dex_assert(fseek(this->fp, md_p->code_offset, SEEK_SET) == 0);
@@ -375,13 +498,15 @@ void DalvikExecutable::ReadBytecodeForMethod(MethodDef *md_p)
         dex_assert(padding == 0x0000);    
     }
     
+    // Save offset for try and handler block for later use
+    // When we read try block should first seek to this offset
+    md_p->try_offset = ftell(this->fp);
+    
     MethodItem *mi_p = this->method_item_list + md_p->method;
     dex_printf("Bytecode for cls: %s, name: %s, size: %u bytes",
                this->GetTypeString(mi_p->cls),
                this->GetString(mi_p->name),
                md_p->instruction_size_16bit * 2);
-    
-    //TODO: READ TRY BLOCK (as stated in header file)
     
     return;
 }
@@ -392,7 +517,7 @@ void DalvikExecutable::ReadBytecodeForMethod(MethodDef *md_p)
  * This is a wrapper function to traverse all classes and all methods,
  * and read byte code for each method by invoking separate functions
  */
-void DalvikExecutable::ReadBytecode()
+void DalvikExecutable::ReadBytecodeForAll()
 {
     // Traverse on classes
     for(unsigned int i = 0;
@@ -407,6 +532,12 @@ void DalvikExecutable::ReadBytecode()
         {
             MethodDef *md_p = ci_p->direct_method_list + j; 
             this->ReadBytecodeForMethod(md_p);
+            
+            // Then read try item as long as there are some
+            if(md_p->try_item_count != 0)
+            {
+                this->ReadTryAndHandlerForMethod(md_p);   
+            }
         }
         
         // Traverse on virtual methods
@@ -414,8 +545,14 @@ void DalvikExecutable::ReadBytecode()
         {
             MethodDef *md_p = ci_p->virtual_method_list + j; 
             this->ReadBytecodeForMethod(md_p);
+            
+            if(md_p->try_item_count != 0)
+            {
+                this->ReadTryAndHandlerForMethod(md_p);   
+            }
         }
     }
+    
     return;    
 }
 
@@ -1093,7 +1230,7 @@ int main()
     de.ReadFieldIdTable();
     de.ReadMethodIdTable();
     de.ReadClassdefTable();
-    de.ReadBytecode();
+    de.ReadBytecodeForAll();
     
     FILE *out_file = fopen("dump.txt", "wb");
     dex_assert(out_file);
