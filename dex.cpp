@@ -1083,7 +1083,7 @@ void DalvikExecutable::VerifyDexHeader()
 
 int main()
 {
-    DalvikExecutable de = DalvikExecutable("classes.dex");
+    DalvikExecutable de = DalvikExecutable("classes2.dex");
     de.VerifyDexHeader();
     de.ReadFileMapPtrAndItem();
     de.ReadCountOffsets();
@@ -1115,6 +1115,9 @@ int main()
                                md_p->instruction_size_16bit * 2,
                                out_file,
                                stderr);
+            fprintf(out_file, "Method: %s, Class: %s\n",
+                    de.GetString(de.method_item_list[md_p->method].name),
+                    de.GetTypeString(ci_p->cls));
             bs.Dispatch();
             counter++;
         }
@@ -1128,6 +1131,9 @@ int main()
                                md_p->instruction_size_16bit * 2,
                                out_file,
                                stderr);
+            fprintf(out_file, "Method: %s, Class: %s\n",
+                    de.GetString(de.method_item_list[md_p->method].name),
+                    de.GetTypeString(ci_p->cls));
             bs.Dispatch();
             counter++;
         }
