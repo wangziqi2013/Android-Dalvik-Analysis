@@ -443,6 +443,29 @@ public:
 	void OnInvokeInterfaceRange(unsigned short index, 
 						   	    unsigned short start, 
 						   		unsigned char count);
+	
+	// Integer operation			   		
+	void OnNegInt(unsigned char reg1, unsigned char reg2);
+    void OnNotInt(unsigned char reg1, unsigned char reg2);
+    void OnNegLong(unsigned char reg1, unsigned char reg2);
+    void OnNotLong(unsigned char reg1, unsigned char reg2);
+    void OnNegFloat(unsigned char reg1, unsigned char reg2);
+    void OnNegDouble(unsigned char reg1, unsigned char reg2);
+    void OnIntToLong(unsigned char reg1, unsigned char reg2);
+    void OnIntToFloat(unsigned char reg1, unsigned char reg2);
+    void OnIntToDouble(unsigned char reg1, unsigned char reg2);
+    void OnLongToInt(unsigned char reg1, unsigned char reg2);
+    void OnLongToFloat(unsigned char reg1, unsigned char reg2);
+    void OnLongToDouble(unsigned char reg1, unsigned char reg2);
+    void OnFloatToInt(unsigned char reg1, unsigned char reg2);
+    void OnFloatToLong(unsigned char reg1, unsigned char reg2);
+    void OnFloatToDouble(unsigned char reg1, unsigned char reg2);
+    void OnDoubleToInt(unsigned char reg1, unsigned char reg2);
+    void OnDoubleToLong(unsigned char reg1, unsigned char reg2);
+    void OnDoubleToFloat(unsigned char reg1, unsigned char reg2);
+    void OnIntToByte(unsigned char reg1, unsigned char reg2);
+    void OnIntToChar(unsigned char reg1, unsigned char reg2);
+    void OnIntToShort(unsigned char reg1, unsigned char reg2);
 };
 
 #endif

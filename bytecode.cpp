@@ -1813,6 +1813,216 @@ void BytecodeSegment::OnInvokeInterface(unsigned char size,
 	fprintf(this->out_file, "}, meth@%u\n", index);
 }
 
+void BytecodeSegment::OnNegInt(unsigned char reg1,
+                               unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "neg-int v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnNotInt(unsigned char reg1,
+                               unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "not-int v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnNegLong(unsigned char reg1,
+                                unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "neg-long v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnNotLong(unsigned char reg1,
+                                unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "not-long v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnNegFloat(unsigned char reg1,
+                                 unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "neg-float v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnNegDouble(unsigned char reg1,
+                                  unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "neg-double v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnIntToLong(unsigned char reg1,
+                                  unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "int-to-long v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnIntToFloat(unsigned char reg1,
+                                   unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "int-to-float v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnIntToDouble(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "int-to-double v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnLongToInt(unsigned char reg1,
+                                  unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "long-to-int v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnLongToFloat(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "long-to-float v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnLongToDouble(unsigned char reg1,
+                                     unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "long-to-double v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnFloatToInt(unsigned char reg1,
+                                   unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "float-to-int v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnFloatToLong(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "float-to-long v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnFloatToDouble(unsigned char reg1,
+                                      unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "float-to-double v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnDoubleToInt(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "double-to-int v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnDoubleToLong(unsigned char reg1,
+                                     unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "double-to-long v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnDoubleToFloat(unsigned char reg1,
+                                      unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "double-to-float v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnIntToByte(unsigned char reg1,
+                                  unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "int-to-byte v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnIntToChar(unsigned char reg1,
+                                  unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "int-to-char v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnIntToShort(unsigned char reg1,
+                                   unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "int-to-short v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
 ////////////////////////////////////////////////////////////////
 // Call back function block end ////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -2534,6 +2744,109 @@ void BytecodeSegment::Dispatch()
 				}
 				
 				break;
+			case 0x79:
+			case 0x7A:
+				byte2 = this->GetNextByte();
+				this->OnUnused(byte2);
+				break;
+			
+			case 0x7B:
+            case 0x7C:
+            case 0x7D:
+            case 0x7E:
+            case 0x7F:
+            case 0x80:
+            case 0x81:
+            case 0x82:
+            case 0x83:
+            case 0x84:
+            case 0x85:
+            case 0x86:
+            case 0x87:
+            case 0x88:
+            case 0x89:
+            case 0x8A:
+            case 0x8B:
+            case 0x8C:
+            case 0x8D:
+            case 0x8E:
+            case 0x8F:
+				byte2 = this->GetNextByte();
+                byte3 = byte2 >> 4;
+                byte2 &= 0x0F;
+                
+                switch(byte1)
+                {
+                    case 0x7B:
+                        this->OnNegInt(byte2, byte3);
+                        break;
+                    case 0x7C:
+                        this->OnNotInt(byte2, byte3);
+                        break;
+                    case 0x7D:
+                        this->OnNegLong(byte2, byte3);
+                        break;
+                    case 0x7E:
+                        this->OnNotLong(byte2, byte3);
+                        break;
+                    case 0x7F:
+                        this->OnNegFloat(byte2, byte3);
+                        break;
+                    case 0x80:
+                        this->OnNegDouble(byte2, byte3);
+                        break;
+                    case 0x81:
+                        this->OnIntToLong(byte2, byte3);
+                        break;
+                    case 0x82:
+                        this->OnIntToFloat(byte2, byte3);
+                        break;
+                    case 0x83:
+                        this->OnIntToDouble(byte2, byte3);
+                        break;
+                    case 0x84:
+                        this->OnLongToInt(byte2, byte3);
+                        break;
+                    case 0x85:
+                        this->OnLongToFloat(byte2, byte3);
+                        break;
+                    case 0x86:
+                        this->OnLongToDouble(byte2, byte3);
+                        break;
+                    case 0x87:
+                        this->OnFloatToInt(byte2, byte3);
+                        break;
+                    case 0x88:
+                        this->OnFloatToLong(byte2, byte3);
+                        break;
+                    case 0x89:
+                        this->OnFloatToDouble(byte2, byte3);
+                        break;
+                    case 0x8A:
+                        this->OnDoubleToInt(byte2, byte3);
+                        break;
+                    case 0x8B:
+                        this->OnDoubleToLong(byte2, byte3);
+                        break;
+                    case 0x8C:
+                        this->OnDoubleToFloat(byte2, byte3);
+                        break;
+                    case 0x8D:
+                        this->OnIntToByte(byte2, byte3);
+                        break;
+                    case 0x8E:
+                        this->OnIntToChar(byte2, byte3);
+                        break;
+                    case 0x8F:
+                        this->OnIntToShort(byte2, byte3);
+                        break;
+                    default:
+                    	this->Assert(false, __LINE__);
+                    	break;
+                }
+                
+                break;
+			
 			default:
 				this->Skip(byte1);
 				break;
