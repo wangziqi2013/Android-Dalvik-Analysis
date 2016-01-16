@@ -583,19 +583,19 @@ void BytecodeSegment::OnPackedSwitchPayload(unsigned short size)
 		fprintf(this->out_file, 
 				"%d: 0x%.8X\n", 
 				first_key + i,
-				this->current_opcode_offset + offset);	
+				(int)this->current_opcode_offset + offset * 2);	
 	}
 	
 	return;
 }
 
 /*
- * OnSparsedSwitchPayload() - Parse jump table for sparse valued switch
+ * OnSparseSwitchPayload() - Parse jump table for sparse valued switch
  */
-void BytecodeSegment::OnSparsedSwitchPayload(unsigned short size)
+void BytecodeSegment::OnSparseSwitchPayload(unsigned short size)
 {
 	this->PrintLineNum();
-	fprintf(this->out_file, "sparsed-switch-payload, size = %u\n", size);
+	fprintf(this->out_file, "sparse-switch-payload, size = %u\n", size);
 	int *buffer = new(int [size]);
 	
 	// This is values array
@@ -609,7 +609,7 @@ void BytecodeSegment::OnSparsedSwitchPayload(unsigned short size)
 		fprintf(this->out_file,
 				"%d: %.8X\n",
 				buffer[i],
-				this->current_opcode_offset + offset);
+				(int)this->current_opcode_offset + offset * 2);
 	}
 	
 	delete[] buffer;
@@ -935,7 +935,7 @@ void BytecodeSegment::OnFillArrayData(unsigned char reg,
 	fprintf(this->out_file,
 			"fill-array-data v%u, %d\n", 
 			reg, 
-			offset);
+			offset * 2);
 }
 
 /*
@@ -961,7 +961,7 @@ void BytecodeSegment::OnFillArrayDataPayload(unsigned short width,
 		// This would make sure they are aligned in output file
 		this->PrintLineNum();
 		this->GetNextNBytes(buffer, width);
-		this->PrintBuffer(buffer, width);	
+		this->PrintBuffer(buffer, width);
 		fprintf(this->out_file, "\n");
 	}
 	
@@ -986,7 +986,7 @@ void BytecodeSegment::OnGoto(char offset)
 	this->PrintLineNum();
 	fprintf(this->out_file, 
 			"goto 0x%.8X\n", 
-			this->current_opcode_offset + (int)offset);
+			(int)this->current_opcode_offset + (int)offset * 2);
 }
 
 void BytecodeSegment::OnGoto16(short offset, 
@@ -997,7 +997,7 @@ void BytecodeSegment::OnGoto16(short offset,
 	this->PrintLineNum();
 	fprintf(this->out_file, 
 			"goto/16 0x%.8X\n", 
-			this->current_opcode_offset + (int)offset);
+			(int)this->current_opcode_offset + (int)offset * 2);
 }
 
 void BytecodeSegment::OnGoto32(int offset, unsigned char null)
@@ -1007,7 +1007,392 @@ void BytecodeSegment::OnGoto32(int offset, unsigned char null)
 	this->PrintLineNum();
 	fprintf(this->out_file,
 			"goto/32 0x%.8X\n",
-			this->current_opcode_offset + offset);	
+			(int)this->current_opcode_offset + offset * 2);	
+}
+
+void BytecodeSegment::OnPackedSwitch(unsigned char reg, int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file, 
+			"packed-switch v%u, %.8X\n",
+			reg, 
+			(int)this->current_opcode_offset + offset * 2);
+}
+
+void BytecodeSegment::OnSparseSwitch(unsigned char reg, int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sparse-switch v%u, %.8X\n",
+			reg,
+			(int)this->current_opcode_offset + offset * 2);	
+}
+
+void BytecodeSegment::OnCmplFloat(unsigned char dest, 
+					 			  unsigned char reg1, 
+					 			  unsigned char reg2)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"cmpl-float v%u, v%u, v%u\n",
+			dest,
+			reg1,
+			reg2);
+}
+
+void BytecodeSegment::OnCmpgFloat(unsigned char dest, 
+					 			  unsigned char reg1, 
+					 			  unsigned char reg2)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"cmpg-float v%u, v%u, v%u\n",
+			dest,
+			reg1,
+			reg2);
+}
+
+void BytecodeSegment::OnCmplDouble(unsigned char dest, 
+					 			   unsigned char reg1, 
+					 			   unsigned char reg2)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"cmpl-double v%u, v%u, v%u\n",
+			dest,
+			reg1,
+			reg2);
+}
+
+void BytecodeSegment::OnCmpgDouble(unsigned char dest, 
+					 			   unsigned char reg1, 
+					 			   unsigned char reg2)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"cmpg-double v%u, v%u, v%u\n",
+			dest,
+			reg1,
+			reg2);
+}
+
+void BytecodeSegment::OnCmpLong(unsigned char dest, 
+					 			unsigned char reg1, 
+					 			unsigned char reg2)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"cmp-long v%u, v%u, v%u\n",
+			dest,
+			reg1,
+			reg2);
+}
+
+void BytecodeSegment::OnIfEq(unsigned char reg1, 
+							 unsigned char reg2,
+							 int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"if-eq v%u, v%u, %.8X\n",
+			reg1, 
+			reg2,
+			(int)this->current_opcode_offset + offset * 2);
+}
+
+void BytecodeSegment::OnIfNe(unsigned char reg1, 
+							 unsigned char reg2,
+							 int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"if-ne v%u, v%u, %.8X\n",
+			reg1, 
+			reg2,
+			(int)this->current_opcode_offset + offset * 2);
+}
+
+void BytecodeSegment::OnIfLt(unsigned char reg1, 
+							 unsigned char reg2,
+							 int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"if-lt v%u, v%u, %.8X\n",
+			reg1, 
+			reg2,
+			(int)this->current_opcode_offset + offset * 2);
+}
+
+void BytecodeSegment::OnIfGe(unsigned char reg1, 
+							 unsigned char reg2,
+							 int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"if-ge v%u, v%u, %.8X\n",
+			reg1, 
+			reg2,
+			(int)this->current_opcode_offset + offset * 2);
+}
+
+void BytecodeSegment::OnIfGt(unsigned char reg1, 
+							 unsigned char reg2,
+							 int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"if-gt v%u, v%u, %.8X\n",
+			reg1, 
+			reg2,
+			(int)this->current_opcode_offset + offset * 2);
+}
+
+void BytecodeSegment::OnIfLe(unsigned char reg1, 
+							 unsigned char reg2,
+							 int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"if-le v%u, v%u, %.8X\n",
+			reg1, 
+			reg2,
+			(int)this->current_opcode_offset + offset * 2);
+}
+
+void BytecodeSegment::OnIfNeZ(unsigned char reg, 
+				 			  int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"if-nez v%u, %.8X\n",
+			reg,
+			(int)this->current_opcode_offset + offset * 2);	
+}
+
+void BytecodeSegment::OnIfLtZ(unsigned char reg, 
+				 			  int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"if-ltz v%u, %.8X\n",
+			reg,
+			(int)this->current_opcode_offset + offset * 2);	
+}
+
+void BytecodeSegment::OnIfGeZ(unsigned char reg, 
+				 			  int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"if-gez v%u, %.8X\n",
+			reg,
+			(int)this->current_opcode_offset + offset * 2);	
+}
+
+void BytecodeSegment::OnIfGtZ(unsigned char reg, 
+				 			  int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"if-gtz v%u, %.8X\n",
+			reg,
+			(int)this->current_opcode_offset + offset * 2);	
+}
+
+void BytecodeSegment::OnIfLeZ(unsigned char reg, 
+				 			  int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"if-lez v%u, %.8X\n",
+			reg,
+			(int)this->current_opcode_offset + offset * 2);	
+}
+
+void BytecodeSegment::OnIfEqZ(unsigned char reg, 
+				 			  int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"if-eqz v%u, %.8X\n",
+			reg,
+			(int)this->current_opcode_offset + offset * 2);	
+}
+
+void BytecodeSegment::OnUnused(unsigned char null)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file, 
+			"*unused*\n");
+}
+
+void BytecodeSegment::OnAGet(unsigned char reg,
+							 unsigned char array,
+							 unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aget v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
+}
+
+void BytecodeSegment::OnAGetWide(unsigned char reg,
+							 	 unsigned char array,
+							 	 unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aget-wide v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
+}
+
+void BytecodeSegment::OnAGetObject(unsigned char reg,
+							 	   unsigned char array,
+							 	   unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aget-object v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
+}
+
+void BytecodeSegment::OnAGetBoolean(unsigned char reg,
+							 		unsigned char array,
+							 		unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aget-boolean v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
+}
+
+void BytecodeSegment::OnAGetByte(unsigned char reg,
+							 	 unsigned char array,
+							 	 unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aget-byte v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
+}
+
+void BytecodeSegment::OnAGetChar(unsigned char reg,
+							 	 unsigned char array,
+							 	 unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aget-char v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
+}
+
+void BytecodeSegment::OnAGetShort(unsigned char reg,
+							 	  unsigned char array,
+							 	  unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aget-short v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
+}
+
+void BytecodeSegment::OnAPut(unsigned char reg,
+							 unsigned char array,
+							 unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aput v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
+}
+
+void BytecodeSegment::OnAPutWide(unsigned char reg,
+							 	 unsigned char array,
+							 	 unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aput-wide v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
+}
+
+void BytecodeSegment::OnAPutObject(unsigned char reg,
+							 	   unsigned char array,
+							 	   unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aput-object v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
+}
+
+void BytecodeSegment::OnAPutBoolean(unsigned char reg,
+							 		unsigned char array,
+							 		unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aput-boolean v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
+}
+
+void BytecodeSegment::OnAPutByte(unsigned char reg,
+							 	 unsigned char array,
+							 	 unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aput-byte v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
+}
+
+void BytecodeSegment::OnAPutChar(unsigned char reg,
+							 	 unsigned char array,
+							 	 unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aput-char v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
+}
+
+void BytecodeSegment::OnAPutShort(unsigned char reg,
+							 	  unsigned char array,
+							 	  unsigned char index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"aput-short v%u, v%u, v%u\n",
+			reg,
+			array,
+			index);	
 }
 
 ////////////////////////////////////////////////////////////////
@@ -1031,7 +1416,7 @@ void BytecodeSegment::Dispatch()
 	while(!this->IsEof())
 	{
 		unsigned char byte1 = this->GetNextByte();
-		unsigned char byte2;
+		unsigned char byte2, byte3, byte4;
 		// Used by filled arrays
 		unsigned char c, d, e, f, g;
 		unsigned short word1, word2;
@@ -1059,7 +1444,7 @@ void BytecodeSegment::Dispatch()
 				else if(byte2 == 0x02)
 				{
 					word1 = this->GetNextShort();
-					this->OnSparsedSwitchPayload(word1);
+					this->OnSparseSwitchPayload(word1);
 				}
 				else if(byte2 == 0x03)
 				{
@@ -1324,6 +1709,203 @@ void BytecodeSegment::Dispatch()
 				int1 = (int)this->GetNextInt();
 				this->OnGoto32(int1, byte2);
 				break;
+			case 0x2B:
+				byte2 = this->GetNextByte();
+				int1 = (int)this->GetNextInt();
+				this->OnPackedSwitch(byte2, int1);
+				break;
+			case 0x2C:
+				byte2 = this->GetNextByte();
+				int1 = (int)this->GetNextInt();
+				this->OnSparseSwitch(byte2, int1);
+				break;
+			case 0x2D:
+			case 0x2E:
+			case 0x2F:
+			case 0x30:
+			case 0x31:
+				byte2 = this->GetNextByte();
+				byte3 = this->GetNextByte();
+				byte4 = this->GetNextByte();
+				switch(byte1)
+				{
+					case 0x2D:
+						this->OnCmplFloat(byte2, byte3, byte4);
+						break;
+					case 0x2E:
+						this->OnCmpgFloat(byte2, byte3, byte4);
+						break;
+					case 0x2F:
+						this->OnCmplDouble(byte2, byte3, byte4);
+						break;
+					case 0x30:
+						this->OnCmpgDouble(byte2, byte3, byte4);
+						break;
+					case 0x31:
+						this->OnCmpLong(byte2, byte3, byte4);
+						break;
+					default:
+						this->Assert(false, __LINE__);
+						break;
+				}
+				
+				break;
+			case 0x32:
+			case 0x33:
+			case 0x34:
+			case 0x35:
+			case 0x36:
+			case 0x37:
+				byte2 = this->GetNextByte();
+				word1 = this->GetNextShort();
+				// second reg
+				byte3 = byte2 >> 4;
+				// first reg
+				byte2 &= 0x0F;
+				// Signed extended offset
+				int1 = ((int)(((unsigned int)word1) << 16)) >> 16;
+				
+				switch(byte1)
+				{
+					case 0x32:
+						this->OnIfEq(byte2, byte3, int1);
+						break;
+					case 0x33:
+						this->OnIfNe(byte2, byte3, int1);
+						break;
+					case 0x34:
+						this->OnIfLt(byte2, byte3, int1);
+						break;
+					case 0x35:
+						this->OnIfGe(byte2, byte3, int1);
+						break;
+					case 0x36:
+						this->OnIfGt(byte2, byte3, int1);
+						break;
+					case 0x37:
+						this->OnIfLe(byte2, byte3, int1);
+						break;
+					default:
+						this->Assert(false, __LINE__);
+						break;
+				}
+				
+				break;
+			
+			case 0x38:
+			case 0x39:
+			case 0x3A:
+			case 0x3B:
+			case 0x3C:
+			case 0x3D:
+				byte2 = this->GetNextByte();
+				word1 = this->GetNextShort();
+				int1 = ((int)(((unsigned int)word1) << 16)) >> 16;
+				
+				switch(byte1)
+				{
+					case 0x38:
+						this->OnIfEqZ(byte2, int1);
+						break;	
+					case 0x39:
+						this->OnIfNeZ(byte2, int1);
+						break;
+					case 0x3A:
+						this->OnIfLtZ(byte2, int1);
+						break;
+					case 0x3B:
+						this->OnIfGeZ(byte2, int1);
+						break;
+					case 0x3C:
+						this->OnIfGtZ(byte2, int1);
+						break;
+					case 0x3D:
+						this->OnIfLeZ(byte2, int1);
+						break;
+					default:
+						this->Assert(false, __LINE__);
+						break;
+				}
+				
+				break;
+			case 0x3E:
+			case 0x3F:
+			case 0x40:
+			case 0x41:
+			case 0x42:
+			case 0x43:
+				byte2 = this->GetNextByte();
+				this->OnUnused(byte2);
+				break;
+			
+			case 0x44:
+			case 0x45:
+			case 0x46:
+			case 0x47:
+			case 0x48:
+			case 0x49:
+			case 0x4A:
+			case 0x4B:
+			case 0x4C:
+			case 0x4D:
+			case 0x4E:
+			case 0x4F:
+			case 0x50:
+			case 0x51:
+				byte2 = this->GetNextByte();
+				byte3 = this->GetNextByte();
+				byte4 = this->GetNextByte();
+				switch(byte1)
+				{
+					case 0x44:
+						this->OnAGet(byte2, byte3, byte4);
+						break;	
+					case 0x45:
+						this->OnAGetWide(byte2, byte3, byte4);
+						break;	
+					case 0x46:
+						this->OnAGetObject(byte2, byte3, byte4);
+						break;	
+					case 0x47:
+						this->OnAGetBoolean(byte2, byte3, byte4);
+						break;	
+					case 0x48:
+						this->OnAGetByte(byte2, byte3, byte4);
+						break;	
+					case 0x49:
+						this->OnAGetChar(byte2, byte3, byte4);
+						break;	
+					case 0x4A:
+						this->OnAGetShort(byte2, byte3, byte4);
+						break;	
+					case 0x4B:
+						this->OnAPut(byte2, byte3, byte4);
+						break;	
+					case 0x4C:
+						this->OnAPutWide(byte2, byte3, byte4);
+						break;	
+					case 0x4D:
+						this->OnAPutObject(byte2, byte3, byte4);
+						break;	
+					case 0x4E:
+						this->OnAPutBoolean(byte2, byte3, byte4);
+						break;	
+					case 0x4F:
+						this->OnAPutByte(byte2, byte3, byte4);
+						break;	
+					case 0x50:
+						this->OnAPutChar(byte2, byte3, byte4);
+						break;	
+					case 0x51:
+						this->OnAPutShort(byte2, byte3, byte4);
+						break;
+					default:
+						this->Assert(false, __LINE__);
+						break;
+				}
+				
+				break;
+			
 			case 0x74:
 			case 0x75:
 			case 0x76:

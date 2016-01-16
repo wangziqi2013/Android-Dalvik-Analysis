@@ -122,7 +122,7 @@ public:
 	
 	void OnNop(unsigned char null);
 	void OnPackedSwitchPayload(unsigned short size);
-	void OnSparsedSwitchPayload(unsigned short size);
+	void OnSparseSwitchPayload(unsigned short size);
 	
 	// Move word
 	void OnMove(unsigned char dest, unsigned char src);
@@ -207,6 +207,110 @@ public:
 	void OnGoto(char offset);
 	void OnGoto16(short offset, unsigned char null);
 	void OnGoto32(int offset, unsigned char null);
+	
+	// Switch statement jump
+	void OnPackedSwitch(unsigned char reg, int offset);
+	void OnSparseSwitch(unsigned char reg, int offset);
+	
+	// Comparison
+	void OnCmplFloat(unsigned char dest, 
+					 unsigned char reg1, 
+					 unsigned char reg2);
+	void OnCmpgFloat(unsigned char dest, 
+					 unsigned char reg1, 
+					 unsigned char reg2);
+	void OnCmplDouble(unsigned char dest, 
+					  unsigned char reg1, 
+					  unsigned char reg2);
+	void OnCmpgDouble(unsigned char dest, 
+					  unsigned char reg1, 
+					  unsigned char reg2);
+	void OnCmpLong(unsigned char dest, 
+				   unsigned char reg1, 
+				   unsigned char reg2);
+	
+	// If testing
+	void OnIfEq(unsigned char reg1, 
+				unsigned char reg2,
+				int offset);
+	void OnIfNe(unsigned char reg1, 
+				unsigned char reg2,
+				int offset);
+	void OnIfLt(unsigned char reg1, 
+				unsigned char reg2,
+				int offset);
+	void OnIfGe(unsigned char reg1, 
+				unsigned char reg2,
+				int offset);
+	void OnIfGt(unsigned char reg1, 
+				unsigned char reg2,
+				int offset);
+	void OnIfLe(unsigned char reg1, 
+				unsigned char reg2,
+				int offset);
+	
+	// If zero testing
+	void OnIfEqZ(unsigned char reg, 
+				 int offset);
+	void OnIfNeZ(unsigned char reg, 
+				 int offset);
+	void OnIfLtZ(unsigned char reg, 
+				 int offset);
+	void OnIfGeZ(unsigned char reg, 
+				 int offset);
+	void OnIfGtZ(unsigned char reg, 
+				 int offset);
+	void OnIfLeZ(unsigned char reg, 
+				 int offset);
+	
+	// Unused opcode
+	void OnUnused(unsigned char null);
+	
+	// Get from array
+	void OnAGet(unsigned char reg,
+				unsigned char array,
+				unsigned char index);
+	void OnAGetWide(unsigned char reg,
+					unsigned char array,
+					unsigned char index);
+	void OnAGetObject(unsigned char reg,
+					  unsigned char array,
+					  unsigned char index);
+	void OnAGetBoolean(unsigned char reg,
+					   unsigned char array,
+					   unsigned char index);
+	void OnAGetByte(unsigned char reg,
+				 	unsigned char array,
+				 	unsigned char index);
+	void OnAGetChar(unsigned char reg,
+				 	unsigned char array,
+				 	unsigned char index);
+	void OnAGetShort(unsigned char reg,
+					 unsigned char array,
+					 unsigned char index);
+	
+	// Write into array
+	void OnAPut(unsigned char reg,
+				unsigned char array,
+				unsigned char index);
+	void OnAPutWide(unsigned char reg,
+					unsigned char array,
+					unsigned char index);
+	void OnAPutObject(unsigned char reg,
+					  unsigned char array,
+					  unsigned char index);
+	void OnAPutBoolean(unsigned char reg,
+					   unsigned char array,
+					   unsigned char index);
+	void OnAPutByte(unsigned char reg,
+				 	unsigned char array,
+				 	unsigned char index);
+	void OnAPutChar(unsigned char reg,
+				 	unsigned char array,
+				 	unsigned char index);
+	void OnAPutShort(unsigned char reg,
+					 unsigned char array,
+					 unsigned char index);
 	
 	// Method invokation
 	void OnInvokeVirtual(unsigned short index, 
