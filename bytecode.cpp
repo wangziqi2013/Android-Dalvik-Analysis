@@ -834,9 +834,9 @@ void BytecodeSegment::OnNewArray(unsigned char dest,
 	fprintf(this->out_file, "new-array v%u, v%u, type@%u\n", dest, size, index);
 }
 
-void BytecodeSegment::OnInvokeVirtual(unsigned short index, 
-									  unsigned short start,
-									  unsigned char count)
+void BytecodeSegment::OnInvokeVirtualRange(unsigned short index, 
+									  	   unsigned short start,
+									  	   unsigned char count)
 {
 	this->PrintLineNum();
 	fprintf(this->out_file, 
@@ -846,9 +846,9 @@ void BytecodeSegment::OnInvokeVirtual(unsigned short index,
 			index);	
 }
 
-void BytecodeSegment::OnInvokeSuper(unsigned short index, 
-									unsigned short start,
-									unsigned char count)
+void BytecodeSegment::OnInvokeSuperRange(unsigned short index, 
+										 unsigned short start,
+										 unsigned char count)
 {
 	this->PrintLineNum();
 	fprintf(this->out_file, 
@@ -858,9 +858,9 @@ void BytecodeSegment::OnInvokeSuper(unsigned short index,
 			index);	
 }
 
-void BytecodeSegment::OnInvokeDirect(unsigned short index, 
-									 unsigned short start,
-									 unsigned char count)
+void BytecodeSegment::OnInvokeDirectRange(unsigned short index, 
+									 	  unsigned short start,
+									 	  unsigned char count)
 {
 	this->PrintLineNum();
 	fprintf(this->out_file, 
@@ -870,9 +870,9 @@ void BytecodeSegment::OnInvokeDirect(unsigned short index,
 			index);	
 }
 
-void BytecodeSegment::OnInvokeStatic(unsigned short index, 
-									 unsigned short start,
-									 unsigned char count)
+void BytecodeSegment::OnInvokeStaticRange(unsigned short index, 
+									 	  unsigned short start,
+									 	  unsigned char count)
 {
 	this->PrintLineNum();
 	fprintf(this->out_file, 
@@ -882,9 +882,9 @@ void BytecodeSegment::OnInvokeStatic(unsigned short index,
 			index);	
 }
 
-void BytecodeSegment::OnInvokeInterface(unsigned short index, 
-									    unsigned short start,
-									    unsigned char count)
+void BytecodeSegment::OnInvokeInterfaceRange(unsigned short index, 
+									    	 unsigned short start,
+									    	 unsigned char count)
 {
 	this->PrintLineNum();
 	fprintf(this->out_file, 
@@ -1393,6 +1393,424 @@ void BytecodeSegment::OnAPutShort(unsigned char reg,
 			reg,
 			array,
 			index);	
+}
+
+void BytecodeSegment::OnIGet(unsigned char reg,
+							 unsigned char obj,
+							 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iget v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnIGetWide(unsigned char reg,
+							 	 unsigned char obj,
+							 	 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iget-wide v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnIGetObject(unsigned char reg,
+							 	   unsigned char obj,
+							 	   unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iget-object v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnIGetBoolean(unsigned char reg,
+							 		unsigned char obj,
+							 		unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iget-boolean v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnIGetByte(unsigned char reg,
+							 	 unsigned char obj,
+							 	 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iget-byte v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnIGetChar(unsigned char reg,
+							 	 unsigned char obj,
+							 	 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iget-char v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnIGetShort(unsigned char reg,
+							 	  unsigned char obj,
+							 	  unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iget-short v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnIPut(unsigned char reg,
+							 unsigned char obj,
+							 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iput v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnIPutWide(unsigned char reg,
+							 	 unsigned char obj,
+							 	 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iput-wide v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnIPutObject(unsigned char reg,
+							 	   unsigned char obj,
+							 	   unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iput-object v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnIPutBoolean(unsigned char reg,
+							 		unsigned char obj,
+							 		unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iput-boolean v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnIPutByte(unsigned char reg,
+							 	 unsigned char obj,
+							 	 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iput-byte v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnIPutChar(unsigned char reg,
+							 	 unsigned char obj,
+							 	 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iput-char v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnIPutShort(unsigned char reg,
+							 	  unsigned char obj,
+							 	  unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"iput-short v%u, v%u, field@%u\n",
+			reg,
+			obj,
+			index);	
+}
+
+void BytecodeSegment::OnSGet(unsigned char reg,
+							 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sget v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnSGetWide(unsigned char reg,
+							 	 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sget-wide v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnSGetObject(unsigned char reg,
+							 	   unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sget-object v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnSGetBoolean(unsigned char reg,
+							 	    unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sget-boolean v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnSGetByte(unsigned char reg,
+							 	 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sget-byte v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnSGetChar(unsigned char reg,
+							 	 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sget-char v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnSGetShort(unsigned char reg,
+							 	  unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sget-short v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnSPut(unsigned char reg,
+							 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sput v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnSPutWide(unsigned char reg,
+							 	 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sput-wide v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnSPutObject(unsigned char reg,
+							 	   unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sput-object v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnSPutBoolean(unsigned char reg,
+							 	    unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sput-boolean v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnSPutByte(unsigned char reg,
+							 	 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sput-byte v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnSPutChar(unsigned char reg,
+							 	 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sput-char v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnSPutShort(unsigned char reg,
+							 	  unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"sput-short v%u, field@%u\n",
+			reg,
+			index);	
+}
+
+void BytecodeSegment::OnInvokeVirtual(unsigned char size,
+									  unsigned char c,
+						 			  unsigned char d,
+						 			  unsigned char e,
+						 			  unsigned char f,
+						 			  unsigned char g,
+						 			  unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"invoke-virtual {");
+	unsigned char buffer[5] = {c, d, e, f, g};
+	const char *sep = "";
+	for(int i = 0;i < size;i++)
+	{
+		fprintf(this->out_file, "%sv%u", sep, buffer[i]);
+		sep = ", ";
+	}
+	
+	fprintf(this->out_file, "}, meth@%u\n", index);
+}
+
+void BytecodeSegment::OnInvokeSuper(unsigned char size,
+									unsigned char c,
+						 			unsigned char d,
+						 			unsigned char e,
+						 			unsigned char f,
+						 			unsigned char g,
+						 			unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"invoke-super {");
+	unsigned char buffer[5] = {c, d, e, f, g};
+	const char *sep = "";
+	for(int i = 0;i < size;i++)
+	{
+		fprintf(this->out_file, "%sv%u", sep, buffer[i]);
+		sep = ", ";
+	}
+	
+	fprintf(this->out_file, "}, meth@%u\n", index);
+}
+
+void BytecodeSegment::OnInvokeDirect(unsigned char size,
+									 unsigned char c,
+						 			 unsigned char d,
+						 			 unsigned char e,
+						 			 unsigned char f,
+						 			 unsigned char g,
+						 			 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"invoke-direct {");
+	unsigned char buffer[5] = {c, d, e, f, g};
+	const char *sep = "";
+	for(int i = 0;i < size;i++)
+	{
+		fprintf(this->out_file, "%sv%u", sep, buffer[i]);
+		sep = ", ";
+	}
+	
+	fprintf(this->out_file, "}, meth@%u\n", index);
+}
+
+void BytecodeSegment::OnInvokeStatic(unsigned char size,
+									 unsigned char c,
+						 			 unsigned char d,
+						 			 unsigned char e,
+						 			 unsigned char f,
+						 			 unsigned char g,
+						 			 unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"invoke-static {");
+	unsigned char buffer[5] = {c, d, e, f, g};
+	const char *sep = "";
+	for(int i = 0;i < size;i++)
+	{
+		fprintf(this->out_file, "%sv%u", sep, buffer[i]);
+		sep = ", ";
+	}
+	
+	fprintf(this->out_file, "}, meth@%u\n", index);
+}
+
+void BytecodeSegment::OnInvokeInterface(unsigned char size,
+									    unsigned char c,
+						 			    unsigned char d,
+						 			    unsigned char e,
+						 			    unsigned char f,
+						 			    unsigned char g,
+						 			    unsigned short index)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"invoke-interface {");
+	unsigned char buffer[5] = {c, d, e, f, g};
+	const char *sep = "";
+	for(int i = 0;i < size;i++)
+	{
+		fprintf(this->out_file, "%sv%u", sep, buffer[i]);
+		sep = ", ";
+	}
+	
+	fprintf(this->out_file, "}, meth@%u\n", index);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -1905,7 +2323,185 @@ void BytecodeSegment::Dispatch()
 				}
 				
 				break;
+				
+			case 0x52:
+			case 0x53:
+			case 0x54:
+			case 0x55:
+			case 0x56:
+			case 0x57:
+			case 0x58:
+			case 0x59:
+			case 0x5A:
+			case 0x5B:
+			case 0x5C:
+			case 0x5D:
+			case 0x5E:
+			case 0x5F:
+				byte2 = this->GetNextByte();
+				byte3 = byte2 >> 4;
+				byte2 &= 0x0F;
+				word1 = this->GetNextShort();
+				
+				switch(byte1)
+				{
+					case 0x52:
+						this->OnIGet(byte2, byte3, word1);
+						break;	
+					case 0x53:
+						this->OnIGetWide(byte2, byte3, word1);
+						break;	
+					case 0x54:
+						this->OnIGetObject(byte2, byte3, word1);
+						break;	
+					case 0x55:
+						this->OnIGetBoolean(byte2, byte3, word1);
+						break;	
+					case 0x56:
+						this->OnIGetByte(byte2, byte3, word1);
+						break;	
+					case 0x57:
+						this->OnIGetChar(byte2, byte3, word1);
+						break;	
+					case 0x58:
+						this->OnIGetShort(byte2, byte3, word1);
+						break;	
+					case 0x59:
+						this->OnIPut(byte2, byte3, word1);
+						break;	
+					case 0x5A:
+						this->OnIPutWide(byte2, byte3, word1);
+						break;	
+					case 0x5B:
+						this->OnIPutObject(byte2, byte3, word1);
+						break;	
+					case 0x5C:
+						this->OnIPutBoolean(byte2, byte3, word1);
+						break;	
+					case 0x5D:
+						this->OnIPutByte(byte2, byte3, word1);
+						break;	
+					case 0x5E:
+						this->OnIPutChar(byte2, byte3, word1);
+						break;	
+					case 0x5F:
+						this->OnIPutShort(byte2, byte3, word1);
+						break;	
+				}
+				
+				break;
+			case 0x60:
+			case 0x61:
+			case 0x62:
+			case 0x63:
+			case 0x64:
+			case 0x65:
+			case 0x66:
+			case 0x67:
+			case 0x68:
+			case 0x69:
+			case 0x6A:
+			case 0x6B:
+			case 0x6C:
+			case 0x6D:
+				byte2 = this->GetNextByte();
+				word1 = this->GetNextShort();
 			
+				switch(byte1)
+				{
+					case 0x60:
+						this->OnSGet(byte2, word1);
+						break;	
+					case 0x61:
+						this->OnSGetWide(byte2, word1);
+						break;	
+					case 0x62:
+						this->OnSGetObject(byte2, word1);
+						break;	
+					case 0x63:
+						this->OnSGetBoolean(byte2, word1);
+						break;	
+					case 0x64:
+						this->OnSGetByte(byte2, word1);
+						break;	
+					case 0x65:
+						this->OnSGetChar(byte2, word1);
+						break;	
+					case 0x66:
+						this->OnSGetShort(byte2, word1);
+						break;	
+					case 0x67:
+						this->OnSPut(byte2, word1);
+						break;	
+					case 0x68:
+						this->OnSPutWide(byte2, word1);
+						break;	
+					case 0x69:
+						this->OnSPutObject(byte2, word1);
+						break;	
+					case 0x6A:
+						this->OnSPutBoolean(byte2, word1);
+						break;	
+					case 0x6B:
+						this->OnSPutByte(byte2, word1);
+						break;	
+					case 0x6C:
+						this->OnSPutChar(byte2, word1);
+						break;	
+					case 0x6D:
+						this->OnSPutShort(byte2, word1);
+						break;
+					default:
+						this->Assert(false, __LINE__);
+						break;
+				}
+				
+				break;
+			case 0x6E:
+			case 0x6F:
+			case 0x70:
+			case 0x71:
+			case 0x72:
+				byte2 = this->GetNextByte();
+				g = byte2 & 0x0F;
+				// Number of registers
+				byte2 >>= 4;
+				// Method index
+				word1 = this->GetNextShort();
+				c = this->GetNextByte();
+				d = c >> 4;
+				c &= 0x0F;
+				e = this->GetNextByte();
+				f = e >> 4;
+				e &= 0x0F;
+				
+				switch(byte1)
+				{
+					case 0x6E:
+						this->OnInvokeVirtual(byte2, c, d, e, f, g, word1);
+						break;
+					case 0x6F:
+						this->OnInvokeSuper(byte2, c, d, e, f, g, word1);
+						break;	
+					case 0x70:
+						this->OnInvokeDirect(byte2, c, d, e, f, g, word1);
+						break;	
+					case 0x71:
+						this->OnInvokeStatic(byte2, c, d, e, f, g, word1);
+						break;	
+					case 0x72:
+						this->OnInvokeInterface(byte2, c, d, e, f, g, word1);
+						break;	
+					default:
+						this->Assert(false, __LINE__);
+						break;
+				}
+				
+				break;
+			case 0x73:
+				byte2 = this->GetNextByte();
+				this->OnUnused(byte2);
+				break;
 			case 0x74:
 			case 0x75:
 			case 0x76:
@@ -1918,19 +2514,19 @@ void BytecodeSegment::Dispatch()
 				switch(byte1)
 				{
 					case 0x74:
-						this->OnInvokeVirtual(word1, word2, byte2);
+						this->OnInvokeVirtualRange(word1, word2, byte2);
 						break;
 					case 0x75:
-						this->OnInvokeSuper(word1, word2, byte2);
+						this->OnInvokeSuperRange(word1, word2, byte2);
 						break;
 					case 0x76:	
-						this->OnInvokeDirect(word1, word2, byte2);
+						this->OnInvokeDirectRange(word1, word2, byte2);
 						break;
 					case 0x77:
-						this->OnInvokeStatic(word1, word2, byte2);
+						this->OnInvokeStaticRange(word1, word2, byte2);
 						break;
 					case 0x78:
-						this->OnInvokeInterface(word1, word2, byte2);
+						this->OnInvokeInterfaceRange(word1, word2, byte2);
 						break;
 					default:
 						this->Assert(false, __LINE__);

@@ -311,23 +311,138 @@ public:
 	void OnAPutShort(unsigned char reg,
 					 unsigned char array,
 					 unsigned char index);
+					 
+	// Read from object
+	void OnIGet(unsigned char reg,
+				unsigned char obj,
+				unsigned short index);
+	void OnIGetWide(unsigned char reg,
+					unsigned char obj,
+					unsigned short index);
+	void OnIGetObject(unsigned char reg,
+					  unsigned char obj,
+					  unsigned short index);
+	void OnIGetBoolean(unsigned char reg,
+					   unsigned char obj,
+					   unsigned short index);
+	void OnIGetByte(unsigned char reg,
+				 	unsigned char obj,
+				 	unsigned short index);
+	void OnIGetChar(unsigned char reg,
+				 	unsigned char obj,
+				 	unsigned short index);
+	void OnIGetShort(unsigned char reg,
+					 unsigned char obj,
+					 unsigned short index);
+					 
+	// Put to object
+	void OnIPut(unsigned char reg,
+				unsigned char obj,
+				unsigned short index);
+	void OnIPutWide(unsigned char reg,
+					unsigned char obj,
+					unsigned short index);
+	void OnIPutObject(unsigned char reg,
+					  unsigned char obj,
+					  unsigned short index);
+	void OnIPutBoolean(unsigned char reg,
+					   unsigned char obj,
+					   unsigned short index);
+	void OnIPutByte(unsigned char reg,
+				 	unsigned char obj,
+				 	unsigned short index);
+	void OnIPutChar(unsigned char reg,
+				 	unsigned char obj,
+				 	unsigned short index);
+	void OnIPutShort(unsigned char reg,
+					 unsigned char obj,
+					 unsigned short index);
+	
+	// Read from static field
+	void OnSGet(unsigned char reg,
+				unsigned short index);
+	void OnSGetWide(unsigned char reg,
+					unsigned short index);
+	void OnSGetObject(unsigned char reg,
+					  unsigned short index);
+	void OnSGetBoolean(unsigned char reg,
+					   unsigned short index);
+	void OnSGetByte(unsigned char reg,
+				 	unsigned short index);
+	void OnSGetChar(unsigned char reg,
+				 	unsigned short index);
+	void OnSGetShort(unsigned char reg,
+					 unsigned short index);
+					 
+	// Write to static field
+	void OnSPut(unsigned char reg,
+				unsigned short index);
+	void OnSPutWide(unsigned char reg,
+					unsigned short index);
+	void OnSPutObject(unsigned char reg,
+					  unsigned short index);
+	void OnSPutBoolean(unsigned char reg,
+					   unsigned short index);
+	void OnSPutByte(unsigned char reg,
+				 	unsigned short index);
+	void OnSPutChar(unsigned char reg,
+				 	unsigned short index);
+	void OnSPutShort(unsigned char reg,
+					 unsigned short index);
+					 
+	// Method invokation
+	void OnInvokeVirtual(unsigned char size,
+						 unsigned char c,
+						 unsigned char d,
+						 unsigned char e,
+						 unsigned char f,
+						 unsigned char g,
+						 unsigned short index);
+	void OnInvokeSuper(unsigned char size,
+					   unsigned char c,
+					   unsigned char d,
+					   unsigned char e,
+					   unsigned char f,
+					   unsigned char g,
+					   unsigned short index);
+	void OnInvokeDirect(unsigned char size,
+						unsigned char c,
+						unsigned char d,
+						unsigned char e,
+						unsigned char f,
+						unsigned char g,
+						unsigned short index);
+	void OnInvokeStatic(unsigned char size,
+						unsigned char c,
+						unsigned char d,
+						unsigned char e,
+						unsigned char f,
+						unsigned char g,
+						unsigned short index);
+	void OnInvokeInterface(unsigned char size,
+						   unsigned char c,
+						   unsigned char d,
+						   unsigned char e,
+						   unsigned char f,
+						   unsigned char g,
+						   unsigned short index);
 	
 	// Method invokation
-	void OnInvokeVirtual(unsigned short index, 
-						 unsigned short start, 
-						 unsigned char count);
-	void OnInvokeSuper(unsigned short index, 
-					   unsigned short start, 
-					   unsigned char count);
-	void OnInvokeDirect(unsigned short index, 
-						unsigned short start, 
-						unsigned char count);
-	void OnInvokeStatic(unsigned short index, 
-						unsigned short start, 
-						unsigned char count);
-	void OnInvokeInterface(unsigned short index, 
-						   unsigned short start, 
-						   unsigned char count);
+	void OnInvokeVirtualRange(unsigned short index, 
+						 	  unsigned short start, 
+						 	  unsigned char count);
+	void OnInvokeSuperRange(unsigned short index, 
+					   		unsigned short start, 
+					   		unsigned char count);
+	void OnInvokeDirectRange(unsigned short index, 
+							 unsigned short start, 
+							 unsigned char count);
+	void OnInvokeStaticRange(unsigned short index, 
+							 unsigned short start, 
+							 unsigned char count);
+	void OnInvokeInterfaceRange(unsigned short index, 
+						   	    unsigned short start, 
+						   		unsigned char count);
 };
 
 #endif
