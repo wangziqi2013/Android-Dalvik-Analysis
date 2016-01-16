@@ -811,13 +811,13 @@ void BytecodeSegment::OnInstanceOf(unsigned char dest,
                                    unsigned short index)
 {
     this->PrintLineNum();
-    fprintf(this->out_file, "instance-of v%u, v%u, type@%u", dest, reg, index);    
+    fprintf(this->out_file, "instance-of v%u, v%u, type@%u\n", dest, reg, index);    
 }
 
 void BytecodeSegment::OnArrayLength(unsigned char dest, unsigned char reg)
 {
     this->PrintLineNum();
-    fprintf(this->out_file, "array-length v%u, v%u", dest, reg);    
+    fprintf(this->out_file, "array-length v%u, v%u\n", dest, reg);    
 }
 
 void BytecodeSegment::OnNewInstance(unsigned char dest, unsigned short index)
@@ -2023,6 +2023,710 @@ void BytecodeSegment::OnIntToShort(unsigned char reg1,
             reg2); 
 }
 
+void BytecodeSegment::OnAddInt(unsigned char dest,
+                               unsigned char reg1,
+                               unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "add-int v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnSubInt(unsigned char dest,
+                               unsigned char reg1,
+                               unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "sub-int v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnMulInt(unsigned char dest,
+                               unsigned char reg1,
+                               unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "mul-int v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnDivInt(unsigned char dest,
+                               unsigned char reg1,
+                               unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "div-int v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnRemInt(unsigned char dest,
+                               unsigned char reg1,
+                               unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "rem-int v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnAndInt(unsigned char dest,
+                               unsigned char reg1,
+                               unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "and-int v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnOrInt(unsigned char dest,
+                              unsigned char reg1,
+                              unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "or-int v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnXorInt(unsigned char dest,
+                               unsigned char reg1,
+                               unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "xor-int v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnShlInt(unsigned char dest,
+                               unsigned char reg1,
+                               unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "shl-int v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnShrInt(unsigned char dest,
+                               unsigned char reg1,
+                               unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "shr-int v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnUshrInt(unsigned char dest,
+                                unsigned char reg1,
+                                unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "ushr-int v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnAddLong(unsigned char dest,
+                                unsigned char reg1,
+                                unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "add-long v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnSubLong(unsigned char dest,
+                                unsigned char reg1,
+                                unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "sub-long v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnMulLong(unsigned char dest,
+                                unsigned char reg1,
+                                unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "mul-long v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnDivLong(unsigned char dest,
+                                unsigned char reg1,
+                                unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "div-long v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnRemLong(unsigned char dest,
+                                unsigned char reg1,
+                                unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "rem-long v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnAndLong(unsigned char dest,
+                                unsigned char reg1,
+                                unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "and-long v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnOrLong(unsigned char dest,
+                               unsigned char reg1,
+                               unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "or-long v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnXorLong(unsigned char dest,
+                                unsigned char reg1,
+                                unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "xor-long v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnShlLong(unsigned char dest,
+                                unsigned char reg1,
+                                unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "shl-long v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnShrLong(unsigned char dest,
+                                unsigned char reg1,
+                                unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "shr-long v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnUshrLong(unsigned char dest,
+                                 unsigned char reg1,
+                                 unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "ushr-long v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnAddFloat(unsigned char dest,
+                                 unsigned char reg1,
+                                 unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "add-float v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnSubFloat(unsigned char dest,
+                                 unsigned char reg1,
+                                 unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "sub-float v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnMulFloat(unsigned char dest,
+                                 unsigned char reg1,
+                                 unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "mul-float v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnDivFloat(unsigned char dest,
+                                 unsigned char reg1,
+                                 unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "div-float v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnRemFloat(unsigned char dest,
+                                 unsigned char reg1,
+                                 unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "rem-float v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnAddDouble(unsigned char dest,
+                                  unsigned char reg1,
+                                  unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "add-double v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnSubDouble(unsigned char dest,
+                                  unsigned char reg1,
+                                  unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "sub-double v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnMulDouble(unsigned char dest,
+                                  unsigned char reg1,
+                                  unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "mul-double v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnDivDouble(unsigned char dest,
+                                  unsigned char reg1,
+                                  unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "div-double v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnRemDouble(unsigned char dest,
+                                  unsigned char reg1,
+                                  unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "rem-double v%u, v%u, v%u\n",
+            dest, 
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnAddInt2addr(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "add-int/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnSubInt2addr(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "sub-int/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnMulInt2addr(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "mul-int/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnDivInt2addr(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "div-int/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnRemInt2addr(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "rem-int/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnAndInt2addr(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "and-int/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnOrInt2addr(unsigned char reg1,
+                                   unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "or-int/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnXorInt2addr(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "xor-int/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnShlInt2addr(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "shl-int/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnShrInt2addr(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "shr-int/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnUshrInt2addr(unsigned char reg1,
+                                     unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "ushr-int/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnAddLong2addr(unsigned char reg1,
+                                     unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "add-long/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnSubLong2addr(unsigned char reg1,
+                                     unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "sub-long/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnMulLong2addr(unsigned char reg1,
+                                     unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "mul-long/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnDivLong2addr(unsigned char reg1,
+                                     unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "div-long/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnRemLong2addr(unsigned char reg1,
+                                     unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "rem-long/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnAndLong2addr(unsigned char reg1,
+                                     unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "and-long/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnOrLong2addr(unsigned char reg1,
+                                    unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "or-long/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnXorLong2addr(unsigned char reg1,
+                                     unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "xor-long/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnShlLong2addr(unsigned char reg1,
+                                     unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "shl-long/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnShrLong2addr(unsigned char reg1,
+                                     unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "shr-long/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnUshrLong2addr(unsigned char reg1,
+                                      unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "ushr-long/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnAddFloat2addr(unsigned char reg1,
+                                      unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "add-float/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnSubFloat2addr(unsigned char reg1,
+                                      unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "sub-float/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnMulFloat2addr(unsigned char reg1,
+                                      unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "mul-float/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnDivFloat2addr(unsigned char reg1,
+                                      unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "div-float/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnRemFloat2addr(unsigned char reg1,
+                                      unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "rem-float/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnAddDouble2addr(unsigned char reg1,
+                                       unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "add-double/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnSubDouble2addr(unsigned char reg1,
+                                       unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "sub-double/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnMulDouble2addr(unsigned char reg1,
+                                       unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "mul-double/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnDivDouble2addr(unsigned char reg1,
+                                       unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "div-double/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
+void BytecodeSegment::OnRemDouble2addr(unsigned char reg1,
+                                       unsigned char reg2)
+{
+    this->PrintLineNum();
+    fprintf(this->out_file,
+            "rem-double/2addr v%u, v%u\n",
+            reg1, 
+            reg2); 
+}
+
 ////////////////////////////////////////////////////////////////
 // Call back function block end ////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -2847,6 +3551,286 @@ void BytecodeSegment::Dispatch()
                 
                 break;
             
+            case 0x90:
+            case 0x91:
+            case 0x92:
+            case 0x93:
+            case 0x94:
+            case 0x95:
+            case 0x96:
+            case 0x97:
+            case 0x98:
+            case 0x99:
+            case 0x9A:
+            case 0x9B:
+            case 0x9C:
+            case 0x9D:
+            case 0x9E:
+            case 0x9F:
+            case 0xA0:
+            case 0xA1:
+            case 0xA2:
+            case 0xA3:
+            case 0xA4:
+            case 0xA5:
+            case 0xA6:
+            case 0xA7:
+            case 0xA8:
+            case 0xA9:
+            case 0xAA:
+            case 0xAB:
+            case 0xAC:
+            case 0xAD:
+            case 0xAE:
+            case 0xAF:
+                byte2 = this->GetNextByte();
+                byte3 = this->GetNextByte();
+                byte4 = this->GetNextByte();
+                
+                switch(byte1)
+                {
+                    case 0x90:
+                        this->OnAddInt(byte2, byte3, byte4);
+                        break;
+                    case 0x91:
+                        this->OnSubInt(byte2, byte3, byte4);
+                        break;
+                    case 0x92:
+                        this->OnMulInt(byte2, byte3, byte4);
+                        break;
+                    case 0x93:
+                        this->OnDivInt(byte2, byte3, byte4);
+                        break;
+                    case 0x94:
+                        this->OnRemInt(byte2, byte3, byte4);
+                        break;
+                    case 0x95:
+                        this->OnAndInt(byte2, byte3, byte4);
+                        break;
+                    case 0x96:
+                        this->OnOrInt(byte2, byte3, byte4);
+                        break;
+                    case 0x97:
+                        this->OnXorInt(byte2, byte3, byte4);
+                        break;
+                    case 0x98:
+                        this->OnShlInt(byte2, byte3, byte4);
+                        break;
+                    case 0x99:
+                        this->OnShrInt(byte2, byte3, byte4);
+                        break;
+                    case 0x9A:
+                        this->OnUshrInt(byte2, byte3, byte4);
+                        break;
+                    case 0x9B:
+                        this->OnAddLong(byte2, byte3, byte4);
+                        break;
+                    case 0x9C:
+                        this->OnSubLong(byte2, byte3, byte4);
+                        break;
+                    case 0x9D:
+                        this->OnMulLong(byte2, byte3, byte4);
+                        break;
+                    case 0x9E:
+                        this->OnDivLong(byte2, byte3, byte4);
+                        break;
+                    case 0x9F:
+                        this->OnRemLong(byte2, byte3, byte4);
+                        break;
+                    case 0xA0:
+                        this->OnAndLong(byte2, byte3, byte4);
+                        break;
+                    case 0xA1:
+                        this->OnOrLong(byte2, byte3, byte4);
+                        break;
+                    case 0xA2:
+                        this->OnXorLong(byte2, byte3, byte4);
+                        break;
+                    case 0xA3:
+                        this->OnShlLong(byte2, byte3, byte4);
+                        break;
+                    case 0xA4:
+                        this->OnShrLong(byte2, byte3, byte4);
+                        break;
+                    case 0xA5:
+                        this->OnUshrLong(byte2, byte3, byte4);
+                        break;
+                    case 0xA6:
+                        this->OnAddFloat(byte2, byte3, byte4);
+                        break;
+                    case 0xA7:
+                        this->OnSubFloat(byte2, byte3, byte4);
+                        break;
+                    case 0xA8:
+                        this->OnMulFloat(byte2, byte3, byte4);
+                        break;
+                    case 0xA9:
+                        this->OnDivFloat(byte2, byte3, byte4);
+                        break;
+                    case 0xAA:
+                        this->OnRemFloat(byte2, byte3, byte4);
+                        break;
+                    case 0xAB:
+                        this->OnAddDouble(byte2, byte3, byte4);
+                        break;
+                    case 0xAC:
+                        this->OnSubDouble(byte2, byte3, byte4);
+                        break;
+                    case 0xAD:
+                        this->OnMulDouble(byte2, byte3, byte4);
+                        break;
+                    case 0xAE:
+                        this->OnDivDouble(byte2, byte3, byte4);
+                        break;
+                    case 0xAF:
+                        this->OnRemDouble(byte2, byte3, byte4);
+                        break;
+                    default:
+                        this->Assert(false, __LINE__);
+                        break;
+                }
+                
+                break;
+            case 0xB0:
+            case 0xB1:
+            case 0xB2:
+            case 0xB3:
+            case 0xB4:
+            case 0xB5:
+            case 0xB6:
+            case 0xB7:
+            case 0xB8:
+            case 0xB9:
+            case 0xBA:
+            case 0xBB:
+            case 0xBC:
+            case 0xBD:
+            case 0xBE:
+            case 0xBF:
+            case 0xC0:
+            case 0xC1:
+            case 0xC2:
+            case 0xC3:
+            case 0xC4:
+            case 0xC5:
+            case 0xC6:
+            case 0xC7:
+            case 0xC8:
+            case 0xC9:
+            case 0xCA:
+            case 0xCB:
+            case 0xCC:
+            case 0xCD:
+            case 0xCE:
+            case 0xCF:
+                byte2 = this->GetNextByte();
+                byte3 = byte2 >> 4;
+                byte2 &= 0x0F;
+                
+                switch(byte1)
+                {
+                    case 0xB0:
+                        this->OnAddInt2addr(byte2, byte3);
+                        break;
+                    case 0xB1:
+                        this->OnSubInt2addr(byte2, byte3);
+                        break;
+                    case 0xB2:
+                        this->OnMulInt2addr(byte2, byte3);
+                        break;
+                    case 0xB3:
+                        this->OnDivInt2addr(byte2, byte3);
+                        break;
+                    case 0xB4:
+                        this->OnRemInt2addr(byte2, byte3);
+                        break;
+                    case 0xB5:
+                        this->OnAndInt2addr(byte2, byte3);
+                        break;
+                    case 0xB6:
+                        this->OnOrInt2addr(byte2, byte3);
+                        break;
+                    case 0xB7:
+                        this->OnXorInt2addr(byte2, byte3);
+                        break;
+                    case 0xB8:
+                        this->OnShlInt2addr(byte2, byte3);
+                        break;
+                    case 0xB9:
+                        this->OnShrInt2addr(byte2, byte3);
+                        break;
+                    case 0xBA:
+                        this->OnUshrInt2addr(byte2, byte3);
+                        break;
+                    case 0xBB:
+                        this->OnAddLong2addr(byte2, byte3);
+                        break;
+                    case 0xBC:
+                        this->OnSubLong2addr(byte2, byte3);
+                        break;
+                    case 0xBD:
+                        this->OnMulLong2addr(byte2, byte3);
+                        break;
+                    case 0xBE:
+                        this->OnDivLong2addr(byte2, byte3);
+                        break;
+                    case 0xBF:
+                        this->OnRemLong2addr(byte2, byte3);
+                        break;
+                    case 0xC0:
+                        this->OnAndLong2addr(byte2, byte3);
+                        break;
+                    case 0xC1:
+                        this->OnOrLong2addr(byte2, byte3);
+                        break;
+                    case 0xC2:
+                        this->OnXorLong2addr(byte2, byte3);
+                        break;
+                    case 0xC3:
+                        this->OnShlLong2addr(byte2, byte3);
+                        break;
+                    case 0xC4:
+                        this->OnShrLong2addr(byte2, byte3);
+                        break;
+                    case 0xC5:
+                        this->OnUshrLong2addr(byte2, byte3);
+                        break;
+                    case 0xC6:
+                        this->OnAddFloat2addr(byte2, byte3);
+                        break;
+                    case 0xC7:
+                        this->OnSubFloat2addr(byte2, byte3);
+                        break;
+                    case 0xC8:
+                        this->OnMulFloat2addr(byte2, byte3);
+                        break;
+                    case 0xC9:
+                        this->OnDivFloat2addr(byte2, byte3);
+                        break;
+                    case 0xCA:
+                        this->OnRemFloat2addr(byte2, byte3);
+                        break;
+                    case 0xCB:
+                        this->OnAddDouble2addr(byte2, byte3);
+                        break;
+                    case 0xCC:
+                        this->OnSubDouble2addr(byte2, byte3);
+                        break;
+                    case 0xCD:
+                        this->OnMulDouble2addr(byte2, byte3);
+                        break;
+                    case 0xCE:
+                        this->OnDivDouble2addr(byte2, byte3);
+                        break;
+                    case 0xCF:
+                        this->OnRemDouble2addr(byte2, byte3);
+                        break;
+                    default:
+                        this->Assert(false, __LINE__);
+                        break;
+                }
+                
+                break;
             default:
                 this->Skip(byte1);
                 break;

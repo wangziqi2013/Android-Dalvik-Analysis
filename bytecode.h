@@ -466,6 +466,138 @@ public:
     void OnIntToByte(unsigned char reg1, unsigned char reg2);
     void OnIntToChar(unsigned char reg1, unsigned char reg2);
     void OnIntToShort(unsigned char reg1, unsigned char reg2);
+    
+    // Arithmetic
+    void OnAddInt(unsigned char dest, 
+                  unsigned char reg1, 
+                  unsigned char reg2);
+    void OnSubInt(unsigned char dest, 
+                  unsigned char reg1, 
+                  unsigned char reg2);
+    void OnMulInt(unsigned char dest, 
+                  unsigned char reg1, 
+                  unsigned char reg2);
+    void OnDivInt(unsigned char dest, 
+                  unsigned char reg1, 
+                  unsigned char reg2);
+    void OnRemInt(unsigned char dest, 
+                  unsigned char reg1, 
+                  unsigned char reg2);
+    void OnAndInt(unsigned char dest, 
+                  unsigned char reg1, 
+                  unsigned char reg2);
+    void OnOrInt(unsigned char dest, 
+                 unsigned char reg1, 
+                 unsigned char reg2);
+    void OnXorInt(unsigned char dest, 
+                  unsigned char reg1, 
+                  unsigned char reg2);
+    void OnShlInt(unsigned char dest, 
+                  unsigned char reg1, 
+                  unsigned char reg2);
+    void OnShrInt(unsigned char dest, 
+                  unsigned char reg1, 
+                  unsigned char reg2);
+    void OnUshrInt(unsigned char dest, 
+                   unsigned char reg1, 
+                   unsigned char reg2);
+    void OnAddLong(unsigned char dest, 
+                   unsigned char reg1, 
+                   unsigned char reg2);
+    void OnSubLong(unsigned char dest, 
+                   unsigned char reg1, 
+                   unsigned char reg2);
+    void OnMulLong(unsigned char dest, 
+                   unsigned char reg1, 
+                   unsigned char reg2);
+    void OnDivLong(unsigned char dest, 
+                   unsigned char reg1, 
+                   unsigned char reg2);
+    void OnRemLong(unsigned char dest, 
+                   unsigned char reg1, 
+                   unsigned char reg2);
+    void OnAndLong(unsigned char dest, 
+                   unsigned char reg1, 
+                   unsigned char reg2);
+    void OnOrLong(unsigned char dest, 
+                  unsigned char reg1, 
+                  unsigned char reg2);
+    void OnXorLong(unsigned char dest, 
+                   unsigned char reg1, 
+                   unsigned char reg2);
+    void OnShlLong(unsigned char dest, 
+                   unsigned char reg1, 
+                   unsigned char reg2);
+    void OnShrLong(unsigned char dest, 
+                   unsigned char reg1, 
+                   unsigned char reg2);
+    void OnUshrLong(unsigned char dest, 
+                    unsigned char reg1, 
+                    unsigned char reg2);
+    void OnAddFloat(unsigned char dest, 
+                    unsigned char reg1, 
+                    unsigned char reg2);
+    void OnSubFloat(unsigned char dest, 
+                    unsigned char reg1, 
+                    unsigned char reg2);
+    void OnMulFloat(unsigned char dest, 
+                    unsigned char reg1, 
+                    unsigned char reg2);
+    void OnDivFloat(unsigned char dest, 
+                    unsigned char reg1, 
+                    unsigned char reg2);
+    void OnRemFloat(unsigned char dest, 
+                    unsigned char reg1, 
+                    unsigned char reg2);
+    void OnAddDouble(unsigned char dest, 
+                     unsigned char reg1, 
+                     unsigned char reg2);
+    void OnSubDouble(unsigned char dest, 
+                     unsigned char reg1, 
+                     unsigned char reg2);
+    void OnMulDouble(unsigned char dest, 
+                     unsigned char reg1, 
+                     unsigned char reg2);
+    void OnDivDouble(unsigned char dest, 
+                     unsigned char reg1, 
+                     unsigned char reg2);
+    void OnRemDouble(unsigned char dest, 
+                     unsigned char reg1, 
+                     unsigned char reg2);
+                     
+    // 2 addr arithmetic
+    void OnAddInt2addr(unsigned char reg1, unsigned char reg2);
+    void OnSubInt2addr(unsigned char reg1, unsigned char reg2);
+    void OnMulInt2addr(unsigned char reg1, unsigned char reg2);
+    void OnDivInt2addr(unsigned char reg1, unsigned char reg2);
+    void OnRemInt2addr(unsigned char reg1, unsigned char reg2);
+    void OnAndInt2addr(unsigned char reg1, unsigned char reg2);
+    void OnOrInt2addr(unsigned char reg1, unsigned char reg2);
+    void OnXorInt2addr(unsigned char reg1, unsigned char reg2);
+    void OnShlInt2addr(unsigned char reg1, unsigned char reg2);
+    void OnShrInt2addr(unsigned char reg1, unsigned char reg2);
+    void OnUshrInt2addr(unsigned char reg1, unsigned char reg2);
+    void OnAddLong2addr(unsigned char reg1, unsigned char reg2);
+    void OnSubLong2addr(unsigned char reg1, unsigned char reg2);
+    void OnMulLong2addr(unsigned char reg1, unsigned char reg2);
+    void OnDivLong2addr(unsigned char reg1, unsigned char reg2);
+    void OnRemLong2addr(unsigned char reg1, unsigned char reg2);
+    void OnAndLong2addr(unsigned char reg1, unsigned char reg2);
+    void OnOrLong2addr(unsigned char reg1, unsigned char reg2);
+    void OnXorLong2addr(unsigned char reg1, unsigned char reg2);
+    void OnShlLong2addr(unsigned char reg1, unsigned char reg2);
+    void OnShrLong2addr(unsigned char reg1, unsigned char reg2);
+    void OnUshrLong2addr(unsigned char reg1, unsigned char reg2);
+    void OnAddFloat2addr(unsigned char reg1, unsigned char reg2);
+    void OnSubFloat2addr(unsigned char reg1, unsigned char reg2);
+    void OnMulFloat2addr(unsigned char reg1, unsigned char reg2);
+    void OnDivFloat2addr(unsigned char reg1, unsigned char reg2);
+    void OnRemFloat2addr(unsigned char reg1, unsigned char reg2);
+    void OnAddDouble2addr(unsigned char reg1, unsigned char reg2);
+    void OnSubDouble2addr(unsigned char reg1, unsigned char reg2);
+    void OnMulDouble2addr(unsigned char reg1, unsigned char reg2);
+    void OnDivDouble2addr(unsigned char reg1, unsigned char reg2);
+    void OnRemDouble2addr(unsigned char reg1, unsigned char reg2);
 };
 
 #endif
