@@ -1098,6 +1098,7 @@ int main()
 	FILE *out_file = fopen("dump.txt", "wb");
 	dex_assert(out_file);
 	
+	int counter = 0;
 	for(unsigned int i = 0;
 		i < de.classdef_id_count; 
 		i++)
@@ -1115,6 +1116,7 @@ int main()
 							   out_file,
 							   stderr);
 			bs.Dispatch();
+			counter++;
 		}
 		
 		// Traverse on virtual methods
@@ -1127,8 +1129,11 @@ int main()
 							   out_file,
 							   stderr);
 			bs.Dispatch();
+			counter++;
 		}
 	}
+	
+	printf("Finished counter = %d\n", counter);
 	
 	return 0;
 }

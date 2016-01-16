@@ -38,7 +38,7 @@ BytecodeFormat FormatObjectTable[] =
 	[_3rc] = 5,
 	[_3rms] = 5,
 	[_3rmi] = 5,
-	[_51l] = 5,
+	[_51l] = 9,
 };
 
 /*
@@ -403,6 +403,24 @@ inline unsigned int BytecodeSegment::GetNextInt()
 }
 
 /*
+ * GetNextNBytes() - Read next N bytes into a buffer
+ *
+ * This method checks for EOF on each byte, and if unexpected EOF
+ * is seen assertion fails immediately
+ */
+inline void BytecodeSegment::GetNextNBytes(unsigned char *buffer, 
+										   int size)
+{
+	// This will check for EOF on each access which is mostly desired
+	for(int i = 0;i < size;i++)
+	{
+		buffer[i] = this->GetNextByte();	
+	}
+	
+	return;
+}
+
+/*
  * IsEof() - Whether there is anything to read
  *
  * Returns true if current pointer points to an invalid byte
@@ -420,9 +438,55 @@ inline bool BytecodeSegment::IsEof()
  */
 inline void BytecodeSegment::PrintLineNum()
 {
-	fprintf(this->out_file, "%-8X ", this->instruction_counter);
-	this->instruction_counter++;
+	fprintf(this->out_file, 
+			"(0x%.8X) %-8d ", 
+			this->current_opcode_offset,
+			this->instruction_counter);
 	return;	
+}
+
+/*
+ * PrintBuffer() - Print a buffer in small endian
+ *
+ * We start from the end of the array and keep printing until
+ * the first byte is printed
+ */
+void BytecodeSegment::PrintBuffer(unsigned char *buffer, 
+								  int size)
+{
+	// Get to the last byte
+	unsigned char *ptr = buffer + size - 1;
+	while(size > 0)
+	{
+		fprintf(this->out_file, "%.2X", *ptr);
+		ptr--;
+		size--;	
+	}
+	
+	return;
+}
+
+/*
+ * ResolveOffsetToCount() - Return instruction counter pointed to
+ * by the offset
+ *
+ * If the offset is invalid (i.e. inside an instruction) then
+ * assertion fail
+ */
+unsigned int BytecodeSegment::ResolveOffsetToCount(unsigned int base, 
+												   int offset)
+{
+	unsigned int target = (unsigned int)((int)base + offset);
+	map<unsigned int, unsigned int>::iterator it = \
+		this->instruction_offset_map.find(target);
+	if(it == this->instruction_offset_map.end())
+	{
+		fprintf(this->err_file, 
+				"ResolveOffsetToCount(): Unable to resolve target: 0x%.8X\n",
+				target);
+	}
+	
+	return it->second;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -436,8 +500,12 @@ void BytecodeSegment::OnStart()
 {
 	fprintf(this->out_file, "Dispatch starts\n");
 	
-	// Line number starts at 1
-	this->instruction_counter = 1;
+	// Line number starts at 1, but we initialize it to 0
+	// since it will be increased by 1 before printing
+	this->instruction_counter = 0;
+	this->current_opcode_offset = 0;
+	this->instruction_counter_map.clear();
+	this->instruction_offset_map.clear();
 }
 
 void BytecodeSegment::OnFinish()
@@ -451,6 +519,41 @@ void BytecodeSegment::OnSkip()
 	fprintf(this->out_file, "[Skipped]\n");	
 }
 
+/*
+ * OnNextInstruction() - Called when a new instruction is retrieved
+ *
+ * Used to update instruction offset and program count
+ * This function will be called after OnStart() and byte code
+ * retrival, but before any further action is taken
+ */
+void BytecodeSegment::OnNextInstruction(unsigned char opcode)
+{
+	// This counter is initialized to 0, so in order to
+	// start at instruction 1 we need to increase first
+	this->instruction_counter++;
+	
+	// This is the offset of current opcode offset even if there
+	// are operands it always points to opcode
+	// This is useful as the base address of goto and branching instruction
+	this->current_opcode_offset = this->current_ptr - this->bytecode - 1; 
+	// Maps current instruction byte offset in input stream to
+	// integral instruction count, starting from 1
+	// Need to -1 on pointer difference since we have already fetched the
+	// bytecode
+	this->instruction_offset_map[this->current_opcode_offset] = \
+		this->instruction_counter;
+		
+	// Also maps current instruction counter to offset
+	this->instruction_counter_map[this->instruction_counter] = \
+		this->current_opcode_offset;
+		
+	return;
+}
+
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+
 void BytecodeSegment::OnNop(unsigned char null)
 {
 	// For nop instruction we require its high byte being 0x00
@@ -458,6 +561,60 @@ void BytecodeSegment::OnNop(unsigned char null)
 	
 	this->PrintLineNum();
 	fprintf(this->out_file, "nop\n");
+}
+
+/*
+ * OnPackedSwitchPayload() - Parse a switch jump table
+ *
+ * ushort: item size
+ * int[item_size]: values
+ * int[item_size]: target offset relative to the opcode
+ */
+void BytecodeSegment::OnPackedSwitchPayload(unsigned short size)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file, "packed-switch-payload, size = %u\n", size);
+	int first_key = (int)this->GetNextInt();
+	
+	for(unsigned int i = 0;i < size;i++)
+	{
+		this->PrintLineNum();
+		int offset = (int)this->GetNextInt();
+		fprintf(this->out_file, 
+				"%d: 0x%.8X\n", 
+				first_key + i,
+				this->current_opcode_offset + offset);	
+	}
+	
+	return;
+}
+
+/*
+ * OnSparsedSwitchPayload() - Parse jump table for sparse valued switch
+ */
+void BytecodeSegment::OnSparsedSwitchPayload(unsigned short size)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file, "sparsed-switch-payload, size = %u\n", size);
+	int *buffer = new(int [size]);
+	
+	// This is values array
+	this->GetNextNBytes((unsigned char *)buffer, size * sizeof(int));	
+	
+	for(unsigned int i = 0;i < size;i++)
+	{
+		this->PrintLineNum();
+		int offset = (int)this->GetNextInt();
+		
+		fprintf(this->out_file,
+				"%d: %.8X\n",
+				buffer[i],
+				this->current_opcode_offset + offset);
+	}
+	
+	delete[] buffer;
+	
+	return;
 }
 
 void BytecodeSegment::OnMove(unsigned char dest, unsigned char src)
@@ -737,6 +894,122 @@ void BytecodeSegment::OnInvokeInterface(unsigned short index,
 			index);	
 }
 
+void BytecodeSegment::OnFilledNewArray(unsigned char size, 
+								 	   unsigned char c, 
+						  			   unsigned char d,
+						  			   unsigned char e,
+						  			   unsigned char f,
+						  			   unsigned char g,
+						  			   unsigned short type)
+{
+	this->PrintLineNum();
+	unsigned char reg_array[5] = {c, d, e, f, g};
+	const char *sep = "";
+	
+	fprintf(this->out_file, "filled-new-array {");
+	for(int i = 0;i < size;i++)
+	{
+		fprintf(this->out_file, "%sv%u", sep, reg_array[i]);
+		sep = ", ";	
+	}
+	
+	fprintf(this->out_file, "}, type@%u\n", type);
+}
+
+void BytecodeSegment::OnFilledNewArrayRange(unsigned char size,
+										    unsigned short type,
+											unsigned short start)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file, 
+			"filled-new-array/range {v%u..v%u}, type@%u",
+			start,
+			start + size - 1,
+			type);
+}
+
+void BytecodeSegment::OnFillArrayData(unsigned char reg,
+									  int offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"fill-array-data v%u, %d\n", 
+			reg, 
+			offset);
+}
+
+/*
+ * OnFillArrayDataPayload() - Read data embedded in instruction
+ *
+ * This is not a callback for opcode, but rather for embedded data
+ * The length of this array is aligned to 16-bit words which
+ * implies that if width * size is odd then there is a 1 byte
+ * padding after this structure
+ */
+void BytecodeSegment::OnFillArrayDataPayload(unsigned short width, 
+											 unsigned int size)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file, 
+			"fill-array-data-payload, width = %u, size = %u\n",
+			width,
+			size);
+	
+	unsigned char *buffer = new(unsigned char [width]);
+	for(unsigned int i = 0;i < size;i++)
+	{
+		// This would make sure they are aligned in output file
+		this->PrintLineNum();
+		this->GetNextNBytes(buffer, width);
+		this->PrintBuffer(buffer, width);	
+		fprintf(this->out_file, "\n");
+	}
+	
+	delete[] buffer;
+	
+	// If the total length is odd we should also read the extra 1 byte
+	if((width * size) % 2 == 1)
+	{
+		this->PrintLineNum();
+		fprintf(this->out_file, "padding: %.2X\n", this->GetNextByte());
+	}
+}
+
+void BytecodeSegment::OnThrow(unsigned char reg)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file, "throw v%u\n", reg);	
+}
+
+void BytecodeSegment::OnGoto(char offset)
+{
+	this->PrintLineNum();
+	fprintf(this->out_file, 
+			"goto 0x%.8X\n", 
+			this->current_opcode_offset + (int)offset);
+}
+
+void BytecodeSegment::OnGoto16(short offset, 
+							   unsigned char null)
+{
+	this->Assert(null == 0, __LINE__);
+	
+	this->PrintLineNum();
+	fprintf(this->out_file, 
+			"goto/16 0x%.8X\n", 
+			this->current_opcode_offset + (int)offset);
+}
+
+void BytecodeSegment::OnGoto32(int offset, unsigned char null)
+{
+	this->Assert(null == 0x00, __LINE__);
+	
+	this->PrintLineNum();
+	fprintf(this->out_file,
+			"goto/32 0x%.8X\n",
+			this->current_opcode_offset + offset);	
+}
+
 ////////////////////////////////////////////////////////////////
 // Call back function block end ////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -759,18 +1032,47 @@ void BytecodeSegment::Dispatch()
 	{
 		unsigned char byte1 = this->GetNextByte();
 		unsigned char byte2;
+		// Used by filled arrays
+		unsigned char c, d, e, f, g;
 		unsigned short word1, word2;
 		unsigned int uint1, uint2;
 		int int1;
 		long long lld1;
 		unsigned long long llu1;
 		
-		//fprintf(out_file, "%.2X\n", byte1);
+		this->OnNextInstruction(byte1);
+		//this->PrintLineNum();
+		//fprintf(out_file, "opcode = %.2X\n", byte1);
 		switch(byte1)
 		{
 			case 0x00:
 				byte2 = this->GetNextByte();
-				this->OnNop(byte2);
+				if(byte2 == 0x00) 
+				{
+					this->OnNop(byte2);
+				}
+				else if(byte2 == 0x01)
+				{
+					word1 = this->GetNextShort();
+					this->OnPackedSwitchPayload(word1);
+				}
+				else if(byte2 == 0x02)
+				{
+					word1 = this->GetNextShort();
+					this->OnSparsedSwitchPayload(word1);
+				}
+				else if(byte2 == 0x03)
+				{
+					word1 = this->GetNextShort();
+					uint1 = this->GetNextInt();
+					this->OnFillArrayDataPayload(word1, uint1);
+				}
+				else
+				{
+					fprintf(this->out_file, "MSB = %.2X, error!\n", byte2);
+					this->Assert(false, __LINE__);	
+				}
+				
 				break;
 			case 0x01:
 				byte2 = this->GetNextByte();
@@ -784,6 +1086,7 @@ void BytecodeSegment::Dispatch()
 				this->OnMoveFrom16(byte2, word1);
 				break;
 			case 0x03:
+				byte2 = this->GetNextByte();
 				word1 = this->GetNextShort();
 				word2 = this->GetNextShort();
 				// First word is dest
@@ -800,6 +1103,7 @@ void BytecodeSegment::Dispatch()
 				this->OnMoveWideFrom16(byte2, word1);
 				break;
 			case 0x06:
+				byte2 = this->GetNextByte();
 				word1 = this->GetNextShort();
 				word2 = this->GetNextShort();
 				// First word is dest
@@ -817,6 +1121,7 @@ void BytecodeSegment::Dispatch()
 				this->OnMoveObjectFrom16(byte2, word1);
 				break;
 			case 0x09:
+				byte2 = this->GetNextByte();
 				word1 = this->GetNextShort();
 				word2 = this->GetNextShort();
 				// First word is dest
@@ -967,6 +1272,58 @@ void BytecodeSegment::Dispatch()
 				word1 = this->GetNextShort();
 				this->OnNewArray(byte2 & 0x0F, byte2 >> 4, word1);
 				break;
+			case 0x24:
+				// This is used as size
+				byte2 = this->GetNextByte();
+				g = byte2 & 0x0F;
+				byte2 >>= 4;
+				// This is the type
+				word1 = this->GetNextShort();
+				
+				c = this->GetNextByte();
+				d = c >> 4;
+				c &= 0x0F;
+				
+				e = this->GetNextByte();
+				f = e >> 4;
+				e &= 0x0F;
+				
+				this->OnFilledNewArray(byte2, c, d, e, f, g, word1);
+				
+				break;
+			case 0x25:
+				// size
+				byte2 = this->GetNextByte();
+				// Type
+				word1 = this->GetNextShort();
+				// Start register
+				word2 = this->GetNextShort();
+				
+				this->OnFilledNewArrayRange(byte2, word1, word2);
+				break;
+			case 0x26:
+				byte2 = this->GetNextByte();
+				int1 = (int)this->GetNextInt();
+				this->OnFillArrayData(byte2, int1);
+				break;
+			case 0x27:
+				byte2 = this->GetNextByte();
+				this->OnThrow(byte2);
+				break;
+			case 0x28:
+				byte2 = this->GetNextByte();
+				this->OnGoto(byte2);
+				break;
+			case 0x29:
+				byte2 = this->GetNextByte();
+				word1 = this->GetNextShort();
+				this->OnGoto16((short)word1, byte2);
+				break;
+			case 0x2A:
+				byte2 = this->GetNextByte();
+				int1 = (int)this->GetNextInt();
+				this->OnGoto32(int1, byte2);
+				break;
 			case 0x74:
 			case 0x75:
 			case 0x76:
@@ -1002,6 +1359,18 @@ void BytecodeSegment::Dispatch()
 			default:
 				this->Skip(byte1);
 				break;
+		} // switch
+		
+		// 0x00 carries extra data, so we do not check its operand size
+		if(byte1 != 0x00)
+		{
+			// Check consistency
+			this->Assert(this->GetOperandSize(byte1) == \
+						 (this->current_ptr - \
+						  this->bytecode - \
+						  this->current_opcode_offset - \
+					  	1),
+					 	__LINE__);
 		}
 	}
 	

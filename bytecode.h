@@ -67,6 +67,17 @@ struct BytecodeSegment
 	// compared with memory buffered analysis
 	unsigned char *bytecode;
 	unsigned char *current_ptr;
+	// Current byte offset from the start of bytecode
+	// This always points to the opcode (i.e. the offset of opcode)
+	// even if there are operands
+	unsigned int current_opcode_offset;
+	
+	// Maps instruction offset to instruction index (starting from 1)
+	map<unsigned int, unsigned int> instruction_offset_map;
+	// Maps instruction counter to offset
+	// Just a reverse mapping of instruction_offset_map
+	map<unsigned int, unsigned int> instruction_counter_map;
+	
 	
 	unsigned int code_len;
 	// The following two must be already opened (e.g. stdout, stderr)
@@ -88,22 +99,30 @@ struct BytecodeSegment
 
 private:
 	inline void Assert(bool cond, int linenum);
+	// Make byte and short fast, other cases slower by not inlining them
 	inline unsigned char GetNextByte();
 	inline unsigned short GetNextShort();
-	inline unsigned int GetNextInt();
+	unsigned int GetNextInt();
+	void GetNextNBytes(unsigned char *buffer, int size);
 	inline bool IsEof();
 	inline void PrintLineNum();
+	void PrintBuffer(unsigned char *buffer, int size);
+	unsigned int ResolveOffsetToCount(unsigned int base, int offset);
 
 public:
 	// This is defined for callbacks to refer
 	// and will be incremented everytime after a new instruction is issued
 	unsigned int instruction_counter;
 	
+	// Control callbacks 
 	void OnStart();
 	void OnFinish();
 	void OnSkip();
+	void OnNextInstruction(unsigned char opcode);
 	
 	void OnNop(unsigned char null);
+	void OnPackedSwitchPayload(unsigned short size);
+	void OnSparsedSwitchPayload(unsigned short size);
 	
 	// Move word
 	void OnMove(unsigned char dest, unsigned char src);
@@ -163,11 +182,31 @@ public:
 					  unsigned char reg, 
 					  unsigned short index);
 	
+	// Array creation and initialization
 	void OnArrayLength(unsigned char dest, unsigned char reg);
 	void OnNewInstance(unsigned char dest, unsigned short index);
 	void OnNewArray(unsigned char dest, 
 					unsigned char size, 
 					unsigned short index);
+	void OnFilledNewArray(unsigned char size, 
+						  unsigned char c, 
+						  unsigned char d,
+						  unsigned char e,
+						  unsigned char f,
+						  unsigned char g,
+						  unsigned short type);
+	void OnFilledNewArrayRange(unsigned char size,
+							   unsigned short type,
+							   unsigned short start);
+	void OnFillArrayData(unsigned char reg,
+						 int offset);
+	void OnFillArrayDataPayload(unsigned short width, unsigned int size);
+	
+	// Control flow
+	void OnThrow(unsigned char reg);
+	void OnGoto(char offset);
+	void OnGoto16(short offset, unsigned char null);
+	void OnGoto32(int offset, unsigned char null);
 	
 	// Method invokation
 	void OnInvokeVirtual(unsigned short index, 
