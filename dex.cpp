@@ -1220,7 +1220,7 @@ void DalvikExecutable::VerifyDexHeader()
 
 int main()
 {
-    DalvikExecutable de = DalvikExecutable("classes2.dex");
+    DalvikExecutable de = DalvikExecutable("classes.dex");
     de.VerifyDexHeader();
     de.ReadFileMapPtrAndItem();
     de.ReadCountOffsets();
