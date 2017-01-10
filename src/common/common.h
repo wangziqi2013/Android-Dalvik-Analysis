@@ -43,7 +43,10 @@ static void dummy(const char*, ...) {}
 // Error string table
 extern const char *error_str_table[];
 
-#define CANNOT_SEEK_FILE (error_str_table[0])
+#define ERROR_SEEK_FILE (error_str_table[0])
 #define ERROR_ACQUIRE_FILE_SIZE (error_str_table[1])
+#define ERROR_OPEN_FILE (error_str_table[2])
+#define OUT_OF_MEMORY (error_str_table[3])
+#define ERROR_READ_FILE (error_str_table[4])
  
 #endif
