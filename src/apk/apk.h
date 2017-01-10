@@ -73,6 +73,15 @@ class ApkArchive {
   }
   
   /*
+   * Destructor
+   */
+  ~ApkArchive() {
+    delete[] raw_data_p;
+    
+    return;
+  }
+  
+  /*
    * ReportError() - Reports error on stderr and then throw exception
    *
    * The exception thrown is always integer 0 and this function does not return
