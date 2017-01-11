@@ -244,12 +244,18 @@ class ApkArchive {
     if(eof_central_dir_p->this_disk != 0 || \
        eof_central_dir_p->total_disk != 0) {
       ReportError(MULTI_PART_NOT_SUPPORTED, eof_central_dir_p->total_disk);
+    } else {
+      dbg_printf("    # of disks: %u\n", 
+                 eof_central_dir_p->total_disk);
     }
     
     // Both file counts must be the same otherwise we have inconsistency
     if(eof_central_dir_p->this_disk_file_count != \
        eof_central_dir_p->total_file_count) {
       ReportError(CORRUPTED_ARCHIVE, "Inconsistent file count");
+    } else {
+      dbg_printf("    # of records: %u\n", 
+                 eof_central_dir_p->total_file_count); 
     }
     
     // Fill in the central dir count and pointer
@@ -259,9 +265,7 @@ class ApkArchive {
         raw_data_p + eof_central_dir_p->central_dir_offset);
     
     // Verify that both the first and last one has a valid header
-    if((central_dir_p->signature != RecordType::CENTRAL_DIR_FILE_HEADER) || \
-        ((central_dir_p + central_dir_count)->signature != \
-         RecordType::CENTRAL_DIR_FILE_HEADER)) {
+    if((central_dir_p->signature != RecordType::CENTRAL_DIR_FILE_HEADER)) {
       ReportError(CORRUPTED_ARCHIVE, 
                   "Invalid central directory file header signature");
     }
