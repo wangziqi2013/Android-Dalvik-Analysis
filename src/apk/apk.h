@@ -272,6 +272,23 @@ class ApkArchive {
     
     return;
   }
+  
+  /*
+   * GetNextHeader() - Returns the next central dir file header pointer
+   *
+   * Since the length of CentralDirFileHeader is not fixed length we need to
+   * compute the next byte offset manually using the length of variable length 
+   * fields recorded inside the object
+   */
+  inline CentralDirFileHeader *GetNextHeader(CentralDirFileHeader *header_p) {
+    unsigned char *byte_offset = reinterpret_cast<unsigned char *>(header_p);
+    
+    byte_offset += (header_p->file_name_length + \
+                    header_p->extra_field_length + \
+                    header_p->file_comment_length);
+                    
+    return reinterpret_cast<CentralDirFileHeader *>(byte_offset);
+  }
    
  // Public member functions
  public:
@@ -338,7 +355,9 @@ class ApkArchive {
     return;
   }  
   
-  
+  void DebugPrintAllFileName() {
+    
+  } 
 };
 
 } // namespace android_dalvik_analysis {
