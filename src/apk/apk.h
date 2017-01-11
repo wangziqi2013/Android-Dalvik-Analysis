@@ -28,7 +28,20 @@ class ApkArchive {
    */
   class FileRecord {
     uint32_t singature;
+    uint16_t version_to_extract;
+    uint16_t general_purpose_flags;
+    uint16_t compression_method;
+    uint16_t modification_time;
+    uint16_t modification_date;
+    uint32_t crc32;
+    uint32_t compressed_size;
+    uint32_t uncompressed_size;
+    uint16_t file_name_length;
+    uint16_t extra_field_length;
     
+    // This is just a pointer to the next byte and does not 
+    // constitute the actual length
+    char file_name[0];
   } BYTE_ALIGNED;
  
  // Private data members
@@ -39,6 +52,9 @@ class ApkArchive {
   // instance everytime
   const std::string file_name;
   size_t file_length;
+  
+  // This one is kept as the current read position
+  size_t read_offset;
   
   unsigned char *raw_data_p;
  
@@ -100,7 +116,8 @@ class ApkArchive {
    * This function loads the file into memory
    */
   ApkArchive(const std::string &p_filename) :
-    file_name{p_filename} {
+    file_name{p_filename},
+    read_offset{0UL} {
     // Open the file as read and binary
     FILE *fp = fopen(file_name.c_str(), "rb");
     if(fp == nullptr) {
