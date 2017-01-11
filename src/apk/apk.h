@@ -24,11 +24,11 @@ class ApkArchive {
    * enum class RecordType - Denotes the type of the record, because we cannot
    *                         decide the type before looking at its signature
    */
-  enum class RecordType {
-    LOCAL_FILE_HEADER,
-    DATA_DESCRIPTOR,
-    CENTRAL_DIR_FILE_HEADER,
-    END_OF_CENTRAL_DIR,
+  enum class RecordType : uint32_t {
+    LOCAL_FILE_HEADER = 0x04034b50,
+    DATA_DESCRIPTOR = 0x08074b50,
+    CENTRAL_DIR_FILE_HEADER = 0x02014b50,
+    END_OF_CENTRAL_DIR = 0x06054b50,
   };
   
   /*
@@ -39,7 +39,7 @@ class ApkArchive {
    */
   class LocalFileHeader {
    public: 
-    uint32_t singature;
+    RecordType singature;
     uint16_t version_to_extract;
     uint16_t general_purpose_flags;
     uint16_t compression_method;
@@ -66,7 +66,7 @@ class ApkArchive {
    */
   class EndOfCentralDir {
    public:
-    uint32_t singature;
+    RecordType singature;
     uint16_t this_disk;
     uint16_t total_disk;
     uint16_t this_disk_file_count;
@@ -86,7 +86,6 @@ class ApkArchive {
   
   // All archive must be at least that long
   static constexpr size_t MINIMUM_ARCHIVE_LENGTH = sizeof(EndOfCentralDir);
-  static constexpr uint32_t EOF_CENTRAL_DIR_SIGNATURE = 0x06054b50;
   
  // Private data members
  private:
@@ -171,7 +170,7 @@ class ApkArchive {
     
     // Do a byte-wise scan until the beginning
     while(scan_begin >= raw_data_p) {
-      if(eof_central_dir_p->singature != EOF_CENTRAL_DIR_SIGNATURE) {
+      if(eof_central_dir_p->singature != RecordType::END_OF_CENTRAL_DIR) {
         // If the comment length matches the actual length we have jumped then
         // we presume it is a valid EOF central record and return
         if(scan_begin + \
@@ -224,7 +223,7 @@ class ApkArchive {
     
     size_t size_read = fread(raw_data_p, 1, file_length, fp);
     if(size_read != file_length) {
-      ReportError(ERROR_READ_FILE, size_read); 
+      ReportError(ERROR_READ_FILE, size_read);
     }
     
     int close_ret = fclose(fp);
