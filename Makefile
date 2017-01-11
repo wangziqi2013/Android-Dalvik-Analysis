@@ -20,3 +20,7 @@ $(BUILD)/apk.o: $(SRC)/apk/apk.cpp $(SRC)/apk/apk.h
 prepare:
 	mkdir -p bin
 	mkdir -p build
+
+clean:
+	rm -f ./build/*
+	rm -f ./bin/*
