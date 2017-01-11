@@ -23,10 +23,11 @@ class ApkArchive {
    * class FileRecord - This corresponds to the file record inside the APK 
    *                    archive
    *
-   * Each file has a compressed representation and a decompressed representation
+   * The file header is located at the beginning of compressed file data
    */
   class FileRecord {
-  
+    uint32_t singature;
+    
   };
  
  // Private data members
@@ -44,6 +45,8 @@ class ApkArchive {
  private:
   /*
    * Constructor
+   *
+   * This function loads the file into memory
    */
   ApkArchive(const std::string &p_filename) :
     file_name{p_filename} {
