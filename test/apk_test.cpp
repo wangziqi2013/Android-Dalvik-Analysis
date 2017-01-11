@@ -15,7 +15,17 @@ using namespace android_dalvik_analysis;
 void TestReadFileHeader() {
   _PrintTestName();
   
-  ApkArchive("test.apk");
+  ApkArchive("./test.apk");
+  
+  try {
+    ApkArchive("./corrupt.apk");
+  } catch(int) {
+    fprintf(stderr, "Successfully caught the exception\n"); 
+    
+    return;
+  } 
+  
+  assert(false);
   
   return;
 }
