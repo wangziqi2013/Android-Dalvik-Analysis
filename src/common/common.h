@@ -40,6 +40,9 @@ static void dummy(const char*, ...) {}
 #define likely(x)   __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
+// This is used to cancel alignment for structures
+#define BYTE_ALIGNED __attribute__((packed, aligned(1)))
+
 // Error string table
 extern const char *error_str_table[];
 
