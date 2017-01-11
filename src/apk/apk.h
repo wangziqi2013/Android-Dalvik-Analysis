@@ -4,10 +4,11 @@
 #ifndef _APK_H
 #define _APK_H
 
-namespace wangziqi2013 {
-namespace android_dalvik_analysis {
+#include <cstdarg>
+#include "common.h"
 
-#include <cstdio>
+namespace wangziqi2013 {
+namespace android_dalvik_analysis { 
 
 /*
  * class ApkArchive - In memory representation of an APK archive
@@ -37,12 +38,12 @@ class ApkArchive {
   // because we do not support reusing of the class - always create a new 
   // instance everytime
   const std::string file_name;
-  const size_t file_length;
+  size_t file_length;
   
   unsigned char *raw_data_p;
  
- // Private member functions
- private:
+ // Public member functions
+ public:
   /*
    * Constructor
    *
@@ -53,13 +54,13 @@ class ApkArchive {
     // Open the file as read and binary
     FILE *fp = fopen(file_name.c_str(), "rb");
     if(fp == nullptr) {
-      ReportError(ERROR_OPEN_FILE, filename.c_str());
+      ReportError(ERROR_OPEN_FILE, file_name.c_str());
     }
     
     file_length = GetFileLength(fp);
     
     // Allocate a buffer to hold the entire file and then close it
-    raw_data_p = new char[file_length];
+    raw_data_p = new unsigned char[file_length];
     if(raw_data_p == nullptr) {
       ReportError(OUT_OF_MEMORY); 
     }
@@ -82,7 +83,10 @@ class ApkArchive {
     delete[] raw_data_p;
     
     return;
-  }
+  } 
+ 
+ // Private member functions
+ private:
   
   /*
    * ReportError() - Reports error on stderr and then throw exception
@@ -110,8 +114,10 @@ class ApkArchive {
   size_t GetFileLength(FILE *fp) {
     assert(fp != nullptr);
     
-    int ret = fseek(fp, 0, SEEK_END);
-    if(ret != 0) {
+    int seek_ret;
+    
+    seek_ret = fseek(fp, 0, SEEK_END);
+    if(seek_ret != 0) {
       ReportError(ERROR_SEEK_FILE); 
     }
     
@@ -121,8 +127,8 @@ class ApkArchive {
     }
     
     // Do not forget to set it back to the beginning of file
-    int ret = fseek(fp, 0, SEEK_SET);
-    if(ret != 0) {
+    seek_ret = fseek(fp, 0, SEEK_SET);
+    if(seek_ret != 0) {
       ReportError(ERROR_SEEK_FILE); 
     }
     

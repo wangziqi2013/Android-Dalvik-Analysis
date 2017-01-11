@@ -4,6 +4,9 @@
 #ifndef _TESTSUITE_H
 #define _TESTSUITE_H
 
+// This is added to avoid using PAPI library
+#define NO_USE_PAPI
+
 #include <random>
 
 #include <sched.h>
