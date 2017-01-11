@@ -56,9 +56,33 @@ class ApkArchive {
     char file_name[0];
   } BYTE_ALIGNED;
   
-  class EndOfCentralDir {
+  // Make sure we aligned it properly
+  static_assert(sizeof(LocalFileHeader) == 30UL, 
+                "class LocalFileHeader does not have correct length");
   
+  /*
+   * class EndOfCentralDir - This is served as the header of the entire archive 
+   *                         and is located at the end of the file
+   */
+  class EndOfCentralDir {
+   public:
+    uint32_t singature;
+    uint16_t this_disk;
+    uint16_t total_disk;
+    uint16_t this_disk_file_count;
+    uint16_t total_file_count;
+    uint32_t size_of_central_dir;
+    uint32_t central_dir_offset;
+    uint16_t comment_length;
+    
+    // This does not constitute the actual length and is only
+    // used as the pointer to the next byte
+    char comment[0];
   } BYTE_ALIGNED;
+  
+  // Make sure we aligned it properly
+  static_assert(sizeof(EndOfCentralDir) == 22UL, 
+                "class EndOfCentralDir does not have correct length");
  
  // Private data members
  private:
