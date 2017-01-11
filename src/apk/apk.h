@@ -61,6 +61,43 @@ class ApkArchive {
                 "class LocalFileHeader does not have correct length");
   
   /*
+   * class CentralDirFileHeader - This represents the central file header record
+   *                              located at the end of the archive
+   */
+  class CentralDirFileHeader {
+   public:
+    RecordType signature;
+    uint16_t version_made_by;
+    uint16_t version_to_extract; 
+    
+    // The following are the same with those in local file header
+    uint16_t general_purpose_flags;
+    uint16_t compression_method;
+    uint16_t modification_time;
+    uint16_t modification_date;
+    uint32_t crc32;
+    uint32_t compressed_size;
+    uint32_t uncompressed_size;
+    uint16_t file_name_length;
+    uint16_t extra_field_length;
+    
+    uint16_t file_comment_length;
+    // Disk number where file starts; we always assume it is 0
+    uint16_t disk_num;
+    uint16_t internal_file_attr;
+    uint32_t external_file_attr;
+    
+    // This is the relative offset on the disk it first appears
+    // for a single part file this is the offset from the beginning
+    uint32_t local_header_offset;
+    
+    char file_name[0];
+  } BYTE_ALIGNED;
+  
+  static_assert(sizeof(CentralDirFileHeader) == 46UL, 
+                "class CentralDirFileHeader does not have correct length");
+  
+  /*
    * class EndOfCentralDir - This is served as the header of the entire archive 
    *                         and is located at the end of the file
    */
