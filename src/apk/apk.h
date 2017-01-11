@@ -21,12 +21,24 @@ class ApkArchive {
  private:
   
   /*
-   * class FileRecord - This corresponds to the file record inside the APK 
-   *                    archive
+   * enum class RecordType - Denotes the type of the record, because we cannot
+   *                         decide the type before looking at its signature
+   */
+  enum class RecordType {
+    LOCAL_FILE_HEADER,
+    DATA_DESCRIPTOR,
+    CENTRAL_DIR_FILE_HEADER,
+    END_OF_CENTRAL_DIR,
+  };
+  
+  /*
+   * class LocalFileHeader - This corresponds to the file record inside the APK 
+   *                         archive
    *
    * The file header is located at the beginning of compressed file data
    */
-  class FileRecord {
+  class LocalFileHeader {
+   public: 
     uint32_t singature;
     uint16_t version_to_extract;
     uint16_t general_purpose_flags;
@@ -42,6 +54,10 @@ class ApkArchive {
     // This is just a pointer to the next byte and does not 
     // constitute the actual length
     char file_name[0];
+  } BYTE_ALIGNED;
+  
+  class EndOfCentralDir {
+  
   } BYTE_ALIGNED;
  
  // Private data members
@@ -107,6 +123,8 @@ class ApkArchive {
     
     return static_cast<size_t>(file_size);
   }
+  
+  
    
  // Public member functions
  public:
