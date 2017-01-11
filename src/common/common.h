@@ -52,5 +52,6 @@ extern const char *error_str_table[];
 #define OUT_OF_MEMORY (error_str_table[3])
 #define ERROR_READ_FILE (error_str_table[4])
 #define FILE_TOO_SMALL (error_str_table[5])
+#define NO_EOF_CENTRAL_DIR (error_str_table[6])
  
 #endif

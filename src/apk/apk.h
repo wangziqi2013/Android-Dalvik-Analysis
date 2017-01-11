@@ -100,6 +100,8 @@ class ApkArchive {
   // This one is kept as the current read position
   size_t read_offset;
   
+  EndOfCentralDir *eof_central_dir_p;
+  
   unsigned char *raw_data_p;
  
  // Private member functions
@@ -159,34 +161,36 @@ class ApkArchive {
    * Since we know the minimum size of the central record we could start
    * scanning from the last byte - minimum length of the EOF central record
    *
-   * Return nullptr is not found which is usually an error; Otherwise return
-   * a pointer to the location of the record
+   * This will set the member once it is found. Otherwise the data member will
+   * be set to nullptr
    */
-  void *ScanForEndOfCentralDir() {
-    const unsigned char *scan_begin = \
-      const_cast<const unsigned char *>(raw_data_p) + \
-      file_length - \
-      MINIMUM_ARCHIVE_LENGTH;
-    const EndOfCentralDir *eof_dir_p = \
-      reinterpret_cast<const EndOfCentralDir *>(scan_begin);
+  void ScanForEndOfCentralDir() {
+    unsigned char *scan_begin = \
+      raw_data_p + file_length - MINIMUM_ARCHIVE_LENGTH;
+    eof_central_dir_p = reinterpret_cast<EndOfCentralDir *>(scan_begin);
     
     // Do a byte-wise scan until the beginning
     while(scan_begin >= raw_data_p) {
-      if(eof_dir_p->signature != EOF_CENTRAL_DIR_SIGNATURE) {
+      if(eof_central_dir_p->singature != EOF_CENTRAL_DIR_SIGNATURE) {
         // If the comment length matches the actual length we have jumped then
         // we presume it is a valid EOF central record and return
-        if(scan_begin + eof_dir_p->comment_length + MINIMUM_ARCHIVE_LENGTH == \
+        if(scan_begin + \
+            eof_central_dir_p->comment_length + \
+            MINIMUM_ARCHIVE_LENGTH == \
            raw_data_p + file_length) {
-          return scan_begin;
+          return;
         }
       }
       
+      // Otherwise move one byte backward and retry
       scan_begin--;
-      eof_dir_p = reinterpret_cast<const EndOfCentralDir *>(scan_begin);
+      eof_central_dir_p = reinterpret_cast<EndOfCentralDir *>(scan_begin);
     }
     
     // If we have ever reached here just return because nothing was found
-    return nullptr;
+    eof_central_dir_p = nullptr;
+    
+    return;
   }
    
  // Public member functions
@@ -198,7 +202,8 @@ class ApkArchive {
    */
   ApkArchive(const std::string &p_filename) :
     file_name{p_filename},
-    read_offset{0UL} {
+    read_offset{0UL},
+    eof_central_dir_p{nullptr} {
     // Open the file as read and binary
     FILE *fp = fopen(file_name.c_str(), "rb");
     if(fp == nullptr) {
@@ -217,13 +222,22 @@ class ApkArchive {
       ReportError(OUT_OF_MEMORY); 
     }
     
-    size_t size_read = fread(raw_data_p, file_length, 1, fp);
+    size_t size_read = fread(raw_data_p, 1, file_length, fp);
     if(size_read != file_length) {
       ReportError(ERROR_READ_FILE, size_read); 
     }
     
     int close_ret = fclose(fp);
     assert(close_ret == 0);
+    
+    // Find end of central dir record first
+    ScanForEndOfCentralDir();
+    if(eof_central_dir_p == nullptr) {
+      ReportError(NO_EOF_CENTRAL_DIR); 
+    } else {
+      dbg_printf("Found end of central directory record @ %p\n", 
+                 eof_central_dir_p);
+    }
     
     return;
   }
