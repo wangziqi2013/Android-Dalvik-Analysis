@@ -10,4 +10,7 @@ const char *error_str_table[] = {
   "Error reading file. Size actually read: %lu\n",
   "The archive is too small. Size: %lu\n",
   "Did not find end of central directory record (invalid format?)\n",
+  "Multi-part archive file not supported (# of disks: %u)\n",
+  // This is general error message and carries a more specific reason string
+  "Corrupted archive: %s\n", 
 };

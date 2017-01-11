@@ -136,7 +136,14 @@ class ApkArchive {
   // This one is kept as the current read position
   size_t read_offset;
   
+  // This points to the last structure in the archive
   EndOfCentralDir *eof_central_dir_p;
+  
+  // This points to the first entry of central dir file header
+  // and it is an array
+  CentralDirFileHeader *central_dir_p;
+  // This is the number of central dirs
+  size_t central_dir_count;
   
   unsigned char *raw_data_p;
  
@@ -207,7 +214,7 @@ class ApkArchive {
     
     // Do a byte-wise scan until the beginning
     while(scan_begin >= raw_data_p) {
-      if(eof_central_dir_p->singature != RecordType::END_OF_CENTRAL_DIR) {
+      if(eof_central_dir_p->singature == RecordType::END_OF_CENTRAL_DIR) {
         // If the comment length matches the actual length we have jumped then
         // we presume it is a valid EOF central record and return
         if(scan_begin + \
@@ -228,6 +235,39 @@ class ApkArchive {
     
     return;
   }
+  
+  /*
+   * FindCentralDir() - Find the central directory and validate its contents
+   */
+  void FindCentralDir() {
+    // Do not support multi-part file
+    if(eof_central_dir_p->this_disk != 0 || \
+       eof_central_dir_p->total_disk != 0) {
+      ReportError(MULTI_PART_NOT_SUPPORTED, eof_central_dir_p->total_disk);
+    }
+    
+    // Both file counts must be the same otherwise we have inconsistency
+    if(eof_central_dir_p->this_disk_file_count != \
+       eof_central_dir_p->total_file_count) {
+      ReportError(CORRUPTED_ARCHIVE, "Inconsistent file count");
+    }
+    
+    // Fill in the central dir count and pointer
+    central_dir_count = eof_central_dir_p->total_file_count;
+    central_dir_p = \
+      reinterpret_cast<CentralDirFileHeader *>(
+        raw_data_p + eof_central_dir_p->central_dir_offset);
+    
+    // Verify that both the first and last one has a valid header
+    if((central_dir_p->signature != RecordType::CENTRAL_DIR_FILE_HEADER) || \
+        ((central_dir_p + central_dir_count)->signature != \
+         RecordType::CENTRAL_DIR_FILE_HEADER)) {
+      ReportError(CORRUPTED_ARCHIVE, 
+                  "Invalid central directory file header signature");
+    }
+    
+    return;
+  }
    
  // Public member functions
  public:
@@ -238,8 +278,11 @@ class ApkArchive {
    */
   ApkArchive(const std::string &p_filename) :
     file_name{p_filename},
+    file_length{0UL},
     read_offset{0UL},
-    eof_central_dir_p{nullptr} {
+    eof_central_dir_p{nullptr},
+    central_dir_p{nullptr},
+    central_dir_count{0UL} {
     // Open the file as read and binary
     FILE *fp = fopen(file_name.c_str(), "rb");
     if(fp == nullptr) {
@@ -274,6 +317,10 @@ class ApkArchive {
       dbg_printf("Found end of central directory record @ %p\n", 
                  eof_central_dir_p);
     }
+    
+    FindCentralDir();
+    dbg_printf("Found central directory record beginning @ %p\n",
+               central_dir_p);
     
     return;
   }
