@@ -7,5 +7,6 @@ const char *error_str_table[] = {
   "Error acquiring file size\n",
   "Error opening file: %s\n",
   "Out of memory\n",
-  "Error reading file: size %lu\n",
+  "Error reading file. Size actually read: %lu\n",
+  "The archive is too small. Size: %lu\n",
 };

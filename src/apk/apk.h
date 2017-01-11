@@ -83,7 +83,11 @@ class ApkArchive {
   // Make sure we aligned it properly
   static_assert(sizeof(EndOfCentralDir) == 22UL, 
                 "class EndOfCentralDir does not have correct length");
- 
+  
+  // All archive must be at least that long
+  static constexpr size_t MINIMUM_ARCHIVE_LENGTH = sizeof(EndOfCentralDir);
+  static constexpr uint32_t EOF_CENTRAL_DIR_SIGNATURE = 0x06054b50;
+  
  // Private data members
  private:
    
@@ -148,7 +152,42 @@ class ApkArchive {
     return static_cast<size_t>(file_size);
   }
   
-  
+  /*
+   * ScanForEndOfCentralDir() - Scan in the byte stream from the end to the 
+   *                            beginning for finding the end of central dir
+   *
+   * Since we know the minimum size of the central record we could start
+   * scanning from the last byte - minimum length of the EOF central record
+   *
+   * Return nullptr is not found which is usually an error; Otherwise return
+   * a pointer to the location of the record
+   */
+  void *ScanForEndOfCentralDir() {
+    const unsigned char *scan_begin = \
+      const_cast<const unsigned char *>(raw_data_p) + \
+      file_length - \
+      MINIMUM_ARCHIVE_LENGTH;
+    const EndOfCentralDir *eof_dir_p = \
+      reinterpret_cast<const EndOfCentralDir *>(scan_begin);
+    
+    // Do a byte-wise scan until the beginning
+    while(scan_begin >= raw_data_p) {
+      if(eof_dir_p->signature != EOF_CENTRAL_DIR_SIGNATURE) {
+        // If the comment length matches the actual length we have jumped then
+        // we presume it is a valid EOF central record and return
+        if(scan_begin + eof_dir_p->comment_length + MINIMUM_ARCHIVE_LENGTH == \
+           raw_data_p + file_length) {
+          return scan_begin;
+        }
+      }
+      
+      scan_begin--;
+      eof_dir_p = reinterpret_cast<const EndOfCentralDir *>(scan_begin);
+    }
+    
+    // If we have ever reached here just return because nothing was found
+    return nullptr;
+  }
    
  // Public member functions
  public:
@@ -166,7 +205,11 @@ class ApkArchive {
       ReportError(ERROR_OPEN_FILE, file_name.c_str());
     }
     
+    // File length must be at least longer to hold the file header
     file_length = GetFileLength(fp);
+    if(file_length <= MINIMUM_ARCHIVE_LENGTH) {
+      ReportError(FILE_TOO_SMALL, file_length);
+    }
     
     // Allocate a buffer to hold the entire file and then close it
     raw_data_p = new unsigned char[file_length];
