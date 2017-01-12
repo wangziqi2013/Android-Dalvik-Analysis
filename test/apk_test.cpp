@@ -22,6 +22,18 @@ void TestReadFileHeader() {
 }
 
 /*
+ * TestExtractAll() - Tests whether we could extract all files
+ */
+void TestExtractAll() {
+  _PrintTestName();
+  
+  ApkArchive apk{"./test.apk"};
+  apk.ExtractAll("./aaa");
+ 
+  return;
+}
+
+/*
  * TestMalformedFile() - Tests whether malformed file could be recognized
  */
 void TestMalformedFile() {
@@ -53,6 +65,7 @@ void ZlibVersionTest() {
 int main() {
   TestMalformedFile();
   TestReadFileHeader();
+  TestExtractAll();
   ZlibVersionTest();
   
   return 0; 

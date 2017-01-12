@@ -761,7 +761,7 @@ class ApkArchive {
       
       void *data = it.GetData();
       int fwrite_ret = fwrite(data, 1, it.GetUncompressedSize(), fp);
-      if(fwrite_ret != it.GetUncompressedSize()) {
+      if(static_cast<size_t>(fwrite_ret) != it.GetUncompressedSize()) {
         ReportError(ERROR_WRITE_FILE, it.GetFileName().GetString().c_str()); 
       }
       
@@ -784,26 +784,8 @@ class ApkArchive {
     while(it.IsEnd() == false) {
       std::string name = it.GetFileName().GetString();
       fprintf(stderr, "%s\n", name.c_str());
-      
-      if(it.GetCompressionMethod() != CompressionMethod::DEFLATE) {
-        printf("method = %u\n", (uint32_t)it.GetCompressionMethod());
-        
-        it++;
-        continue;  
-      }
-      
-      FILE *fp = fopen("speed_test.css", "wb");
-      assert(fp != nullptr);
-      
-      void *data = it.GetData();
-      fwrite(data, 1, it.GetUncompressedSize(), fp);
-      
-      fclose(fp);
-      delete[] (unsigned char *)data;
   
       it++;
-      
-      break;
     }
     
     return;
