@@ -37,6 +37,18 @@ class ApkArchive {
   };
   
   /*
+   * enum class CompressionMethod - Compression method recorded for each file
+   *
+   * Since it is stored as a two byte integer we also make it so here
+   */
+  enum class CompressionMethod : uint16_t {
+    // Data is not compressed
+    STORE = 0x0000,
+    // Use zlib to compress
+    DEFLATE = 0x0008,
+  };
+  
+  /*
    * class LocalFileHeader - This corresponds to the file record inside the APK 
    *                         archive
    *
@@ -47,7 +59,7 @@ class ApkArchive {
     RecordType signature;
     uint16_t version_to_extract;
     uint16_t general_purpose_flags;
-    uint16_t compression_method;
+    CompressionMethod compression_method;
     uint16_t modification_time;
     uint16_t modification_date;
     uint32_t crc32;
@@ -96,7 +108,7 @@ class ApkArchive {
     
     // The following are the same with those in local file header
     uint16_t general_purpose_flags;
-    uint16_t compression_method;
+    CompressionMethod compression_method;
     uint16_t modification_time;
     uint16_t modification_date;
     uint32_t crc32;
@@ -457,7 +469,7 @@ class ApkArchive {
     /*
      * GetCompressionMethod() - As name suggests
      */
-    inline uint16_t GetCompressionMethod() {
+    inline CompressionMethod GetCompressionMethod() {
       return header_p->compression_method; 
     }
     
@@ -522,13 +534,14 @@ class ApkArchive {
       assert(local_header_p->IsValid() == true);
       
       
-      if(local_header_p->compression_method == 0x0008) {
+      if(local_header_p->compression_method == CompressionMethod::DEFLATE) {
         // Here actual decompression is done
         Decompress(data, 
                    header_p->uncompressed_size, 
                    local_header_p->GetCompressedData(), 
                    header_p->compressed_size);
-      } else if(local_header_p->compression_method == 0x0000) {
+      } else if(local_header_p->compression_method == \
+                CompressionMethod::STORE) {
         assert(header_p->compressed_size == header_p->uncompressed_size);
         memcpy(data, 
                local_header_p->GetCompressedData(), 
@@ -621,13 +634,15 @@ class ApkArchive {
     Iterator it = Begin();
     
     while(it.IsEnd() == false) {
-      if(it.GetCompressionMethod() != 0x0008) {
+      std::string name = it.GetFileName().GetString();
+      fprintf(stderr, "%s\n", name.c_str());
+      
+      if(it.GetCompressionMethod() != CompressionMethod::DEFLATE) {
+        printf("method = %u\n", (uint32_t)it.GetCompressionMethod());
+        
+        it++;
         continue;  
       }
-      
-      std::string name = it.GetFileName().GetString();
-      
-      fprintf(stderr, "%s\n", name.c_str());
       
       FILE *fp = fopen("speed_test.css", "wb");
       assert(fp != nullptr);
