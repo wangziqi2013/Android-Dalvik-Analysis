@@ -257,6 +257,20 @@ class ApkArchive {
       
       return;
     }
+    
+    /*
+     * GetPtr() - Returns the string pointer
+     */
+    inline char *GetPtr() {
+      return p; 
+    }
+    
+    /*
+     * GetLength() - Returns the length of the string
+     */
+    inline size_t GetLength() {
+      return length; 
+    }
   };
   
  // Private data members
@@ -407,6 +421,14 @@ class ApkArchive {
     
     return;
   }
+  
+  /*
+   * SwitchToPath() - Switches to the path specified in the given path string
+   */
+  void SwitchToPath(StringWrapper s) {
+    size_t length = s.GetLength();
+    char *p = s.GetPtr(); 
+  }
  
  // Private iterator class (use Begin() to create one)
  private:
@@ -552,9 +574,6 @@ class ApkArchive {
       
       
       if(local_header_p->compression_method == CompressionMethod::DEFLATE) {
-        printf("local header = %ld, data = %ld\n", 
-               (char *)local_header_p - (char *)archive_p->raw_data_p,
-               (char *)local_header_p->GetCompressedData() - (char *)archive_p->raw_data_p);
         // Here actual decompression is done
         Decompress(data, 
                    header_p->uncompressed_size, 
@@ -646,6 +665,24 @@ class ApkArchive {
    */
   Iterator Begin() {
     return Iterator{this};
+  }
+  
+  /*
+   * ExtractAll() - Extarcts everything into destination
+   *
+   * If dest is nullptr then we just use current working directory and do not 
+   * switch
+   */
+  void ExtractAll(const char *dest) {
+    int ret;
+    
+    // If there is a destination then switch to there first
+    if(dest != nullptr) {
+      ret = chdir(dest);
+      if(ret != 0) {
+        ReportError(INVALID_DEST_PATH, dest); 
+      }
+    }
   }
   
   /*
