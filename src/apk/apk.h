@@ -96,6 +96,7 @@ class ApkArchive {
      *                       which is present if bit 3 in general purpose flag
      *                       is set
      */
+     /*
     inline DataDescriptor *GetDataDescriptor(size_t actual_data_size) {
       unsigned char *byte_offset = reinterpret_cast<unsigned char *>(this);
       return reinterpret_cast<DataDescriptor *>(
@@ -105,6 +106,7 @@ class ApkArchive {
                extra_field_length + \
                actual_data_size);
     }
+     */
     
     /*
      * GetCompressedData() - Returns a pointer to compressed data
@@ -537,7 +539,7 @@ class ApkArchive {
       // we could always finish this in one function call
       ret = inflate(&strm, Z_NO_FLUSH);
       if(ret != Z_STREAM_END) {
-        archive_p->ReportError(ERROR_INFLATE, ret); 
+        archive_p->ReportError(ERROR_INFLATE, ret, strm.msg); 
       }
       
       return;
