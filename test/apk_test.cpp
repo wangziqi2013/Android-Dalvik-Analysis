@@ -15,7 +15,8 @@ using namespace android_dalvik_analysis;
 void TestReadFileHeader() {
   _PrintTestName();
   
-  ApkArchive("./test.apk");
+  ApkArchive apk{"./test.apk"};
+  apk.DebugPrintAllFileName();
   
   try {
     ApkArchive("./corrupt.apk");
