@@ -28,7 +28,7 @@ void TestExtractAll() {
   _PrintTestName();
   
   ApkArchive apk{"./test.apk"};
-  apk.ExtractAll("./aaa");
+  apk.ExtractAll("./test_apk_root/actual_test/");
  
   return;
 }

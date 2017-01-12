@@ -408,6 +408,17 @@ class ApkArchive {
     
     size_t file_name_length = length - prev;
     
+    // This means we have a '\' or '/' at the end
+    // then need to check whether the last one is directory or file
+    if(file_name_length == 0) {
+      // The last one is folder so just return
+      if(open_file == false) {
+        return nullptr; 
+      } else {
+        ReportError(INVALID_FILE_PATH, s.GetString().c_str()); 
+      }
+    }
+    
     // One more char to contain '\0'
     char file_name[file_name_length + 1];
     memcpy(file_name, p + prev, file_name_length);
@@ -677,8 +688,14 @@ class ApkArchive {
     char dest_2[dest_length];
     memcpy(dest_2, dest, dest_length);
     
+    // Need to reset to this after finishing everything
+    char *cwd_before = FileUtility::GetCwd();
+    
     // If there is a destination then switch to there first
     SwitchToPath(StringWrapper{dest_2, dest_length}, false);
+    
+    // Need to reset to this after extracting each file
+    char *cwd_for_each = FileUtility::GetCwd();
     
     Iterator it = Begin();
     
@@ -695,8 +712,22 @@ class ApkArchive {
       fclose(fp);
       delete[] (unsigned char *)data;
   
+      int chdir_ret = chdir(cwd_for_each);
+      if(chdir_ret == -1) {
+        ReportError(ERROR_CHDIR, cwd_for_each);
+      }
+  
       it++;
     }
+    
+    int chdir_ret = chdir(cwd_before);
+    if(chdir_ret == -1) {
+      ReportError(ERROR_CHDIR, cwd_before);
+    }
+    
+    // These two are allocated on the heap and should be destroied here
+    delete[] cwd_for_each;
+    delete[] cwd_before;
     
     return; 
   }

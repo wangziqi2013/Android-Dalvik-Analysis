@@ -27,6 +27,7 @@ const char *error_str_table[] = {
   "Error writing to file: %s\n",
   "Error unlinking a regular file: %s\n",
   "Error reading current working directory (buffer size %d)\n",
+  "Invalid file path: %s\n",
 };
 
 /*

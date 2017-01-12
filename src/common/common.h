@@ -69,6 +69,7 @@ static void dummy(const char*, ...) {}
 #define ERROR_WRITE_FILE (error_str_table[17])
 #define ERROR_UNLINK (error_str_table[18])
 #define ERROR_GETCWD (error_str_table[19])
+#define INVALID_FILE_PATH (error_str_table[20])
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis {
@@ -208,8 +209,11 @@ class FileUtility {
       }
       
       // Try using current size first
-      int ret = getcwd(p, current_size);
-      if(ret == -1) {
+      // Note that here the interface changes slightly and there is an option
+      // for it to allocate from heap by the system, but this way we have really
+      // messy code with operator new/malloc() mixed together
+      char *ret = getcwd(p, current_size);
+      if(ret == nullptr) {
         // If the array is too small just double the size
         // and try again
         if(errno == ERANGE) {
