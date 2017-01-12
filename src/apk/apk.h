@@ -352,8 +352,8 @@ class ApkArchive {
     return;
   }
  
- // Public iterator class
- public:
+ // Private iterator class (use Begin() to create one)
+ private:
   
   /*
    * class Iterator - An encapsulation to archived files that allows pipelined
@@ -380,18 +380,18 @@ class ApkArchive {
      * IsEnd() - Whether we have reached the end of iteration
      */
     inline bool IsEnd() {
-      return header_p->IsValid();
+      return header_p->IsValid() == false;
     }
     
     /*
      * operator++ (prefix)
      */
     Iterator &operator++() {
-      CentralDirFileHeader *next_p = header_p->GetNext();
-      if(next_p->IsValid() == true) {
-        header_p = next_p;
+      // Cannot do this on an invalid iterator
+      if(IsEnd() == true) {
+        archive_p->ReportError(END_OF_ITERATION);
       } else {
-         archive_p->ReportError(END_OF_ITERATION);
+        header_p = header_p->GetNext();
       }
       
       return *this;
@@ -490,19 +490,24 @@ class ApkArchive {
   }  
   
   /*
+   * Begin() - Returns an iterator to the beginning of all file records
+   */
+  Iterator Begin() {
+    return Iterator{this};
+  }
+  
+  /*
    * DebugPrintAllFileName() - Prints out all files from the central dir as 
    *                           a debugging tool
    */
   void DebugPrintAllFileName() {
-    CentralDirFileHeader *header_p = central_dir_p;
-    for(size_t i = 0;i < central_dir_count;i++) {
-      assert(header_p->IsValid() == true);
+    Iterator it = Begin();
+    
+    while(it.IsEnd() == false) {
+      it.GetFileName().PrintToFile(stderr);
+      fputc('\n', stderr); 
       
-      StringWrapper s{header_p->file_name, header_p->file_name_length};
-      s.PrintToFile(stderr);
-      putchar('\n');
-      
-      header_p = header_p->GetNext(); 
+      it++;
     }
     
     return;
