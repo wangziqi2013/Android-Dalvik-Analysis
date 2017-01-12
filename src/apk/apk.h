@@ -210,6 +210,16 @@ class ApkArchive {
     {}
     
     /*
+     * GetString() - Returns a standard C++ string which copies data and 
+     *               maintains its own storage
+     *
+     * The return value is moved to avoid multiple data copy
+     */
+    std::string &&GetString() {
+      return std::move(std::string{length, p}); 
+    }
+    
+    /*
      * PrintToFile() - Prints to a file specified in argument
      */
     void PrintToFile(FILE *fp) {
@@ -468,10 +478,9 @@ class ApkArchive {
       }
       
       strm.avail_in = src_length;
-      strm.next_in = src;
-      
+      strm.next_in = static_cast<Bytef *>(src);
       strm.avail_out = dest_length;
-      strm.next_out = dest;
+      strm.next_out = static_cast<Bytef *>(dest);
       
       ret = inflate(&strm, Z_NO_FLUSH);
       if(ret != Z_STREAM_END) {
@@ -589,8 +598,12 @@ class ApkArchive {
     Iterator it = Begin();
     
     while(it.IsEnd() == false) {
-      it.GetFileName().PrintToFile(stderr);
+      StringWrapper name = it.GetFileName();
+      
+      name.PrintToFile(stderr);
       fputc('\n', stderr); 
+      
+      FILE *fp = fopen(std::string{name.})
       
       it++;
     }
