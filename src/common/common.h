@@ -69,7 +69,6 @@ static void dummy(const char*, ...) {}
 #define ERROR_WRITE_FILE (error_str_table[17])
 #define ERROR_UNLINK (error_str_table[18])
 #define ERROR_GETCWD (error_str_table[19])
-#define INVALID_FILE_PATH (error_str_table[20])
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis {

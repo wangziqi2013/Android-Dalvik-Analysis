@@ -381,7 +381,10 @@ class ApkArchive {
    *
    * If open_file is true then this function also opens a file for the last
    * path component. Otherwise it just treats the last component as a directory
-   * and return value is always nullptr
+   * and return value is always nullptr. 
+   *
+   * However if the path has a trailing '\' or '/' then it always return nullptr
+   * because it means the resulting object is a dir
    */
   FILE *SwitchToPath(StringWrapper s, bool open_file) {    
     size_t length = s.GetLength();
@@ -409,14 +412,10 @@ class ApkArchive {
     size_t file_name_length = length - prev;
     
     // This means we have a '\' or '/' at the end
-    // then need to check whether the last one is directory or file
+    // it is possible that this is a directory (on some platform
+    // dir is also recorded as a ZIP file); so just return nullptr
     if(file_name_length == 0) {
-      // The last one is folder so just return
-      if(open_file == false) {
-        return nullptr; 
-      } else {
-        ReportError(INVALID_FILE_PATH, s.GetString().c_str()); 
-      }
+      return nullptr;
     }
     
     // One more char to contain '\0'
@@ -701,20 +700,20 @@ class ApkArchive {
     
     while(it.IsEnd() == false) {      
       FILE *fp = SwitchToPath(it.GetFileName(), true);
-      assert(fp != nullptr);
-      
-      void *data = it.GetData();
-      int fwrite_ret = fwrite(data, 1, it.GetUncompressedSize(), fp);
-      if(static_cast<size_t>(fwrite_ret) != it.GetUncompressedSize()) {
-        ReportError(ERROR_WRITE_FILE, it.GetFileName().GetString().c_str()); 
-      }
-      
-      fclose(fp);
-      delete[] (unsigned char *)data;
-  
-      int chdir_ret = chdir(cwd_for_each);
-      if(chdir_ret == -1) {
-        ReportError(ERROR_CHDIR, cwd_for_each);
+      if(fp != nullptr) {
+        void *data = it.GetData();
+        int fwrite_ret = fwrite(data, 1, it.GetUncompressedSize(), fp);
+        if(static_cast<size_t>(fwrite_ret) != it.GetUncompressedSize()) {
+          ReportError(ERROR_WRITE_FILE, it.GetFileName().GetString().c_str()); 
+        }
+        
+        fclose(fp);
+        delete[] (unsigned char *)data;
+    
+        int chdir_ret = chdir(cwd_for_each);
+        if(chdir_ret == -1) {
+          ReportError(ERROR_CHDIR, cwd_for_each);
+        }
       }
   
       it++;
