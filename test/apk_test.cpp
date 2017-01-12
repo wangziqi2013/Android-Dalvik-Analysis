@@ -18,8 +18,18 @@ void TestReadFileHeader() {
   ApkArchive apk{"./test.apk"};
   apk.DebugPrintAllFileName();
   
+  return;
+}
+
+/*
+ * TestMalformedFile() - Tests whether malformed file could be recognized
+ */
+void TestMalformedFile() {
+  _PrintTestName();
+  
   try {
-    ApkArchive("./corrupt.apk");
+    // This would fail since there is no EOF central file record
+    ApkArchive apk("./corrupt.apk");
   } catch(int) {
     fprintf(stderr, "Successfully caught the exception\n"); 
     
@@ -27,11 +37,10 @@ void TestReadFileHeader() {
   } 
   
   assert(false);
-  
-  return;
 }
 
 int main() {
+  TestMalformedFile();
   TestReadFileHeader();
   
   return 0; 
