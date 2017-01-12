@@ -494,9 +494,15 @@ class ApkArchive {
         archive_p->ReportError(OUT_OF_MEMORY);  
       } 
       
+      // This is the local header and we need this to calculate pointer
+      // to compressed raw data
+      LocalFileHeader *local_header_p = header_p->GetLocalFileHeader(archive_p);
+      assert(local_header_p->IsValid() == true);
+      
+      // Here actual decompression is done
       Decompress(data, 
                  header_p->uncompressed_size, 
-                 , 
+                 local_header_p->GetCompressedData(), 
                  header_p->compressed_size);
       
       return static_cast<void *>(data);
