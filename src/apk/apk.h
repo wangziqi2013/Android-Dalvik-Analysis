@@ -5,9 +5,10 @@
 #define _APK_H
 
 #include <cstdarg>
-#include "common.h"
-
+#include <unistd.h>
 #include <zlib.h>
+
+#include "common.h"
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 
@@ -90,23 +91,6 @@ class ApkArchive {
     inline bool HasDescriptor() {
       return !!(general_purpose_flags & 0x0008);
     }
-    
-    /*
-     * GetDataDescriptor() - Returns a pointer to the data descriptor object
-     *                       which is present if bit 3 in general purpose flag
-     *                       is set
-     */
-     /*
-    inline DataDescriptor *GetDataDescriptor(size_t actual_data_size) {
-      unsigned char *byte_offset = reinterpret_cast<unsigned char *>(this);
-      return reinterpret_cast<DataDescriptor *>(
-               byte_offset + \
-               sizeof(LocalFileHeader) + \
-               file_name_length + \
-               extra_field_length + \
-               actual_data_size);
-    }
-     */
     
     /*
      * GetCompressedData() - Returns a pointer to compressed data
