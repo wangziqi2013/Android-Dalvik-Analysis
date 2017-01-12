@@ -25,6 +25,7 @@ const char *error_str_table[] = {
   "Error executing mkdir() on path: %s\n",
   "Error creating new file for write: %s\n",
   "Error writing to file: %s\n",
+  "Error unlinking a regular file: %s\n",
 };
 
 /*

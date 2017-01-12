@@ -67,6 +67,7 @@ static void dummy(const char*, ...) {}
 #define ERROR_MKDIR (error_str_table[15])
 #define ERROR_CREATE_FILE (error_str_table[16])
 #define ERROR_WRITE_FILE (error_str_table[17])
+#define ERROR_UNLINK (error_str_table[18])
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis {
@@ -126,6 +127,33 @@ class FileUtility {
   }
   
   /*
+   * CreateDir() - Creates a new dir under cwd
+   *
+   * If there is already a regular file with the same name dir creation would
+   * fail. Caller should guarantee the regular file is removed
+   */
+  inline static void CreateDir(const char *dir) {
+    int ret = mkdir(p + prev, S_IRUSR | S_IWUSR | S_IXUSR);
+    if(ret == -1) {
+      ReportError(ERROR_MKDIR, dir); 
+    }
+    
+    return;
+  }
+  
+  /*
+   * DeleteFile() - Deletes a file 
+   */
+  inline static void DeleteFile(const char *file_name) {
+    int ret = unlink(file_name);
+    if(ret == -1) {
+      ReportError(ERROR_UNLINK, file_name); 
+    }
+    
+    return;
+  }
+  
+  /*
    * CreateOrEnterDir() - Creates a new or enters an existing dir
    *
    * If a regular file with the same name is there then we just unlink the file
@@ -135,7 +163,29 @@ class FileUtility {
    * the new dir
    */
   static void CreateOrEnterDir(const char *dir) {
+    struct stat buf;
+    ret = stat(dir, &buf);
     
+    // If this happens either we make the dir or error and exit
+    if(ret == -1) {
+      // The entry does not exist, so just create one
+      if(errno == ENOENT) {
+        CreateDir(dir);
+        EnterDir(dir);
+      } else {
+        ReportError(ERROR_STAT, dir); 
+      }
+    } else if(S_ISDIR(buf.st_mode)) {
+      EnterDir(dir);
+    } else {
+      dbg_printf("Deleting regular file %s to create directory\n", dir);
+      
+      DeleteFile(dir);
+      CreateDir(dir);
+      EnterDir(dir);
+    }
+    
+    return;
   }
 };
 
