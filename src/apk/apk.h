@@ -400,7 +400,24 @@ class ApkArchive {
     return;
   }  
   
-  
+  /*
+   * DebugPrintAllFileName() - Prints out all files from the central dir as 
+   *                           a debugging tool
+   */
+  void DebugPrintAllFileName() {
+    CentralDirFileHeader *header_p = central_dir_p;
+    for(size_t i = 0;i < central_dir_count;i++) {
+      assert(header_p->signature == RecordType::CENTRAL_DIR_FILE_HEADER);
+      
+      StringWrapper s{header_p->file_name, header_p->file_name_length};
+      s.PrintToFile(stderr);
+      putchar('\n');
+      
+      header_p = header_p->GetNext(); 
+    }
+    
+    return;
+  } 
 };
 
 } // namespace android_dalvik_analysis {
