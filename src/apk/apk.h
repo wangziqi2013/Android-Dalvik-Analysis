@@ -92,6 +92,27 @@ class ApkArchive {
     uint32_t local_header_offset;
     
     char file_name[0];
+    
+    /*
+     * GetNext() - Returns the next central dir file header pointer
+     *
+     * Since the length of CentralDirFileHeader is not fixed length we need to
+     * compute the next byte offset manually using the length of variable length 
+     * fields recorded inside the object
+     */
+    inline CentralDirFileHeader *GetNext() {
+      // Take the address of the current pointer
+      // The compiler will use this to refer to the pointer on which we
+      // call this function so it is totally legal
+      unsigned char *byte_offset = reinterpret_cast<unsigned char *>(this);
+      
+      byte_offset += (file_name_length + \
+                      extra_field_length + \
+                      file_comment_length + \
+                      sizeof(CentralDirFileHeader));
+                      
+      return reinterpret_cast<CentralDirFileHeader *>(byte_offset);
+    }
   } BYTE_ALIGNED;
   
   static_assert(sizeof(CentralDirFileHeader) == 46UL, 
@@ -123,6 +144,47 @@ class ApkArchive {
   
   // All archive must be at least that long
   static constexpr size_t MINIMUM_ARCHIVE_LENGTH = sizeof(EndOfCentralDir);
+  
+  /*
+   * class StringWrapper - Wrapper to a string that this class has no ownership
+   *
+   * This class contains a pointer to externally allocated string and a size_t
+   * field to denote the size of the string.
+   *
+   * Ths string is not null-terminated and the handling of the string is 
+   * automatically taken care of
+   */
+  class StringWrapper {
+   private:
+    char *p;
+    size_t length;
+    
+   public:
+    
+    /*
+     * constructor
+     */
+    StringWrapper(char *p_p, size_t p_length) :
+      p{p_p},
+      length{p_length}
+    {}
+    
+    /*
+     * PrintToFile() - Prints to a file specified in argument
+     */
+    void PrintToFile(FILE *fp) {
+      // Print n - 1 characters first by putting a '\0' after it
+      char ch = p[length - 1];
+      p[length - 1] = '\0';
+      
+      fprintf(fp, "%s", p);
+      fputc(ch, fp);
+      
+      p[length - 1] = ch;
+      
+      return;
+    }
+  };
   
  // Private data members
  private:
@@ -272,23 +334,6 @@ class ApkArchive {
     
     return;
   }
-  
-  /*
-   * GetNextHeader() - Returns the next central dir file header pointer
-   *
-   * Since the length of CentralDirFileHeader is not fixed length we need to
-   * compute the next byte offset manually using the length of variable length 
-   * fields recorded inside the object
-   */
-  inline CentralDirFileHeader *GetNextHeader(CentralDirFileHeader *header_p) {
-    unsigned char *byte_offset = reinterpret_cast<unsigned char *>(header_p);
-    
-    byte_offset += (header_p->file_name_length + \
-                    header_p->extra_field_length + \
-                    header_p->file_comment_length);
-                    
-    return reinterpret_cast<CentralDirFileHeader *>(byte_offset);
-  }
    
  // Public member functions
  public:
@@ -355,9 +400,7 @@ class ApkArchive {
     return;
   }  
   
-  void DebugPrintAllFileName() {
-    
-  } 
+  
 };
 
 } // namespace android_dalvik_analysis {
