@@ -14,6 +14,11 @@
 #include <thread>
 #include <cstdint> 
 #include <cstring>
+#include <cstdarg>
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define DEBUG_PRINT
 
@@ -44,18 +49,6 @@ static void dummy(const char*, ...) {}
 // This is used to cancel alignment for structures
 #define BYTE_ALIGNED __attribute__((packed, aligned(1)))
 
-namespace wangziqi2013 {
-namespace android_dalvik_analysis {
-  
-// Error string table
-extern const char *error_str_table[];
-
-// Report error on stderr and then throw exception
-void ReportError(const char *format, ...);
-
-}
-}
-
 #define ERROR_SEEK_FILE (error_str_table[0])
 #define ERROR_ACQUIRE_FILE_SIZE (error_str_table[1])
 #define ERROR_OPEN_FILE (error_str_table[2])
@@ -74,5 +67,56 @@ void ReportError(const char *format, ...);
 #define ERROR_MKDIR (error_str_table[15])
 #define ERROR_CREATE_FILE (error_str_table[16])
 #define ERROR_WRITE_FILE (error_str_table[17])
+
+namespace wangziqi2013 {
+namespace android_dalvik_analysis {
+  
+// Error string table
+extern const char *error_str_table[];
+
+// Report error on stderr and then throw exception
+void ReportError(const char *format, ...);
+
+/*
+ * class FileUtility - Common file system functionalities
+ */
+class FileUtility {
+ public:
+   
+  /*
+   * GetFileLength() - Returns the size of an opened file
+   *
+   * This function does not stat(), and instead it moves the file pointer to
+   * end end and then reports current offset
+   */
+  static size_t GetFileLength(FILE *fp) {
+    assert(fp != nullptr);
+    
+    int seek_ret;
+    
+    seek_ret = fseek(fp, 0, SEEK_END);
+    if(seek_ret != 0) {
+      ReportError(ERROR_SEEK_FILE); 
+    }
+    
+    long file_size = ftell(fp);
+    if(file_size == -1L) {
+      ReportError(ERROR_ACQUIRE_FILE_SIZE); 
+    }
+    
+    // Do not forget to set it back to the beginning of file
+    seek_ret = fseek(fp, 0, SEEK_SET);
+    if(seek_ret != 0) {
+      ReportError(ERROR_SEEK_FILE); 
+    }
+    
+    return static_cast<size_t>(file_size);
+  }
+  
+  //static void 
+};
+
+}
+}
  
 #endif

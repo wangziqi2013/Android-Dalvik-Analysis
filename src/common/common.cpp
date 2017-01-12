@@ -44,13 +44,5 @@ void ReportError(const char *format, ...) {
   return;
 }
 
-/*
- * class FileUtility - Common file system functionalities
- */
-class FileUtility {
- public:
-  static void 
-};
-
 }
 }

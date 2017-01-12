@@ -4,12 +4,7 @@
 #ifndef _APK_H
 #define _APK_H
 
-#include <cstdarg>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <zlib.h>
-
 #include "common.h"
 
 namespace wangziqi2013 {
@@ -489,7 +484,7 @@ class ApkArchive {
     Iterator &operator++() {
       // Cannot do this on an invalid iterator
       if(IsEnd() == true) {
-        archive_p->ReportError(END_OF_ITERATION);
+        ReportError(END_OF_ITERATION);
       } else {
         header_p = header_p->GetNext();
       }
@@ -555,7 +550,7 @@ class ApkArchive {
       
       ret = inflateInit2(&strm, -MAX_WBITS);
       if (ret != Z_OK) {
-        archive_p->ReportError(ERROR_INIT_ZLIB);
+        ReportError(ERROR_INIT_ZLIB);
       }
       
       strm.avail_in = src_length;
@@ -567,7 +562,7 @@ class ApkArchive {
       // we could always finish this in one function call
       ret = inflate(&strm, Z_NO_FLUSH);
       if(ret != Z_STREAM_END) {
-        archive_p->ReportError(ERROR_INFLATE, ret, strm.msg); 
+        ReportError(ERROR_INFLATE, ret, strm.msg); 
       }
       
       // Free resources used by the stream
@@ -586,7 +581,7 @@ class ApkArchive {
       // Allocate as many that number of bytes 
       void *data = new unsigned char[header_p->uncompressed_size];
       if(data == nullptr) {
-        archive_p->ReportError(OUT_OF_MEMORY);  
+        ReportError(OUT_OF_MEMORY);  
       } 
       
       // This is the local header and we need this to calculate pointer
@@ -608,7 +603,7 @@ class ApkArchive {
                local_header_p->GetCompressedData(), 
                header_p->compressed_size);
       } else {
-        archive_p->ReportError(
+        ReportError(
           UNKNOWN_COMPRESSION_METHOD, 
           static_cast<uint16_t>(header_p->compression_method));
       }
@@ -638,7 +633,7 @@ class ApkArchive {
     }
     
     // File length must be at least longer to hold the file header
-    file_length = GetFileLength(fp);
+    file_length = FileUtility::GetFileLength(fp);
     if(file_length <= MINIMUM_ARCHIVE_LENGTH) {
       ReportError(FILE_TOO_SMALL, file_length);
     }
