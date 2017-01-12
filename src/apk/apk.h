@@ -80,6 +80,18 @@ class ApkArchive {
     }
     
     /*
+     * HasDescriptor() - Whether the file header has a descriptor after data 
+     *                   field
+     *
+     * The existence of a descriptor indicates that CRC, compressed size and 
+     * decompressed size are not known yet, and could be found in the data
+     * descriptor structure immediately after the data
+     */
+    inline bool HasDescriptor() {
+      return !!(general_purpose_flags & 0x0008);
+    }
+    
+    /*
      * GetCompressedData() - Returns a pointer to compressed data
      */
     void *GetCompressedData() {
@@ -506,6 +518,8 @@ class ApkArchive {
       strm.avail_out = dest_length;
       strm.next_out = static_cast<Bytef *>(dest);
       
+      // Since we always deflate the entire data segment in one pass,
+      // we could always finish this in one function call
       ret = inflate(&strm, Z_NO_FLUSH);
       if(ret != Z_STREAM_END) {
         archive_p->ReportError(ERROR_INFLATE, ret); 
@@ -534,6 +548,9 @@ class ApkArchive {
       
       
       if(local_header_p->compression_method == CompressionMethod::DEFLATE) {
+        printf("local header = %ld, data = %ld\n", 
+               (char *)local_header_p - (char *)archive_p->raw_data_p,
+               (char *)local_header_p->GetCompressedData() - (char *)archive_p->raw_data_p);
         // Here actual decompression is done
         Decompress(data, 
                    header_p->uncompressed_size, 
