@@ -450,6 +450,13 @@ class ApkArchive {
     }
     
     /*
+     * GetUncompressedSize() - As name suggests
+     */
+    inline size_t GetUncompressedSize() {
+      return header_p->uncompressed_size;
+    }
+    
+    /*
      * operator* - Returns the string name
      */
     inline StringWrapper operator*() {
@@ -598,13 +605,19 @@ class ApkArchive {
     Iterator it = Begin();
     
     while(it.IsEnd() == false) {
-      StringWrapper name = it.GetFileName();
+      std::string name = it.GetName().GetString();
       
-      name.PrintToFile(stderr);
-      fputc('\n', stderr); 
+      fprintf(stderr, "%s\n", name.c_str());
       
-      FILE *fp = fopen(std::string{name.})
+      FILE *fp = fopen(name.c_str(), "wb");
+      assert(fp != nullptr);
       
+      void *data = it.GetData();
+      fwrite(data, 1, it.GetUncompressedSize(), fp);
+      
+      fclose(fp);
+      delete[] (unsigned char *)data;
+  
       it++;
     }
     
