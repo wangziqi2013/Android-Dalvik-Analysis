@@ -481,7 +481,7 @@ class ApkArchive {
     }
     
     /*
-     * Decompress() - Use DEFLATE algorithm to decompress the data
+     * Decompress() - Call zlib routine to decompress the data
      */
     void Decompress(void *dest, 
                     size_t dest_length, 
@@ -507,9 +507,8 @@ class ApkArchive {
       strm.next_out = static_cast<Bytef *>(dest);
       
       ret = inflate(&strm, Z_NO_FLUSH);
-      printf("ret = %d\n", ret);
       if(ret != Z_STREAM_END) {
-        archive_p->ReportError(ERROR_INFLATE); 
+        archive_p->ReportError(ERROR_INFLATE, ret); 
       }
       
       return;
@@ -547,7 +546,9 @@ class ApkArchive {
                local_header_p->GetCompressedData(), 
                header_p->compressed_size);
       } else {
-        assert(false); 
+        archive_p->ReportError(
+          UNKNOWN_COMPRESSION_METHOD, 
+          static_cast<uint16_t>(header_p->compression_method));
       }
       
       return static_cast<void *>(data);

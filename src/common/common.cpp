@@ -15,5 +15,6 @@ const char *error_str_table[] = {
   "Corrupted archive: %s\n", 
   "Iterator has passed the end of iteration\n",
   "Failed to initialize zlib\n",
-  "Error decompressing data using zlib\n",
+  "Error decompressing data using zlib (errno %d)\n",
+  "Unknown compression method: %u\n",
 };
