@@ -68,6 +68,7 @@ static void dummy(const char*, ...) {}
 #define ERROR_CREATE_FILE (error_str_table[16])
 #define ERROR_WRITE_FILE (error_str_table[17])
 #define ERROR_UNLINK (error_str_table[18])
+#define ERROR_GETCWD (error_str_table[19])
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis {
@@ -186,6 +187,46 @@ class FileUtility {
     }
     
     return;
+  }
+  
+  /*
+   * GetCwd() - Returns the current working directory in a heap allocated
+   *            chunk of memory
+   *
+   * The caller is responsible for freeing the memory
+   */
+  static char *GetCwd() {
+    static constexpr int DEFAULT_CWD_SIZE = 1024;
+    
+    // We double this everytime it is not large enough 
+    int current_size = DEFAULT_CWD_SIZE;
+    
+    do {
+      char *p = new char[current_size];
+      if(p == nullptr) {
+        ReportError(OUT_OF_MEMORY); 
+      }
+      
+      // Try using current size first
+      int ret = getcwd(p, current_size);
+      if(ret == -1) {
+        // If the array is too small just double the size
+        // and try again
+        if(errno == ERANGE) {
+          delete[] p;
+          current_size *= 2;
+          
+          continue;
+        } else {
+          ReportError(ERROR_GETCWD, current_size); 
+        }
+      } else {
+        return p; 
+      }
+    } while(1);
+    
+    assert(false);
+    return nullptr;
   }
 };
 
