@@ -44,8 +44,17 @@ static void dummy(const char*, ...) {}
 // This is used to cancel alignment for structures
 #define BYTE_ALIGNED __attribute__((packed, aligned(1)))
 
+namespace wangziqi2013 {
+namespace android_dalvik_analysis {
+  
 // Error string table
 extern const char *error_str_table[];
+
+// Report error on stderr and then throw exception
+void ReportError(const char *format, ...);
+
+}
+}
 
 #define ERROR_SEEK_FILE (error_str_table[0])
 #define ERROR_ACQUIRE_FILE_SIZE (error_str_table[1])

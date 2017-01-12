@@ -1,6 +1,9 @@
 
 #include "common.h"
 
+namespace wangziqi2013 {
+namespace android_dalvik_analysis {
+
 // This is used to reduce duplicated and scattered error messages
 const char *error_str_table[] = {
   "Cannot seek file\n",
@@ -23,3 +26,31 @@ const char *error_str_table[] = {
   "Error creating new file for write: %s\n",
   "Error writing to file: %s\n",
 };
+
+/*
+ * ReportError() - Reports error on stderr and then throw exception
+ *
+ * The exception thrown is always integer 0 and this function does not return
+ */
+void ReportError(const char *format, ...) {
+  va_list args;
+  
+  va_start (args, format);
+  vfprintf (stderr, format, args);
+  va_end (args);
+  
+  throw 0;
+  
+  return;
+}
+
+/*
+ * class FileUtility - Common file system functionalities
+ */
+class FileUtility {
+ public:
+  static void 
+};
+
+}
+}

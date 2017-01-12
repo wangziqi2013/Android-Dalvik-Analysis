@@ -302,53 +302,6 @@ class ApkArchive {
  private:
   
   /*
-   * ReportError() - Reports error on stderr and then throw exception
-   *
-   * The exception thrown is always integer 0 and this function does not return
-   */
-  void ReportError(const char *format, ...) {
-    va_list args;
-    
-    va_start (args, format);
-    vfprintf (stderr, format, args);
-    va_end (args);
-    
-    throw 0;
-    
-    return;
-  }
-  
-  /*
-   * GetFileLength() - Returns the size of an opened file
-   *
-   * This function does not stat(), and instead it moves the file pointer to
-   * end end and then reports current offset
-   */
-  size_t GetFileLength(FILE *fp) {
-    assert(fp != nullptr);
-    
-    int seek_ret;
-    
-    seek_ret = fseek(fp, 0, SEEK_END);
-    if(seek_ret != 0) {
-      ReportError(ERROR_SEEK_FILE); 
-    }
-    
-    long file_size = ftell(fp);
-    if(file_size == -1L) {
-      ReportError(ERROR_ACQUIRE_FILE_SIZE); 
-    }
-    
-    // Do not forget to set it back to the beginning of file
-    seek_ret = fseek(fp, 0, SEEK_SET);
-    if(seek_ret != 0) {
-      ReportError(ERROR_SEEK_FILE); 
-    }
-    
-    return static_cast<size_t>(file_size);
-  }
-  
-  /*
    * ScanForEndOfCentralDir() - Scan in the byte stream from the end to the 
    *                            beginning for finding the end of central dir
    *
