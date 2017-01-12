@@ -56,5 +56,7 @@ extern const char *error_str_table[];
 #define MULTI_PART_NOT_SUPPORTED (error_str_table[7])
 #define CORRUPTED_ARCHIVE (error_str_table[8])
 #define END_OF_ITERATION (error_str_table[9])
+#define ERROR_INIT_ZLIB (error_str_table[10])
+#define ERROR_INFLATE (error_str_table[11])
  
 #endif

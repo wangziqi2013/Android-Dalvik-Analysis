@@ -426,6 +426,41 @@ class ApkArchive {
     }
     
     /*
+     * Decompress() - Use DEFLATE algorithm to decompress the data
+     */
+    void Decompress(void *dest, 
+                    size_t dest_length, 
+                    void *src, 
+                    size_t src_length) {
+      z_stream strm;
+      int ret;
+      
+      strm.zalloc = Z_NULL;
+      strm.zfree = Z_NULL;
+      strm.opaque = Z_NULL;
+      strm.avail_in = 0;
+      strm.next_in = Z_NULL;
+      
+      ret = inflateInit(&strm);
+      if (ret != Z_OK) {
+        archive_p->ReportError(ERROR_INIT_ZLIB);
+      }
+      
+      strm.avail_in = src_length;
+      strm.next_in = src;
+      
+      strm.avail_out = dest_length;
+      strm.next_out = dest;
+      
+      ret = inflate(&strm, Z_NO_FLUSH);
+      if(ret != Z_STREAM_END) {
+        archive_p->ReportError(ERROR_INFLATE); 
+      }
+      
+      return;
+    }
+    
+    /*
      * GetData() - Decompresses data and return it in an allocated array
      *
      * This function will allocate the array on the heap, and caller is
@@ -438,7 +473,10 @@ class ApkArchive {
         archive_p->ReportError(OUT_OF_MEMORY);  
       } 
       
-      
+      Decompress(data, 
+                 header_p->uncompressed_size, 
+                 , 
+                 header_p->compressed_size);
       
       return static_cast<void *>(data);
     }
