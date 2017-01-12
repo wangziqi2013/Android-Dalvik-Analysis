@@ -455,6 +455,13 @@ class ApkArchive {
     }
     
     /*
+     * GetCompressionMethod() - As name suggests
+     */
+    inline uint16_t GetCompressionMethod() {
+      return header_p->compression_method; 
+    }
+    
+    /*
      * operator* - Returns the string name
      */
     inline StringWrapper operator*() {
@@ -488,6 +495,7 @@ class ApkArchive {
       strm.next_out = static_cast<Bytef *>(dest);
       
       ret = inflate(&strm, Z_NO_FLUSH);
+      printf("ret = %d\n", ret);
       if(ret != Z_STREAM_END) {
         archive_p->ReportError(ERROR_INFLATE); 
       }
@@ -513,11 +521,21 @@ class ApkArchive {
       LocalFileHeader *local_header_p = header_p->GetLocalFileHeader(archive_p);
       assert(local_header_p->IsValid() == true);
       
-      // Here actual decompression is done
-      Decompress(data, 
-                 header_p->uncompressed_size, 
-                 local_header_p->GetCompressedData(), 
-                 header_p->compressed_size);
+      
+      if(local_header_p->compression_method == 0x0008) {
+        // Here actual decompression is done
+        Decompress(data, 
+                   header_p->uncompressed_size, 
+                   local_header_p->GetCompressedData(), 
+                   header_p->compressed_size);
+      } else if(local_header_p->compression_method == 0x0000) {
+        assert(header_p->compressed_size == header_p->uncompressed_size);
+        memcpy(data, 
+               local_header_p->GetCompressedData(), 
+               header_p->compressed_size);
+      } else {
+        assert(false); 
+      }
       
       return static_cast<void *>(data);
     }
@@ -603,11 +621,15 @@ class ApkArchive {
     Iterator it = Begin();
     
     while(it.IsEnd() == false) {
+      if(it.GetCompressionMethod() != 0x0008) {
+        continue;  
+      }
+      
       std::string name = it.GetFileName().GetString();
       
       fprintf(stderr, "%s\n", name.c_str());
       
-      FILE *fp = fopen(name.c_str(), "wb");
+      FILE *fp = fopen("speed_test.css", "wb");
       assert(fp != nullptr);
       
       void *data = it.GetData();

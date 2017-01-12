@@ -13,6 +13,7 @@
 #include <atomic>
 #include <thread>
 #include <cstdint> 
+#include <cstring>
 
 #define DEBUG_PRINT
 
