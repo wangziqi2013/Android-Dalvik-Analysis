@@ -66,6 +66,18 @@ class ApkArchive {
     inline bool IsValid() const {
       return signature == RecordType::LOCAL_FILE_HEADER;
     }
+    
+    /*
+     * GetCompressedData() - Returns a pointer to compressed data
+     */
+    void *GetCompressedData() {
+      unsigned char *byte_offset = reinterpret_cast<unsigned char *>(this);
+      return reinterpret_cast<void *>( \
+               byte_offset + \
+               sizeof(LocalFileHeader) + \
+               file_name_length + \
+               extra_field_length);
+    }
   } BYTE_ALIGNED;
   
   // Make sure we aligned it properly
