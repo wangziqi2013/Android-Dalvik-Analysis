@@ -334,6 +334,32 @@ class ApkArchive {
     
     return;
   }
+ 
+ // Public iterator class
+ public:
+  
+  /*
+   * class Iterator - An encapsulation to archived files that allows pipelined
+   *                  decompression/usage of these files
+   */
+  class Iterator {
+   private:
+    // We complete information with this pointer about the file
+    // however, we could not do reverse iteration because the structure is 
+    // a variable length one 
+    CentralDirFileHeader *header_p;
+    ApkArchive *archive_p;
+    
+   public:
+     
+    /*
+     * Constructor
+     */
+    Iterator(ApkArchive *p_archive_p) :
+      header_p{p_archive_p->central_dir_p},
+      archive_p{p_archive_p}
+    {}
+  };
    
  // Public member functions
  public:
