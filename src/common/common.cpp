@@ -13,4 +13,5 @@ const char *error_str_table[] = {
   "Multi-part archive file not supported (# of disks: %u)\n",
   // This is general error message and carries a more specific reason string
   "Corrupted archive: %s\n", 
+  "Iterator has passed the end of iteration\n", 
 };

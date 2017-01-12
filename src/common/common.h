@@ -55,5 +55,6 @@ extern const char *error_str_table[];
 #define NO_EOF_CENTRAL_DIR (error_str_table[6])
 #define MULTI_PART_NOT_SUPPORTED (error_str_table[7])
 #define CORRUPTED_ARCHIVE (error_str_table[8])
+#define END_OF_ITERATION (error_str_table[9])
  
 #endif

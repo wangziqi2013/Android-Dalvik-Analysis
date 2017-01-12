@@ -17,6 +17,9 @@ namespace android_dalvik_analysis {
  * inside the class
  */
 class ApkArchive {
+  // Iterator needs to access its internal states
+  friend class Iterator;
+  
  // class definitions
  private:
   
@@ -377,9 +380,40 @@ class ApkArchive {
      * operator++ (prefix)
      */
     Iterator &operator++() {
-      //if()
+      CentralDirFileHeader *next_p = header_p->GetNext();
+      if(next_p->IsValid() == true) {
+        header_p = next_p;
+      } else {
+         archive_p->ReportError(END_OF_ITERATION);
+      }
       
       return *this;
+    }
+    
+    /*
+     * operator++ (postfix)
+     */
+    Iterator operator++(int) {
+      Iterator old_it = *this;
+      
+      // Call prefix version here to actually do the job
+      ++(*this);
+      
+      return old_it;
+    }
+    
+    /*
+     * GetFileName() - Returns a StringWrapper as the file name
+     */
+    inline StringWrapper GetFileName() {
+      return StringWrapper{header_p->file_name, header_p->file_name_length};
+    }
+    
+    /*
+     * operator* - Returns the string name
+     */
+    inline StringWrapper operator*() {
+      return GetFileName();
     }
   };
    
