@@ -60,6 +60,9 @@ extern const char *error_str_table[];
 #define ERROR_INIT_ZLIB (error_str_table[10])
 #define ERROR_INFLATE (error_str_table[11])
 #define UNKNOWN_COMPRESSION_METHOD (error_str_table[12])
-#define INVALID_DEST_PATH (error_str_table[13])
+#define ERROR_CHDIR (error_str_table[13])
+#define ERROR_STAT (error_str_table[14])
+#define ERROR_MKDIR (error_str_table[15])
+#define ERROR_CREATE_FILE (error_str_table[16])
  
 #endif

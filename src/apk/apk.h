@@ -6,6 +6,8 @@
 
 #include <cstdarg>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <zlib.h>
 
 #include "common.h"
@@ -424,10 +426,77 @@ class ApkArchive {
   
   /*
    * SwitchToPath() - Switches to the path specified in the given path string
+   *
+   * This function returns an opened file descriptor with "wb" mode such that
+   * the caller could manipulate that file. If the file already exists then it
+   * will be overwritten.
+   *
+   * It is required that s contains both a path and a file name.
    */
-  void SwitchToPath(StringWrapper s) {
+  FILE *SwitchToPath(StringWrapper s) {
+    int ret;
+    
     size_t length = s.GetLength();
     char *p = s.GetPtr(); 
+    size_t offset = 0UL;
+    
+    // This is after the last path element we have processed
+    size_t prev = 0UL;
+    
+    // While we are reading valid characters in the string
+    while(offset < length) {
+      char ch = p[offset];
+      if(ch == '\\' || ch == '/') {
+        p[offset] = '\0';
+        
+        struct stat buf;
+        ret = stat(p[prev], &buf);
+        
+        // If this happens either we make the dir or error and exit
+        if(ret == -1) {
+          // The entry does not exist, so just create one
+          if(errno == ENOENT) {
+            int mkdir_ret = mkdir(p[prev]);
+            if(mkdir_ret == -1) {
+              ErportError(ERROR_MKDIR, p[prev]); 
+            }
+          } else {
+            ReportError(ERROR_STAT, p[prev]); 
+          }
+        } else if(S_ISDIR(buf.st_mode)) {
+          int mkdir_ret = mkdir(p[prev]);
+          if(mkdir_ret == -1) {
+            ErportError(ERROR_MKDIR, p[prev]); 
+          }
+        }
+        
+        // When it falls to here we must have known there is an dir
+        int chdir_ret = chdir(p[prev]);
+        if(chdir_ret == -1) {
+          ErportError(ERROR_CHDIR, p[prev]); 
+        }
+        
+        prev = offset + 1;
+        p[offset] = ch; 
+      } // if we have seen a path separator
+      
+      offset++;
+    }
+    
+    size_t file_name_length = length - prev;
+    
+    // One more char to contain '\0'
+    char file_name[file_name_length + 1];
+    memcpy(file_name, p + prev, file_name_length);
+    file_name[file_name_length] = '\0';
+    
+    // All existing contents will be overwritten by default
+    FILE *fp = fopen(file_name, "wb");
+    if(fp == nullptr) {
+      ReportError(ERROR_CREATE_FILE, file_name); 
+    }
+    
+    return fp;
   }
  
  // Private iterator class (use Begin() to create one)
@@ -680,7 +749,7 @@ class ApkArchive {
     if(dest != nullptr) {
       ret = chdir(dest);
       if(ret != 0) {
-        ReportError(INVALID_DEST_PATH, dest); 
+        ReportError(ERROR_CHDIR, dest); 
       }
     }
   }

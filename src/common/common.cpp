@@ -17,5 +17,8 @@ const char *error_str_table[] = {
   "Failed to initialize zlib\n",
   "Error decompressing data using zlib (errno: %d; reason: %s)\n",
   "Unknown compression method: %u\n",
-  "Invalid destination path: %s\n",
+  "Error executing chdir() on path: %s\n",
+  "Error executing stat() on path: %s\n",
+  "Error executing mkdir() on path: %s\n",
+  "Error creating new file for write: %s\n",
 };
