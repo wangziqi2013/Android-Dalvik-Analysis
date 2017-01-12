@@ -64,5 +64,6 @@ extern const char *error_str_table[];
 #define ERROR_STAT (error_str_table[14])
 #define ERROR_MKDIR (error_str_table[15])
 #define ERROR_CREATE_FILE (error_str_table[16])
+#define ERROR_WRITE_FILE (error_str_table[17])
  
 #endif

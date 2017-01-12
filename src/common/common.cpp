@@ -21,4 +21,5 @@ const char *error_str_table[] = {
   "Error executing stat() on path: %s\n",
   "Error executing mkdir() on path: %s\n",
   "Error creating new file for write: %s\n",
+  "Error writing to file: %s\n",
 };

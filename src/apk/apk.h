@@ -450,30 +450,30 @@ class ApkArchive {
         p[offset] = '\0';
         
         struct stat buf;
-        ret = stat(p[prev], &buf);
+        ret = stat(p + prev, &buf);
         
         // If this happens either we make the dir or error and exit
         if(ret == -1) {
           // The entry does not exist, so just create one
           if(errno == ENOENT) {
-            int mkdir_ret = mkdir(p[prev]);
+            int mkdir_ret = mkdir(p + prev, S_IRUSR | S_IWUSR | S_IXUSR);
             if(mkdir_ret == -1) {
-              ErportError(ERROR_MKDIR, p[prev]); 
+              ReportError(ERROR_MKDIR, p + prev); 
             }
           } else {
-            ReportError(ERROR_STAT, p[prev]); 
+            ReportError(ERROR_STAT, p + prev); 
           }
         } else if(S_ISDIR(buf.st_mode)) {
-          int mkdir_ret = mkdir(p[prev]);
+          int mkdir_ret = mkdir(p + prev, S_IRUSR | S_IWUSR | S_IXUSR);
           if(mkdir_ret == -1) {
-            ErportError(ERROR_MKDIR, p[prev]); 
+            ReportError(ERROR_MKDIR, p + prev); 
           }
         }
         
         // When it falls to here we must have known there is an dir
-        int chdir_ret = chdir(p[prev]);
+        int chdir_ret = chdir(p + prev);
         if(chdir_ret == -1) {
-          ErportError(ERROR_CHDIR, p[prev]); 
+          ReportError(ERROR_CHDIR, p + prev); 
         }
         
         prev = offset + 1;
@@ -752,6 +752,26 @@ class ApkArchive {
         ReportError(ERROR_CHDIR, dest); 
       }
     }
+    
+    Iterator it = Begin();
+    
+    while(it.IsEnd() == false) {      
+      FILE *fp = SwitchToPath(it.GetFileName());
+      assert(fp != nullptr);
+      
+      void *data = it.GetData();
+      int fwrite_ret = fwrite(data, 1, it.GetUncompressedSize(), fp);
+      if(fwrite_ret != it.GetUncompressedSize()) {
+        ReportError(ERROR_WRITE_FILE, it.GetFileName().GetString().c_str()); 
+      }
+      
+      fclose(fp);
+      delete[] (unsigned char *)data;
+  
+      it++;
+    }
+    
+    return; 
   }
   
   /*
