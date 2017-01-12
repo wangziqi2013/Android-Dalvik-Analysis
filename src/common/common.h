@@ -49,35 +49,37 @@ static void dummy(const char*, ...) {}
 // This is used to cancel alignment for structures
 #define BYTE_ALIGNED __attribute__((packed, aligned(1)))
 
-#define ERROR_SEEK_FILE (error_str_table[0])
-#define ERROR_ACQUIRE_FILE_SIZE (error_str_table[1])
-#define ERROR_OPEN_FILE (error_str_table[2])
-#define OUT_OF_MEMORY (error_str_table[3])
-#define ERROR_READ_FILE (error_str_table[4])
-#define FILE_TOO_SMALL (error_str_table[5])
-#define NO_EOF_CENTRAL_DIR (error_str_table[6])
-#define MULTI_PART_NOT_SUPPORTED (error_str_table[7])
-#define CORRUPTED_ARCHIVE (error_str_table[8])
-#define END_OF_ITERATION (error_str_table[9])
-#define ERROR_INIT_ZLIB (error_str_table[10])
-#define ERROR_INFLATE (error_str_table[11])
-#define UNKNOWN_COMPRESSION_METHOD (error_str_table[12])
-#define ERROR_CHDIR (error_str_table[13])
-#define ERROR_STAT (error_str_table[14])
-#define ERROR_MKDIR (error_str_table[15])
-#define ERROR_CREATE_FILE (error_str_table[16])
-#define ERROR_WRITE_FILE (error_str_table[17])
-#define ERROR_UNLINK (error_str_table[18])
-#define ERROR_GETCWD (error_str_table[19])
-
 namespace wangziqi2013 {
 namespace android_dalvik_analysis {
   
+enum ErrorCode : uint64_t {
+  ERROR_SEEK_FILE = 0, 
+  ERROR_ACQUIRE_FILE_SIZE,
+  ERROR_OPEN_FILE,
+  OUT_OF_MEMORY,
+  ERROR_READ_FILE,
+  FILE_TOO_SMALL = 5,
+  NO_EOF_CENTRAL_DIR,
+  MULTI_PART_NOT_SUPPORTED,
+  CORRUPTED_ARCHIVE,
+  END_OF_ITERATION,
+  ERROR_INIT_ZLIB = 10,
+  ERROR_INFLATE,
+  UNKNOWN_COMPRESSION_METHOD,
+  ERROR_CHDIR,
+  ERROR_STAT,
+  ERROR_MKDIR = 15,
+  ERROR_CREATE_FILE,
+  ERROR_WRITE_FILE,
+  ERROR_UNLINK,
+  ERROR_GETCWD,
+};
+
 // Error string table
 extern const char *error_str_table[];
 
 // Report error on stderr and then throw exception
-void ReportError(const char *format, ...);
+void ReportError(enum ErrorCode code, ...);
 
 /*
  * class FileUtility - Common file system functionalities

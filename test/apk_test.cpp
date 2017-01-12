@@ -42,8 +42,8 @@ void TestMalformedFile() {
   try {
     // This would fail since there is no EOF central file record
     ApkArchive apk("./corrupt.apk");
-  } catch(int) {
-    fprintf(stderr, "Successfully caught the exception\n"); 
+  } catch(ErrorCode code) {
+    fprintf(stderr, "Successfully caught the exception (code = %lu)\n", code); 
     
     return;
   } 

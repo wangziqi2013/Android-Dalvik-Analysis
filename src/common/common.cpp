@@ -34,14 +34,14 @@ const char *error_str_table[] = {
  *
  * The exception thrown is always integer 0 and this function does not return
  */
-void ReportError(const char *format, ...) {
+void ReportError(enum ErrorCode code, ...) {
   va_list args;
   
-  va_start (args, format);
-  vfprintf (stderr, format, args);
+  va_start (args, code);
+  vfprintf (stderr, error_str_table[code], args);
   va_end (args);
   
-  throw 0;
+  throw code;
   
   return;
 }

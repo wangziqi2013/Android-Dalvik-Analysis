@@ -700,6 +700,9 @@ class ApkArchive {
     
     while(it.IsEnd() == false) {      
       FILE *fp = SwitchToPath(it.GetFileName(), true);
+      
+      // It is possible that we just recovered an entry for directory
+      // and in this case nullptr is returned
       if(fp != nullptr) {
         void *data = it.GetData();
         int fwrite_ret = fwrite(data, 1, it.GetUncompressedSize(), fp);
