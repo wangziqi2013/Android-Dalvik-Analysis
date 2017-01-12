@@ -212,11 +212,9 @@ class ApkArchive {
     /*
      * GetString() - Returns a standard C++ string which copies data and 
      *               maintains its own storage
-     *
-     * The return value is moved to avoid multiple data copy
      */
-    std::string &&GetString() {
-      return std::move(std::string{length, p}); 
+    inline std::string GetString() {
+      return std::string{p, length}; 
     }
     
     /*
@@ -605,7 +603,7 @@ class ApkArchive {
     Iterator it = Begin();
     
     while(it.IsEnd() == false) {
-      std::string name = it.GetName().GetString();
+      std::string name = it.GetFileName().GetString();
       
       fprintf(stderr, "%s\n", name.c_str());
       
