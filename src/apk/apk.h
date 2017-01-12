@@ -379,11 +379,11 @@ class ApkArchive {
    * the caller could manipulate that file. If the file already exists then it
    * will be overwritten.
    *
-   * It is required that s contains both a path and a file name.
+   * If open_file is true then this function also opens a file for the last
+   * path component. Otherwise it just treats the last component as a directory
+   * and return value is always nullptr
    */
-  FILE *SwitchToPath(StringWrapper s) {
-    int ret;
-    
+  FILE *SwitchToPath(StringWrapper s, bool open_file) {    
     size_t length = s.GetLength();
     char *p = s.GetPtr(); 
     size_t offset = 0UL;
@@ -397,32 +397,7 @@ class ApkArchive {
       if(ch == '\\' || ch == '/') {
         p[offset] = '\0';
         
-        struct stat buf;
-        ret = stat(p + prev, &buf);
-        
-        // If this happens either we make the dir or error and exit
-        if(ret == -1) {
-          // The entry does not exist, so just create one
-          if(errno == ENOENT) {
-            int mkdir_ret = mkdir(p + prev, S_IRUSR | S_IWUSR | S_IXUSR);
-            if(mkdir_ret == -1) {
-              ReportError(ERROR_MKDIR, p + prev); 
-            }
-          } else {
-            ReportError(ERROR_STAT, p + prev); 
-          }
-        } else if(S_ISDIR(buf.st_mode)) {
-          int mkdir_ret = mkdir(p + prev, S_IRUSR | S_IWUSR | S_IXUSR);
-          if(mkdir_ret == -1) {
-            ReportError(ERROR_MKDIR, p + prev); 
-          }
-        }
-        
-        // When it falls to here we must have known there is an dir
-        int chdir_ret = chdir(p + prev);
-        if(chdir_ret == -1) {
-          ReportError(ERROR_CHDIR, p + prev); 
-        }
+        FileUtility::CreateOrEnterDir(p + prev); 
         
         prev = offset + 1;
         p[offset] = ch; 
@@ -438,10 +413,16 @@ class ApkArchive {
     memcpy(file_name, p + prev, file_name_length);
     file_name[file_name_length] = '\0';
     
-    // All existing contents will be overwritten by default
-    FILE *fp = fopen(file_name, "wb");
-    if(fp == nullptr) {
-      ReportError(ERROR_CREATE_FILE, file_name); 
+    FILE *fp = nullptr;
+    
+    if(open_file == true) {
+      // All existing contents will be overwritten by default
+      fp = fopen(file_name, "wb");
+      if(fp == nullptr) {
+        ReportError(ERROR_CREATE_FILE, file_name); 
+      }
+    } else {
+      FileUtility::CreateOrEnterDir(file_name);
     }
     
     return fp;
@@ -690,21 +671,19 @@ class ApkArchive {
    * If dest is nullptr then we just use current working directory and do not 
    * switch
    */
-  void ExtractAll(const char *dest) {
-    int ret;
+  void ExtractAll(const char *dest) {    
+    // Need to make a copy of dest because we will modify it
+    size_t dest_length = strlen(dest);
+    char dest_2[dest_length];
+    memcpy(dest_2, dest, dest_length);
     
     // If there is a destination then switch to there first
-    if(dest != nullptr) {
-      ret = chdir(dest);
-      if(ret != 0) {
-        ReportError(ERROR_CHDIR, dest); 
-      }
-    }
+    SwitchToPath(StringWrapper{dest_2, dest_length}, false);
     
     Iterator it = Begin();
     
     while(it.IsEnd() == false) {      
-      FILE *fp = SwitchToPath(it.GetFileName());
+      FILE *fp = SwitchToPath(it.GetFileName(), true);
       assert(fp != nullptr);
       
       void *data = it.GetData();

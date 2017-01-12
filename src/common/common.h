@@ -133,7 +133,7 @@ class FileUtility {
    * fail. Caller should guarantee the regular file is removed
    */
   inline static void CreateDir(const char *dir) {
-    int ret = mkdir(p + prev, S_IRUSR | S_IWUSR | S_IXUSR);
+    int ret = mkdir(dir, S_IRUSR | S_IWUSR | S_IXUSR);
     if(ret == -1) {
       ReportError(ERROR_MKDIR, dir); 
     }
@@ -164,7 +164,7 @@ class FileUtility {
    */
   static void CreateOrEnterDir(const char *dir) {
     struct stat buf;
-    ret = stat(dir, &buf);
+    int ret = stat(dir, &buf);
     
     // If this happens either we make the dir or error and exit
     if(ret == -1) {
