@@ -132,6 +132,15 @@ class ApkArchive {
     inline bool IsValid() const {
       return signature == RecordType::CENTRAL_DIR_FILE_HEADER;
     }
+    
+    /*
+     * GetLocalFileHeader() - Returns the local file header pointer 
+     *                        corresponding to this entry
+     */
+    LocalFileHeader *GetLocalFileHeader(ApkArchive *archive_p) {
+      return reinterpret_cast<LocalFileHeader *>( \
+               archive_p->raw_data_p + local_header_offset);
+    }
   } BYTE_ALIGNED;
   
   static_assert(sizeof(CentralDirFileHeader) == 46UL, 
