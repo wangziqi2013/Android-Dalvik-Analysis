@@ -7,6 +7,8 @@
 #include <cstdarg>
 #include "common.h"
 
+#include <zlib.h>
+
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 
 
@@ -421,6 +423,24 @@ class ApkArchive {
      */
     inline StringWrapper operator*() {
       return GetFileName();
+    }
+    
+    /*
+     * GetData() - Decompresses data and return it in an allocated array
+     *
+     * This function will allocate the array on the heap, and caller is
+     * responsible for freeing the memory after using it 
+     */
+    void *GetData() {
+      // Allocate as many that number of bytes 
+      void *data = new unsigned char[header_p->uncompressed_size];
+      if(data == nullptr) {
+        archive_p->ReportError(OUT_OF_MEMORY);  
+      } 
+      
+      
+      
+      return static_cast<void *>(data);
     }
   };
    

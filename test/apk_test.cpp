@@ -39,9 +39,21 @@ void TestMalformedFile() {
   assert(false);
 }
 
+/*
+ * ZlibVersionTest() - As name suggests 
+ */
+void ZlibVersionTest() {
+  _PrintTestName();
+  
+  dbg_printf("ZLib version: %s\n", zlibVersion());
+  
+  return;
+}
+
 int main() {
   TestMalformedFile();
   TestReadFileHeader();
+  ZlibVersionTest();
   
   return 0; 
 }
