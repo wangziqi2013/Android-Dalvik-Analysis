@@ -113,7 +113,30 @@ class FileUtility {
     return static_cast<size_t>(file_size);
   }
   
-  //static void 
+  /*
+   * EnterDir() - Changes current working directory to the specified dir
+   */
+  inline static void EnterDir(const char *dir) {
+    int ret = chdir(dir);
+    if(ret == -1) {
+      ReportError(ERROR_CHDIR, dir); 
+    }
+    
+    return;
+  }
+  
+  /*
+   * CreateOrEnterDir() - Creates a new or enters an existing dir
+   *
+   * If a regular file with the same name is there then we just unlink the file
+   * and then create new dir
+   *
+   * This function always work under cwd. After new entry is created it enters
+   * the new dir
+   */
+  static void CreateOrEnterDir(const char *dir) {
+    
+  }
 };
 
 }
