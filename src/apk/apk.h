@@ -377,6 +377,13 @@ class ApkArchive {
     {}
     
     /*
+     * IsEnd() - Whether we have reached the end of iteration
+     */
+    inline bool IsEnd() {
+      return header_p->IsValid();
+    }
+    
+    /*
      * operator++ (prefix)
      */
     Iterator &operator++() {
