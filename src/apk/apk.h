@@ -525,7 +525,7 @@ class ApkArchive {
       strm.avail_in = 0;
       strm.next_in = Z_NULL;
       
-      ret = inflateInit(&strm);
+      ret = inflateInit2(&strm, -MAX_WBITS);
       if (ret != Z_OK) {
         archive_p->ReportError(ERROR_INIT_ZLIB);
       }
@@ -541,6 +541,9 @@ class ApkArchive {
       if(ret != Z_STREAM_END) {
         archive_p->ReportError(ERROR_INFLATE, ret, strm.msg); 
       }
+      
+      // Free resources used by the stream
+      inflateEnd(&strm);
       
       return;
     }
@@ -689,6 +692,8 @@ class ApkArchive {
       delete[] (unsigned char *)data;
   
       it++;
+      
+      break;
     }
     
     return;
