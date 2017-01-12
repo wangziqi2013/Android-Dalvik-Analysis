@@ -39,7 +39,7 @@ class ApkArchive {
    */
   class LocalFileHeader {
    public: 
-    RecordType singature;
+    RecordType signature;
     uint16_t version_to_extract;
     uint16_t general_purpose_flags;
     uint16_t compression_method;
@@ -54,6 +54,13 @@ class ApkArchive {
     // This is just a pointer to the next byte and does not 
     // constitute the actual length
     char file_name[0];
+    
+    /*
+     * IsValid() - Verifies the signature
+     */
+    inline bool IsValid() const {
+      return signature == RecordType::LOCAL_FILE_HEADER;
+    }
   } BYTE_ALIGNED;
   
   // Make sure we aligned it properly
@@ -112,6 +119,13 @@ class ApkArchive {
                       sizeof(CentralDirFileHeader));
                       
       return reinterpret_cast<CentralDirFileHeader *>(byte_offset);
+    }
+    
+    /*
+     * IsValid() - Verifies the signature
+     */
+    inline bool IsValid() const {
+      return signature == RecordType::CENTRAL_DIR_FILE_HEADER;
     }
   } BYTE_ALIGNED;
   
@@ -327,7 +341,7 @@ class ApkArchive {
         raw_data_p + eof_central_dir_p->central_dir_offset);
     
     // Verify that both the first and last one has a valid header
-    if((central_dir_p->signature != RecordType::CENTRAL_DIR_FILE_HEADER)) {
+    if(central_dir_p->IsValid() == false) {
       ReportError(CORRUPTED_ARCHIVE, 
                   "Invalid central directory file header signature");
     }
@@ -344,9 +358,8 @@ class ApkArchive {
    */
   class Iterator {
    private:
-    // We complete information with this pointer about the file
-    // however, we could not do reverse iteration because the structure is 
-    // a variable length one 
+    // Must keep it because the structure is not fixed length and therefore
+    // we could not get the pointer using an offset
     CentralDirFileHeader *header_p;
     ApkArchive *archive_p;
     
@@ -359,6 +372,15 @@ class ApkArchive {
       header_p{p_archive_p->central_dir_p},
       archive_p{p_archive_p}
     {}
+    
+    /*
+     * operator++ (prefix)
+     */
+    Iterator &operator++() {
+      //if()
+      
+      return *this;
+    }
   };
    
  // Public member functions
@@ -433,7 +455,7 @@ class ApkArchive {
   void DebugPrintAllFileName() {
     CentralDirFileHeader *header_p = central_dir_p;
     for(size_t i = 0;i < central_dir_count;i++) {
-      assert(header_p->signature == RecordType::CENTRAL_DIR_FILE_HEADER);
+      assert(header_p->IsValid() == true);
       
       StringWrapper s{header_p->file_name, header_p->file_name_length};
       s.PrintToFile(stderr);
