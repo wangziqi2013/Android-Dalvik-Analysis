@@ -55,6 +55,33 @@ class BinaryXml {
     uint32_t string_offset;
     uint32_t style_offset;
   } BYTE_ALIGNED;
+  
+ // Private data memver
+ private: 
+ 
+  // This points to an external buffer that does not belong to this class
+  unsigned char *raw_data_p;
+  
+  // This is the length of the data buffer
+  size_t length;
+  
+ public:
+  
+  /*
+   * Constructor
+   */
+  BinaryXml(unsigned char *p_raw_data_p, size_t p_length) :
+    raw_data_p{p_raw_data_p},
+    length{p_length} {
+    return;  
+  }
+  
+  /*
+   * Destructor
+   */
+  ~BinaryXml() {
+    return;
+  }
 };
 
 } // namespace wangziqi2013
