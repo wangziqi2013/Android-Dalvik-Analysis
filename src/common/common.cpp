@@ -34,6 +34,7 @@ const char *error_str_table[] = {
   
   // 20
   "Error parsing XML: Unexpected start of a new XML document\n",
+  "Error parsing resource chunk header: Unknown chunk type (%u)\n",
 };
 
 /*

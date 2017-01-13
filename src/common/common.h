@@ -75,7 +75,8 @@ enum ErrorCode : uint64_t {
   ERROR_GETCWD,
   
   // The following are related to parsing binary XML
-  UNEXPECTED_START_OF_XML,
+  UNEXPECTED_START_OF_XML = 20,
+  UNKNOWN_CHUNK_TYPE,
 };
 
 // Error string table

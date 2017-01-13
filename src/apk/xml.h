@@ -132,6 +132,14 @@ class BinaryXml {
   }
   
   /*
+   * ParseStringPool() - Parses the string pool and constructs the string 
+   *                     pool object
+   */
+  void ParseStringPool() {
+    
+  }
+  
+  /*
    * ParseNext() - Central scheduling function that acts as a state machine and 
    *               calls sorresponding routine based on its type in the common 
    *               header
@@ -143,15 +151,29 @@ class BinaryXml {
    * called.
    */
   CommonHeader *ParseNext(CommonHeader *next_header_p) {
-    CommonHeader  
+    assert(next_header_p != nullptr);
+    
+    // The return value is the next header pointer (hopefully)
+    CommonHeader *ret_header_p = \
+      TypeUtility::Advance(next_header_p, next_header_p->total_size);
+    
     switch(next_header_p->type) {
-      // This has already been done
       case XML_DOCUMENT: {
-        if(xml_header_p != nullptr) {
-          ReportError(UNEXPECTED_START_OF_XML);
-        }
+        // The header needs to be validated outside this function 
+        ReportError(UNEXPECTED_START_OF_XML);
+        break;
+      } 
+      case STRING_POOL: {
+        ParseStringPool();
+      } 
+      default: {
+        ReportError(UNKNOWN_CHUNK_TYPE, 
+                    static_cast<uint32_t>(next_header_p->type)); 
+        break;
       }
     } // switch type
+    
+    return ret_header_p;
   }
 };
 
