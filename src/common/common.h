@@ -73,6 +73,9 @@ enum ErrorCode : uint64_t {
   ERROR_WRITE_FILE,
   ERROR_UNLINK,
   ERROR_GETCWD,
+  
+  // The following are related to parsing binary XML
+  UNEXPECTED_START_OF_XML,
 };
 
 // Error string table
@@ -232,6 +235,32 @@ class FileUtility {
     
     assert(false);
     return nullptr;
+  }
+};
+
+/*
+ * class TypeCast - Helper class to cast types without writing too much code
+ *
+ * This class is just a syntactic sugar in a sense that it does not generate 
+ * any real code. It only interacts with the type system during compilation
+ */
+class TypeUtility {
+ public: 
+ 
+  /*
+   * Advance() - Moves a pointer either forward by some bytes
+   */
+  template<typename T>
+  T *Advance(T *ptr, size_t offset) {
+    return reinterpret_cast<T *>((reinterpret_cast<uint8_t *>(ptr) + offset));
+  }
+  
+  /*
+   * Retract() - Moves a pointer backward by some bytes
+   */
+  template<typename T>
+  T *Retract(T *ptr, size_t offset) {
+    return reinterpret_cast<T *>((reinterpret_cast<uint8_t *>(ptr) - offset));
   }
 };
 

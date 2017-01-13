@@ -100,26 +100,58 @@ class BinaryXml {
   /*
    * VerifyXmlHeader() - Verifies the beginning of the document
    *
-   * If the format is not current/unknown then return false and no exception
-   * is thrown; Otherwise return true and the 
+   * If the format is not current/unknown then return nullptr. Otherwise
+   * the next byte after the XML header (which is of known length)
+   *
+   * Note that this function will set xml_header_p if it returns true. After 
+   * this returns there could not be any XML header type until the parsing
+   * finishes
    */
-  bool VerifyXmlHeader() {
+  CommonHeader *VerifyXmlHeader() {
     // XML header begins at the first byte of the data 
     xml_header_p = reinterpret_cast<XmlHeader *>(raw_data_p);
     
     // All three fields could be determiend so we just compare value
     // in the data with expected value
     if(xml_header_p->type != XML_DOCUMENT) {
-      return false; 
+      return nullptr; 
     } else if(xml_header_p->header_length != sizeof(XmlHeader)) {
-      return false;      
+      return nullptr;      
     } else if(xml_header_p->total_length != length) {
       // We require that the entire document is part of the XML
       // Otherwise we are unable to decode the rest of it
-      return false; 
+      return nullptr; 
     } else {
-      return true; 
+      // Return the next byte and cast it as common header for later parsing
+      return reinterpret_cast<CommonHeader *>(
+               TypeUtility::Advance(xml_header, sizeof(XmlHeader))); 
     }
+    
+    asset(false);
+    return false;
+  }
+  
+  /*
+   * ParseNext() - Central scheduling function that acts as a state machine and 
+   *               calls sorresponding routine based on its type in the common 
+   *               header
+   *
+   * This function returns the first byte after the current chunk
+   * 
+   * If parsing fails because of unparsable data an integer exception will 
+   * be thrown. It is assumed that the verification function has not yet been
+   * called.
+   */
+  CommonHeader *ParseNext(CommonHeader *next_header_p) {
+    CommonHeader  
+    switch(next_header_p->type) {
+      // This has already been done
+      case XML_DOCUMENT: {
+        if(xml_header_p != nullptr) {
+          ReportError(UNEXPECTED_START_OF_XML);
+        }
+      }
+    } // switch type
   }
 };
 
