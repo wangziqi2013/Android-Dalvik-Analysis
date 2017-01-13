@@ -18,6 +18,9 @@ $(BUILD)/test_suite.o: $(TEST)/test_suite.cpp $(TEST)/test_suite.h
 $(BUILD)/apk.o: $(SRC)/apk/apk.cpp $(SRC)/apk/apk.h
 	g++ -c $(CXX_FLAG) $(SRC)/apk/apk.cpp -o $(BUILD)/apk.o
 
+$(BUILD)/xml.o: $(SRC)/apk/xml.cpp $(SRC)/apk/xml.h
+	g++ -c $(CXX_FLAG) $(SRC)/apk/xml.cpp -o $(BUILD)/xml.o
+
 prepare:
 	mkdir -p bin
 	mkdir -p build
