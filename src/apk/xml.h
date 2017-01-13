@@ -40,6 +40,21 @@ class BinaryXml {
     // If this equals header size then it is an indication of empty data
     uint32_t total_size;
   } BYTE_ALIGNED;
+  
+  /*
+   * class StringPoolHeader - This class represents the string pool header
+   */
+  class StringPoolHeader {
+   public:
+    // Use this to decide chunk length
+    CommonHeader common_header;
+    
+    uint32_t string_count;
+    uint32_t style_count;
+    uint32_t flags;
+    uint32_t string_offset;
+    uint32_t style_offset;
+  } BYTE_ALIGNED;
 };
 
 } // namespace wangziqi2013
