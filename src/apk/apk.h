@@ -713,19 +713,13 @@ class ApkArchive {
         fclose(fp);
         delete[] (unsigned char *)data;
     
-        int chdir_ret = chdir(cwd_for_each);
-        if(chdir_ret == -1) {
-          ReportError(ERROR_CHDIR, cwd_for_each);
-        }
+        FileUtility::EnterDir(cwd_for_each);
       }
   
       it++;
     }
     
-    int chdir_ret = chdir(cwd_before);
-    if(chdir_ret == -1) {
-      ReportError(ERROR_CHDIR, cwd_before);
-    }
+    FileUtility::EnterDir(cwd_before);
     
     // These two are allocated on the heap and should be destroied here
     delete[] cwd_for_each;
