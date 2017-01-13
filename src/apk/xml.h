@@ -39,7 +39,13 @@ class BinaryXml {
     // The total size of the chunk including the header
     // If this equals header size then it is an indication of empty data
     uint32_t total_size;
+    
+    // This points to the next field
+    unsigned char next[0];
   } BYTE_ALIGNED;
+  
+  // These two are equivalent
+  using XmlHeader = CommonHeader;
   
   /*
    * class StringPoolHeader - This class represents the string pool header
@@ -54,6 +60,9 @@ class BinaryXml {
     uint32_t flags;
     uint32_t string_offset;
     uint32_t style_offset;
+    
+    // This points to the next field
+    unsigned char next[0];
   } BYTE_ALIGNED;
   
  // Private data memver
@@ -65,6 +74,10 @@ class BinaryXml {
   // This is the length of the data buffer
   size_t length;
   
+  // This points to the valid document header if there is one
+  // Otherwise set to nullptr
+  XmlHeader *xml_header_p;
+  
  public:
   
   /*
@@ -72,7 +85,8 @@ class BinaryXml {
    */
   BinaryXml(unsigned char *p_raw_data_p, size_t p_length) :
     raw_data_p{p_raw_data_p},
-    length{p_length} {
+    length{p_length},
+    xml_header_p{nullptr} {
     return;  
   }
   
@@ -81,6 +95,31 @@ class BinaryXml {
    */
   ~BinaryXml() {
     return;
+  }
+  
+  /*
+   * VerifyXmlHeader() - Verifies the beginning of the document
+   *
+   * If the format is not current/unknown then return false and no exception
+   * is thrown; Otherwise return true and the 
+   */
+  bool VerifyXmlHeader() {
+    // XML header begins at the first byte of the data 
+    xml_header_p = reinterpret_cast<XmlHeader *>(raw_data_p);
+    
+    // All three fields could be determiend so we just compare value
+    // in the data with expected value
+    if(xml_header_p->type != XML_DOCUMENT) {
+      return false; 
+    } else if(xml_header_p->header_length != sizeof(XmlHeader)) {
+      return false;      
+    } else if(xml_header_p->total_length != length) {
+      // We require that the entire document is part of the XML
+      // Otherwise we are unable to decode the rest of it
+      return false; 
+    } else {
+      return true; 
+    }
   }
 };
 
