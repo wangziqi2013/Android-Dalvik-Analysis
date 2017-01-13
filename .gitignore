@@ -34,3 +34,4 @@ bin
 *.apk
 *.log
 test_*
+*.swp
