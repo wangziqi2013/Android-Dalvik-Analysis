@@ -93,6 +93,13 @@ class BinaryXml {
     // in this format there are two such bytes with replicated values
     // (more precisely they are UTF-8 and UTF-16 length respectively)
     bool is_utf8;
+    
+    /*
+     * AppendToBuffer() - Appends the string at a given index to the buffer
+     */
+    void AppendToBuffer(int index, Buffer *buffer_p) {
+      
+    }
   };
   
  // Private data memver

@@ -331,6 +331,27 @@ class Buffer {
   }
   
   /*
+   * AppendByte() - Appends only a byte to the buffer
+   *
+   * This is more efficient since it takes less effort to determine whether a
+   * expand is needed and also to copy the char data
+   */
+  void AppendByte(unsigned char byte) {
+    // If the buffer is full just expand to twice the size
+    // of the original one
+    if(current_length == length) {
+      Expand(length << 1);
+    }
+    
+    assert(current_length < length);
+    
+    p_data[current_length] = byte;
+    current_length++;
+    
+    return;
+  }
+  
+  /*
    * Append() - Append bytes after the current location
    *
    * This function might trigger Oversize() operation if requested size
