@@ -62,9 +62,6 @@ class BinaryXml {
     uint32_t string_offset;
     uint32_t style_offset;
     
-    // This points to the next field
-    unsigned char next[0];
-    
     /*
      * enum class Flags - The meaning of individual bits in the flag
      */

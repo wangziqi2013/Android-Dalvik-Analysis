@@ -14,10 +14,9 @@ using namespace android_dalvik_analysis;
  * TestStringPool() - Tests whether StringPool works and whether we could
  *                    print strings correctly
  */
-void TestStringPool() {
+void TestStringPool(const char *file_name) {
   _PrintTestName();
   
-  const char file_name[] = "AndroidManifest.xml";
   size_t length;
   unsigned char *data = FileUtility::LoadFile(file_name, &length);
   
@@ -33,7 +32,10 @@ void TestStringPool() {
 }
  
 int main() {
-  TestStringPool();
+  // This is UTF-16
+  TestStringPool("AndroidManifest.xml");
+  // This is UTF-8
+  TestStringPool("fragment_edit_dns.xml");
   
   return 0; 
 }
