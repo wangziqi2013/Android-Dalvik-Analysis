@@ -303,6 +303,7 @@ class BinaryXml {
       } 
       case ChunkType::STRING_POOL: {
         ParseStringPool(next_header_p);
+        break;
       } 
       default: {
         ReportError(UNKNOWN_CHUNK_TYPE, 
@@ -324,6 +325,7 @@ class BinaryXml {
       
       fprintf(stderr, "string %lu: ", i);
       string_pool.AppendToBuffer(i, &buffer);
+      buffer.WriteToFile(stderr);
       fprintf(stderr, "\n");
     }
     
