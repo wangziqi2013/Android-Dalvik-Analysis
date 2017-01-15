@@ -77,6 +77,7 @@ enum ErrorCode : uint64_t {
   // The following are related to parsing binary XML
   UNEXPECTED_START_OF_XML = 20,
   UNKNOWN_CHUNK_TYPE,
+  ERROR_FLUSH_FILE,
 };
 
 // Error string table
@@ -338,7 +339,7 @@ class Buffer {
   void Append(void *p, size_t request_length) {
     size_t resize_length = length;
     while(current_length + request_length > resize_length) {
-      resize_length = length * 2;
+      resize_length <<= 1;
     }
     
     // If there is a resize then just do it here
@@ -355,6 +356,31 @@ class Buffer {
     // Should not change this before the potential resize() because 
     // then resize might copy more data then expected
     current_length += request_length;
+    
+    return;
+  }
+  
+  /*
+   * WriteToFile() - Flushes all contents to a file and clear buffer
+   *
+   * This function will flush the buffer, so it is relatively slow
+   */
+  void WriteToFile(FILE *fp) {
+    assert(fp != nullptr);
+    
+    size_t ret = fwrite(data_p, 1, current_length, fp);
+    if(ret != current_length) {
+      ReportError(ERROR_WRITE_FILE); 
+    }
+    
+    // Make sure we could see the content immediately
+    ret = fflush(fp);
+    if(ret != 0) {
+      ReportError(ERROR_FLUSH_FILE, "(unknown)"); 
+    }
+    
+    // Reset the pointer to cleared buffer
+    current_length = 0;
     
     return;
   }
