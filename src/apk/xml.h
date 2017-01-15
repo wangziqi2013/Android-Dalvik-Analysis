@@ -64,7 +64,13 @@ class BinaryXml {
     // This points to the next field
     unsigned char next[0];
     
-    
+    /*
+     * enum class Flags - The meaning of individual bits in the flag
+     */
+    enum class Flags : uint32_t {
+      SORTED = 0x1 << 0;
+      UTF_8 = 0x1 << 8; 
+    };
   } BYTE_ALIGNED;
   
   
