@@ -93,6 +93,42 @@ void ReportError(enum ErrorCode code, ...);
  */
 class FileUtility {
  public:
+  
+  /*
+   * LoadFile() - Loads a file into memory
+   *
+   * This function optionally returns the file length through the second 
+   * parameter. Howeevr if it is set to nullptr then we do not change it
+   */
+  static unsigned char *LoadFile(const char *file_name, 
+                                 size_t *file_length_p=nullptr) {
+    FILE *fp = fopen(file_name, "rb");
+    if(fp == nullptr) {
+      ReportError(ERROR_OPEN_FILE, file_name);
+    }
+    
+    // Get file length and then assign it back to the argument 
+    // if it is not nullptr
+    size_t file_length = GetFileLength(fp);
+    if(file_length_p != nullptr) {
+      *file_length_p = file_length; 
+    }
+    
+    unsigned char *data_p = new unsigned char[file_length];
+    if(data_p == nullptr) {
+      ReportError(OUT_OF_MEMORY); 
+    }
+    
+    size_t size_read = fread(data_p, 1, file_length, fp);
+    if(size_read != file_length) {
+      ReportError(ERROR_READ_FILE, size_read);
+    }
+    
+    int close_ret = fclose(fp);
+    assert(close_ret == 0);
+    
+    return data_p;
+  }
    
   /*
    * GetFileLength() - Returns the size of an opened file
