@@ -219,9 +219,9 @@ class Utf16String : public UtfString {
     
     return;
   }
-}; // class Utf8String
+}; // class Utf16String
 
-} // namespace wangziqi2013
 } // namespace android_dalvik_analysis
+} // namespace wangziqi2013
 
 #endif

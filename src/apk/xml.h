@@ -5,6 +5,7 @@
 #define _XML_H
 
 #include "common.h"
+#include "utf.h"
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 
@@ -94,38 +95,6 @@ class BinaryXml {
     // (more precisely they are UTF-8 and UTF-16 length respectively)
     bool is_utf8;
     
-    
-    
-    /*
-     * DecodeUtf16Length() - Decode length field stored together with string
-     *
-     * This function targets at UTF8 string's length field, which could be 
-     * either 1 byte or 2 bytes, depending on the highest bit on the low byte
-     *
-     * Return value is next unused byte
-     */
-    static unsigned char *DecodeUtf16Length(unsigned char *p, 
-                                            size_t *str_length_p) {
-      assert(p != nullptr);
-      
-      // Zero extend it to be a size_t
-      *str_length_p = static_cast<size_t>(p[0]);
-      
-      // If the high bit is set then use the first byte as bit 8 - 15
-      // and the second byte as byte 0 - 7 to form a 16 bit string length field
-      if(*str_length_p >= 128UL) {
-        *str_length_p = \
-          ((*str_length_p - 128UL) << 8) | static_cast<size_t>(p[1]);
-          
-        return p + 2;
-      } else {
-        return p + 1; 
-      }
-      
-      assert(false);
-      return nullptr;
-    }
-    
     /*
      * AppendToBuffer() - Appends the string at a given index to the buffer
      */
@@ -140,16 +109,22 @@ class BinaryXml {
       unsigned char *string_p = string_start + offset;
        
       if(is_utf8 == true) {
-        // These two are UTF8 and UTF16 length respectively 
-        unsigned char *utf8_length = string_p[0];
-        unsigned char *utf16_length = string_p[1];
+        // Since UTF8 string has 2 length fields for both UTF16 length and UTF8 
+        // length we should call an extra DecodeLength() to make sure the
+        // pointer moves to the correct position
+        Utf8String s{string_p};
         
-        assert(len1 == len2);
+        // This will discard the previous result
+        s.DecodeLength();
         
-        buffer_p->Append(string_p + 2, len1);
+        s.PrintAscii(buffer_p);
       } else {
+        Utf16String s{string_p};
         
+        s.PrintAscii(buffer_p);
       }
+      
+      return;
     }
   };
   
@@ -303,7 +278,7 @@ class BinaryXml {
   }
 };
 
-} // namespace wangziqi2013
 } // namespace android_dalvik_analysis
+} // namespace wangziqi2013
 
 #endif
