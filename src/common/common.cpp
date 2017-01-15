@@ -51,6 +51,12 @@ void ReportError(enum ErrorCode code, ...) {
   vfprintf (stderr, error_str_table[code], args);
   va_end (args);
   
+  // Under debug mode this allows us to inspect the stack to locate 
+  // places this is called
+  // Under release mode this is removed and a real exception will be thrown
+  assert(false && "ReportError() throws an exception; "
+                  "under debug mode use gdb to inspect the execution stack.");
+  
   throw code;
   
   return;

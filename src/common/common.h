@@ -338,8 +338,7 @@ class Buffer {
    * expand is needed and also to copy the char data
    */
   void AppendByte(unsigned char byte) {
-    // If the buffer is full just expand to twice the size
-    // of the original one
+    // If the buffer is full just double the size
     if(current_length == length) {
       Expand(length << 1);
     }
