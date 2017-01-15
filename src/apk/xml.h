@@ -168,6 +168,24 @@ class BinaryXml {
   // header is different
   using NameSpaceEnd = NameSpaceStart;
   
+  /*
+   * class ElementStart - The start of an element
+   */
+  class ElementStart {
+   public:
+    CommonHeader common_header;
+    ElementHeader element_header;
+    
+    // The following two are indices in the string table
+    
+    // The name space of the element
+    uint32_t name_space;
+    // The name of the element
+    uint32_t name;
+  } BYTE_ALIGNED;
+  
+  using ElementEnd = ElementStart;
+  
  // Private data memver
  private: 
  
@@ -371,7 +389,7 @@ class BinaryXml {
    * ParseNameSpaceStart() - Parse the start of namespace
    */
   void ParseNameSpaceStart(CommonHeader *header_p) {
-    assert(header_p->type == ChunkType::NAMESPACE_START);
+    assert(header_p->type == ChunkType::NAME_SPACE_START);
     
     NameSpaceStart *name_space_start_p = \
       reinterpret_cast<NameSpaceStart *>(header_p);
@@ -379,6 +397,20 @@ class BinaryXml {
     // We have seen a new ns and it is not printed yet
     name_space_printed = false;
     name_space_stack.push(name_space_start_p->prefix);
+    
+    return;
+  }
+  
+  /*
+   * ParseElementStart() - Parse the start of element
+   */
+  void ParseElementStart(CommonHeader *header_p) {
+    assert(header_p->type == ChunkType::ELEMENT_START);
+    
+    ElementStart *element_start_p = \
+      reinterpret_cast<ElementStart *>(header_p);
+      
+    
     
     return;
   }
@@ -417,6 +449,10 @@ class BinaryXml {
       }
       case ChunkType::NAME_SPACE_START: {
         ParseNameSpaceStart(next_header_p);
+        break; 
+      }
+      case ChunkType::ELEMENT_START: {
+        ParseElementStart(next_header_p);
         break; 
       }
       default: {
