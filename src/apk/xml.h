@@ -165,6 +165,18 @@ class BinaryXml {
     own_data{p_own_data}
     xml_header_p{nullptr},
     string_pool_header_p{nullptr} {
+    
+    CommonHeader *next_header_p = VerifyXmlHeader();  
+    if(next_header_p == nullptr) {
+      xml_header_p = nullptr;
+      
+      return; 
+    }
+    
+    // This is only temporary measure to parse the string pool
+    ParseNext(next_header_p);
+    assert(string_pool_header_p != nullptr);
+    
     return;  
   }
   
@@ -181,14 +193,27 @@ class BinaryXml {
   }
   
   /*
+   * IsValidXml() - Returns true if the xml has a valid header
+   *
+   * We use xml_header_p to denote whether XML is valid or at least has 
+   * a valid header
+   */
+  bool IsValidXml() {
+    return xml_header_p != nullptr;
+  }
+  
+  /*
    * VerifyXmlHeader() - Verifies the beginning of the document
    *
    * If the format is not current/unknown then return nullptr. Otherwise
    * the next byte after the XML header (which is of known length)
    *
-   * Note that this function will set xml_header_p if it returns true. After 
-   * this returns there could not be any XML header type until the parsing
+   * Note that this function will set xml_header_p if it returns non nullptr. 
+   * After this returns there could not be any XML header type until the parsing
    * finishes
+   *
+   * The caller should set xml_header_p to nullptr if this function returns 
+   * false
    */
   CommonHeader *VerifyXmlHeader() {
     // XML header begins at the first byte of the data 
