@@ -80,6 +80,7 @@ enum ErrorCode : uint64_t {
   ERROR_FLUSH_FILE,
   STRING_POOL_INDEX_TOO_LARGE,
   ONLY_SUPPORT_ASCII,
+  CORRUPT_RESOURCE_MAP,
 };
 
 // Error string table

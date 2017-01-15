@@ -22,6 +22,7 @@ class BinaryXml {
   enum class ChunkType : uint16_t {
     XML_DOCUMENT = 0x0003,
     STRING_POOL = 0x0001,
+    RESOURCE_MAP = 0x0180,
   };
   
   /*
@@ -125,6 +126,11 @@ class BinaryXml {
     }
   };
   
+  // This is just a common header with its data being an array of uint32_t
+  // as resource IDs
+  using ResourceMapHeader = CommonHeader;
+  using ResourceId = uint32_t;
+  
  // Private data memver
  private: 
  
@@ -149,6 +155,15 @@ class BinaryXml {
   // The real string pool
   StringPool string_pool;
   
+  // This is actually a pointer to the common header
+  ResourceMapHeader *resource_map_header_p;
+  
+  // # of 32 bit entries in the res map
+  size_t resource_map_size;
+  
+  // Pointer to the first element of the resource map array
+  ResourceId *resource_map_p;
+  
  public:
   
   /*
@@ -161,7 +176,11 @@ class BinaryXml {
     length{p_length},
     own_data{p_own_data},
     xml_header_p{nullptr},
-    string_pool_header_p{nullptr} {
+    string_pool_header_p{nullptr},
+    string_pool{},
+    resource_map_header_p{nullptr},
+    resource_map_size{0UL},
+    resource_map{nullptr} {
     
     CommonHeader *next_header_p = VerifyXmlHeader();  
     if(next_header_p == nullptr) {
@@ -255,6 +274,9 @@ class BinaryXml {
   void ParseStringPool(CommonHeader *header_p) {
     string_pool_header_p = reinterpret_cast<StringPoolHeader *>(header_p);
     
+    // Do this as a temporary measure because we do not want to deal with it now
+    assert(string_pool_header_p->style_count == 0);
+    
     // This is an array of uint32_t that stores the offset into string 
     // content table. It is located right after the header
     string_pool.string_index_p = reinterpret_cast<uint32_t *>(
@@ -271,6 +293,32 @@ class BinaryXml {
     string_pool.is_utf8 = \
       !!(string_pool_header_p->flags & StringPoolHeader::Flags::UTF8);
     
+    return;
+  }
+  
+  /*
+   * ParseResourceMap() - Parses the string pool and constructs the string 
+   *                      pool object
+   *
+   * Note that the resource map has the same layout as a general header
+   */
+  void ParseResourceMap(CommonHeader *header_p) {
+    resource_map_header_p = reinterpret_cast<ResourceMapHeader *>(header_p);
+    
+    // The length recorded in the header must equal the actual length
+    // also the length must be a multuple of resource ID
+    if((header_p->header_length != sizeof(ResourceMapHeader)) || \
+       ((header_p->total_length - header_p->header_length) % \
+        sizeof(ResourceId) != 0)) {
+      ReportError(CORRUPT_RESOURCE_MAP);
+    }
+    
+    resource_map_size = \
+      (header_p->total_length - header_p->header_length) / sizeof(ResourceId);
+      
+    resource_map_p = reinterpret_cast<ResourceId *>( \
+      TypeUtility::Advance(header_p, sizeof(ResourceMapHeader)));
+      
     return;
   }
   
@@ -302,6 +350,10 @@ class BinaryXml {
         ParseStringPool(next_header_p);
         break;
       } 
+      case ChunkType::RESOURCE_MAP: {
+        ParseResourceMap(next_header_p);
+        break; 
+      }
       default: {
         ReportError(UNKNOWN_CHUNK_TYPE, 
                     static_cast<uint32_t>(next_header_p->type)); 
