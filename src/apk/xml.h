@@ -35,11 +35,11 @@ class BinaryXml {
     
     // The size of the header (may be larger than 8 because there will be 
     // extra fields in extended header)
-    uint16_t header_size;
+    uint16_t header_length;
     
     // The total size of the chunk including the header
     // If this equals header size then it is an indication of empty data
-    uint32_t total_size;
+    uint32_t total_length;
     
     // This points to the next field
     unsigned char next[0];
@@ -68,9 +68,9 @@ class BinaryXml {
     /*
      * enum class Flags - The meaning of individual bits in the flag
      */
-    enum class Flags : uint32_t {
-      SORTED = 0x1 << 0;
-      UTF_8 = 0x1 << 8; 
+    enum Flags : uint32_t {
+      SORTED = 0x1 << 0,
+      UTF8 = 0x1 << 8,
     };
   } BYTE_ALIGNED;
   
@@ -162,7 +162,7 @@ class BinaryXml {
             bool p_own_data=false) :
     raw_data_p{p_raw_data_p},
     length{p_length},
-    own_data{p_own_data}
+    own_data{p_own_data},
     xml_header_p{nullptr},
     string_pool_header_p{nullptr} {
     
@@ -221,7 +221,7 @@ class BinaryXml {
     
     // All three fields could be determiend so we just compare value
     // in the data with expected value
-    if(xml_header_p->type != XML_DOCUMENT) {
+    if(xml_header_p->type != ChunkType::XML_DOCUMENT) {
       return nullptr; 
     } else if(xml_header_p->header_length != sizeof(XmlHeader)) {
       return nullptr;      
@@ -232,10 +232,10 @@ class BinaryXml {
     } else {
       // Return the next byte and cast it as common header for later parsing
       return reinterpret_cast<CommonHeader *>(
-               TypeUtility::Advance(xml_header, sizeof(XmlHeader))); 
+               TypeUtility::Advance(xml_header_p, sizeof(XmlHeader))); 
     }
     
-    asset(false);
+    assert(false);
     return nullptr;
   }
   
@@ -249,7 +249,7 @@ class BinaryXml {
     // This is an array of uint32_t that stores the offset into string 
     // content table. It is located right after the header
     string_pool.string_index_p = reinterpret_cast<uint32_t *>(
-        TypeUtility::Advance(header_p, header_p->header_size));
+        TypeUtility::Advance(header_p, header_p->header_length));
     
     // This is a relative offset to the first byte of the header
     string_pool.string_start = \
@@ -260,7 +260,7 @@ class BinaryXml {
     
     // If it is UTF-8 then each ASCII is represented using only 1 byte
     string_pool.is_utf8 = \
-      !!(string_pool_header_p->flags & StringPoolHeader::Flags::UFT8);
+      !!(string_pool_header_p->flags & StringPoolHeader::Flags::UTF8);
     
     return;
   }
@@ -281,15 +281,15 @@ class BinaryXml {
     
     // The return value is the next header pointer (hopefully)
     CommonHeader *ret_header_p = \
-      TypeUtility::Advance(next_header_p, next_header_p->total_size);
+      TypeUtility::Advance(next_header_p, next_header_p->total_length);
     
     switch(next_header_p->type) {
-      case XML_DOCUMENT: {
+      case ChunkType::XML_DOCUMENT: {
         // The header needs to be validated outside this function 
         ReportError(UNEXPECTED_START_OF_XML);
         break;
       } 
-      case STRING_POOL: {
+      case ChunkType::STRING_POOL: {
         ParseStringPool(next_header_p);
       } 
       default: {

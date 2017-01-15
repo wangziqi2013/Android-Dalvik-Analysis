@@ -291,7 +291,7 @@ class TypeUtility {
    * Advance() - Moves a pointer either forward by some bytes
    */
   template<typename T>
-  T *Advance(T *ptr, size_t offset) {
+  static T *Advance(T *ptr, size_t offset) {
     return reinterpret_cast<T *>((reinterpret_cast<uint8_t *>(ptr) + offset));
   }
   
@@ -299,7 +299,7 @@ class TypeUtility {
    * Retract() - Moves a pointer backward by some bytes
    */
   template<typename T>
-  T *Retract(T *ptr, size_t offset) {
+  static T *Retract(T *ptr, size_t offset) {
     return reinterpret_cast<T *>((reinterpret_cast<uint8_t *>(ptr) - offset));
   }
 };
