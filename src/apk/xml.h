@@ -97,8 +97,18 @@ class BinaryXml {
     /*
      * AppendToBuffer() - Appends the string at a given index to the buffer
      */
-    void AppendToBuffer(int index, Buffer *buffer_p) {
+    void AppendToBuffer(size_t index, Buffer *buffer_p) {
+      if(index >= string_count) {
+        ReportError(STRING_POOL_INDEX_TOO_LARGE, index, string_count); 
+      }
       
+      // This is the byte offset relative to the beginning of the data area
+      uint32_t offset = string_index_p[index];
+      if(is_utf8 == true) {
+        //unsigned char *len =  
+      } else {
+        
+      }
     }
   };
   

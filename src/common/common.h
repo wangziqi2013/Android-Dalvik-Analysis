@@ -78,6 +78,7 @@ enum ErrorCode : uint64_t {
   UNEXPECTED_START_OF_XML = 20,
   UNKNOWN_CHUNK_TYPE,
   ERROR_FLUSH_FILE,
+  STRING_POOL_INDEX_TOO_LARGE,
 };
 
 // Error string table
@@ -345,7 +346,7 @@ class Buffer {
     
     assert(current_length < length);
     
-    p_data[current_length] = byte;
+    data_p[current_length] = byte;
     current_length++;
     
     return;

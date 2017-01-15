@@ -36,6 +36,7 @@ const char *error_str_table[] = {
   "Error parsing XML: Unexpected start of a new XML document\n",
   "Error parsing resource chunk header: Unknown chunk type (%u)\n",
   "Error flushing a file\n",
+  "Index to string pool too large: %lu (total count %lu)\n",
 };
 
 /*
