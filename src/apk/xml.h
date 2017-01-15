@@ -63,29 +63,61 @@ class BinaryXml {
     
     // This points to the next field
     unsigned char next[0];
+    
+    
   } BYTE_ALIGNED;
+  
+  
+  class StringPool {
+    
+  };
   
  // Private data memver
  private: 
  
-  // This points to an external buffer that does not belong to this class
+  // This points to an external buffer. Whether the buffer belongs to the 
+  // class is determined by own_data flag
   unsigned char *raw_data_p;
   
   // This is the length of the data buffer
   size_t length;
   
+  // Whether the buffer should be freed during destruction
+  // The buffer is freed as unsigned char[]
+  bool own_data;
+  
   // This points to the valid document header if there is one
   // Otherwise set to nullptr
   XmlHeader *xml_header_p;
+  
+  // Whether the string is represented in UTF-format or not
+  // UTF-8 string has a one byte repfix denoting the length. However
+  // in this format there are two such bytes with replicated values
+  // (more precisely they are UTF-8 and UTF-16 length respectively)
+  bool is_utf8;
+  
+  // It points to an array of uint32_t which contains the offset into 
+  // string content table
+  // Its size is implicitly determined by the number of strings
+  uint32_t *string_offset_p;
+  // This is a absolute pointer to the starting address of string content table
+  unsigned char *string_start_p;
+  // Number of strings (i.e. the length of the offset array)
+  size_t string_count;
+  
+  
   
  public:
   
   /*
    * Constructor
    */
-  BinaryXml(unsigned char *p_raw_data_p, size_t p_length) :
+  BinaryXml(unsigned char *p_raw_data_p, 
+            size_t p_length, 
+            bool p_own_data=false) :
     raw_data_p{p_raw_data_p},
     length{p_length},
+    own_data{p_own_data}
     xml_header_p{nullptr} {
     return;  
   }
@@ -94,6 +126,11 @@ class BinaryXml {
    * Destructor
    */
   ~BinaryXml() {
+    // If the ownership is transferred to this instance then need to free data
+    if(own_data == true) {
+      delete[] raw_data_p;  
+    }
+    
     return;
   }
   
@@ -135,8 +172,23 @@ class BinaryXml {
    * ParseStringPool() - Parses the string pool and constructs the string 
    *                     pool object
    */
-  void ParseStringPool() {
+  void ParseStringPool(CommonHeader *header_p) {
+    StringPoolHeader *sp_header_p = \
+      reinterpret_cast<StringPoolHeader *>(header_p);
     
+    // This is an array of uint32_t that stores the offset into string 
+    // content table. It is located right after the header
+    string_offset_p = \
+      reinterpret_cast<uint32_t *>(
+        TypeUtility::Advance(header_p, header_p->header_size));
+        
+    // This is a relative offset to the first byte of the header
+    string_start_p = reinterpret_cast<unsigned char *>(
+        TypeUtility::Advance(header_p, sp_header_p->string_offset));
+        
+    string_count = sp_header_p->string_count;
+        
+    return;
   }
   
   /*
@@ -164,7 +216,7 @@ class BinaryXml {
         break;
       } 
       case STRING_POOL: {
-        ParseStringPool();
+        ParseStringPool(next_header_p);
       } 
       default: {
         ReportError(UNKNOWN_CHUNK_TYPE, 
