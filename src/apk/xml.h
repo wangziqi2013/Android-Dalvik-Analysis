@@ -95,6 +95,36 @@ class BinaryXml {
     bool is_utf8;
     
     /*
+     * DecodeUtf8Length() - Decode length field stored together with string
+     *
+     * This function targets at UTF8 string's length field, which could be 
+     * either 1 byte or 2 bytes, depending on the highest bit on the low byte
+     *
+     * Return value is next unused byte
+     */
+    static unsigned char *DecodeUtf8Length(unsigned char *p, 
+                                           size_t *str_length_p) {
+      assert(p != nullptr);
+      
+      // Zero extend it to be a size_t
+      *str_length_p = static_cast<size_t>(p[0]);
+      
+      // If the high bit is set then use the first byte as bit 8 - 15
+      // and the second byte as byte 0 - 7 to form a 16 bit string length field
+      if(*str_length_p >= 128UL) {
+        *str_length_p = \
+          ((*str_length_p - 128UL) << 8) | static_cast<size_t>(p[1]);
+          
+        return p + 2;
+      } else {
+        return p + 1; 
+      }
+      
+      assert(false);
+      return nullptr;
+    }
+    
+    /*
      * AppendToBuffer() - Appends the string at a given index to the buffer
      */
     void AppendToBuffer(size_t index, Buffer *buffer_p) {
@@ -104,8 +134,17 @@ class BinaryXml {
       
       // This is the byte offset relative to the beginning of the data area
       uint32_t offset = string_index_p[index];
+      // This points to the actual string
+      unsigned char *string_p = string_start + offset;
+       
       if(is_utf8 == true) {
-        //unsigned char *len =  
+        // These two are UTF8 and UTF16 length respectively 
+        unsigned char *utf8_length = string_p[0];
+        unsigned char *utf16_length = string_p[1];
+        
+        assert(len1 == len2);
+        
+        buffer_p->Append(string_p + 2, len1);
       } else {
         
       }
