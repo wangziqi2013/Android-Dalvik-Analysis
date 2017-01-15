@@ -20,7 +20,7 @@ class BinaryXml {
    * enum class ChunkType - The type of a chunk
    */
   enum class ChunkType : uint16_t {
-    XML_DOCUMENT = 0x0000,
+    XML_DOCUMENT = 0x0003,
     STRING_POOL = 0x0001,
   };
   
@@ -222,10 +222,22 @@ class BinaryXml {
     // All three fields could be determiend so we just compare value
     // in the data with expected value
     if(xml_header_p->type != ChunkType::XML_DOCUMENT) {
+      dbg_printf("XML type 0x%X is wrong (expecting 0x%X)\n", 
+                 static_cast<uint32_t>(xml_header_p->type), 
+                 static_cast<uint32_t>(ChunkType::XML_DOCUMENT));
+      
       return nullptr; 
     } else if(xml_header_p->header_length != sizeof(XmlHeader)) {
+      dbg_printf("XML header length 0x%X is wrong (expecting 0x%lX)\n", 
+                 xml_header_p->header_length, 
+                 sizeof(XmlHeader));
+      
       return nullptr;      
     } else if(xml_header_p->total_length != length) {
+      dbg_printf("XML total length 0x%X is wrong (expecting 0x%lX)\n", 
+                 xml_header_p->total_length, 
+                 length);
+      
       // We require that the entire document is part of the XML
       // Otherwise we are unable to decode the rest of it
       return nullptr; 
