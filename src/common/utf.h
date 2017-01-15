@@ -59,6 +59,10 @@ class UtfString {
   virtual void PrintAscii(Buffer *buffer_p) = delete;
 };
 
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+
 /*
  * Utf8String - UTF-8 encoded string
  */
@@ -122,7 +126,7 @@ class Utf8String : public UtfString {
   void PrintAscii(Buffer *buffer_p) {
     for(size_t i = 0;i < length;i++) {
       if(data_p[i] >= 128) {
-        ReportError(ONLY_SUPPORT_ASCII);
+        ReportError(ONLY_SUPPORT_ASCII, "8");
       } 
     }
     
@@ -130,7 +134,92 @@ class Utf8String : public UtfString {
     
     return;
   }
-}
+}; // class Utf8String
+
+///////////////////////////////////////////////////////////////////// 
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+
+/*
+ * Utf16String - UTF-8 encoded string
+ */
+class Utf16String : public UtfString {
+ public:
+   
+  /*
+   * Constructor
+   */
+  Utf16String(unsigned char *p_data_p, size_t p_length) :
+    UtfString{p_data_p},
+    UtfString{p_length}
+  {}
+  
+  /*
+   * Constructor
+   */
+  Utf16String(unsigned char *p_data_p) :
+    UtfString{p_data_p} {
+    DecodeLength();
+    
+    return;
+  }
+  
+  /*
+   * Destructor
+   */
+  ~Utf16String() {}
+  
+  /*
+   * DecodeLength() - Decode length field stored together with string
+   *
+   * Similar to Utf8String's method. This function decodes 16 or 32 bite string
+   */
+  void DecodeLength() {    
+    // Cast it to 16 bit integer first
+    uint16_t *p = reinterpret_cast<uint16_t *>(data_p);
+    
+    // Zero extend it to be a size_t
+    length = static_cast<size_t>(p[0]);
+  
+    // If the high bit is set then use the first byte as bit 16 - 31
+    // and the second byte as byte 0 - 15 to form a 32 bit string length field
+    if(length >= 0x8000UL) {
+      length = ((length - 0x8000UL) << 16) | static_cast<size_t>(p[1]);
+      
+      data_p += 4;
+    } else {
+      data_p += 2;
+    }
+    
+    return;
+  }
+  
+  /*
+   * PrintAscii() - Prints ASCII into a buffer
+   *
+   * This only works for ASCII sequence encoded in UTF-16. This function 
+   * extracts the low byte inside a UTF16 unit and send it to the buffer
+   */
+  void PrintAscii(Buffer *buffer_p) {
+    uint16_t *p = reinterpret_cast<uint16_t *>(data_p);
+    for(size_t i = 0;i < length;i++) {
+      if((p[i] & 0xFF00UL) != 0) {
+        ReportError(ONLY_SUPPORT_ASCII, "16");
+      } 
+    }
+    
+    // Then append actual bytes into the buffer
+    for(size_t i = 0;i < length;i++) {
+      // This implicitly chops off higher bytes
+      buffer_p->AppendByte(static_cast<unsigned char>(*p)); 
+      
+      // Advance by 2 bytes each time
+      p++;
+    }
+    
+    return;
+  }
+}; // class Utf8String
 
 } // namespace wangziqi2013
 } // namespace android_dalvik_analysis
