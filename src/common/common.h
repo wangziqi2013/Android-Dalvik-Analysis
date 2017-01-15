@@ -265,6 +265,101 @@ class TypeUtility {
   }
 };
 
+/*
+ * class Buffer - In memory buffer for holding data for buffering them to be
+ *                written into file 
+ */
+class Buffer {
+ private: 
+  unsigned char *data_p;
+  size_t length;
+  
+  size_t current_length;
+  
+  // Use 64K as default buffer size if none is given
+  static constexpr size_t DEFAULT_SIZE = 0x1 << 16;
+  
+  /*
+   * Expand() - Adjust the size of the buffer for holding more data
+   *
+   * Do not use this to shrink the buffer
+   */
+  void Expand(size_t resize_length) {
+    assert(resize_length > length);
+    
+    unsigned char *temp = new unsigned char[resize_length];
+    if(temp == nullptr) {
+      ReportError(OUT_OF_MEMORY);
+    }
+    
+    memcpy(temp, data_p, current_length);
+    delete[] data_p;
+    
+    data_p = temp;
+    length = resize_length;
+    
+    return;
+  }
+  
+ public: 
+  /*
+   * Constructor
+   */
+  Buffer(size_t p_length) :
+    data_p{new unsigned char[p_length]},
+    length{p_length},
+    current_length{0UL}
+  {}
+  
+  /*
+   * Constructor - Use default size
+   */
+  Buffer() :
+    Buffer{DEFAULT_SIZE}
+  {}
+  
+  /*
+   * Destructor
+   */
+  ~Buffer() {
+    assert(data_p != nullptr);
+    
+    delete[] data_p;
+    
+    return; 
+  }
+  
+  /*
+   * Append() - Append bytes after the current location
+   *
+   * This function might trigger Oversize() operation if requested size
+   * is too large
+   */
+  void Append(void *p, size_t request_length) {
+    size_t resize_length = length;
+    while(current_length + request_length > resize_length) {
+      resize_length = length * 2;
+    }
+    
+    // If there is a resize then just do it here
+    if(resize_length != length) {
+      Expand(resize_length); 
+    }
+    
+    // New buffer must be large enough
+    assert(current_length + request_length <= length);
+    
+    // Copy data
+    memcpy(data_p + current_length, p, request_length);
+    
+    // Should not change this before the potential resize() because 
+    // then resize might copy more data then expected
+    current_length += request_length;
+    
+    return;
+  }
+};
+
 }
 }
  
