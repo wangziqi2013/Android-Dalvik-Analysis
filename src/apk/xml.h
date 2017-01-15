@@ -73,9 +73,26 @@ class BinaryXml {
     };
   } BYTE_ALIGNED;
   
-  
+  /*
+   * class StringPool - The class that actually stores string pool data
+   */
   class StringPool {
+   public: 
+    // Number of strings stored in the pool
+    size_t string_count;
     
+    // The pointer to the array that stores offset of each string
+    uint32_t *string_index_p;
+    
+    // The pointer to the table that strings are stored
+    // Begin offset of each string
+    unsigned char *string_start;
+    
+    // Whether the string is represented in UTF-format or not
+    // UTF-8 string has a one byte repfix denoting the length. However
+    // in this format there are two such bytes with replicated values
+    // (more precisely they are UTF-8 and UTF-16 length respectively)
+    bool is_utf8;
   };
   
  // Private data memver
@@ -95,23 +112,12 @@ class BinaryXml {
   // This points to the valid document header if there is one
   // Otherwise set to nullptr
   XmlHeader *xml_header_p;
+
+  // Pointer to the string pool
+  StringPoolHeader *string_pool_header_p;  
   
-  // Whether the string is represented in UTF-format or not
-  // UTF-8 string has a one byte repfix denoting the length. However
-  // in this format there are two such bytes with replicated values
-  // (more precisely they are UTF-8 and UTF-16 length respectively)
-  bool is_utf8;
-  
-  // It points to an array of uint32_t which contains the offset into 
-  // string content table
-  // Its size is implicitly determined by the number of strings
-  uint32_t *string_offset_p;
-  // This is a absolute pointer to the starting address of string content table
-  unsigned char *string_start_p;
-  // Number of strings (i.e. the length of the offset array)
-  size_t string_count;
-  
-  
+  // The real string pool
+  StringPool string_pool;
   
  public:
   
@@ -124,7 +130,8 @@ class BinaryXml {
     raw_data_p{p_raw_data_p},
     length{p_length},
     own_data{p_own_data}
-    xml_header_p{nullptr} {
+    xml_header_p{nullptr},
+    string_pool_header_p{nullptr} {
     return;  
   }
   
@@ -171,7 +178,7 @@ class BinaryXml {
     }
     
     asset(false);
-    return false;
+    return nullptr;
   }
   
   /*
@@ -179,21 +186,24 @@ class BinaryXml {
    *                     pool object
    */
   void ParseStringPool(CommonHeader *header_p) {
-    StringPoolHeader *sp_header_p = \
-      reinterpret_cast<StringPoolHeader *>(header_p);
+    string_pool_header_p = reinterpret_cast<StringPoolHeader *>(header_p);
     
     // This is an array of uint32_t that stores the offset into string 
     // content table. It is located right after the header
-    string_offset_p = \
-      reinterpret_cast<uint32_t *>(
+    string_pool.string_index_p = reinterpret_cast<uint32_t *>(
         TypeUtility::Advance(header_p, header_p->header_size));
-        
+    
     // This is a relative offset to the first byte of the header
-    string_start_p = reinterpret_cast<unsigned char *>(
-        TypeUtility::Advance(header_p, sp_header_p->string_offset));
+    string_pool.string_start = \
+      reinterpret_cast<unsigned char *>(
+        TypeUtility::Advance(header_p, string_pool_header_p->string_offset));
         
-    string_count = sp_header_p->string_count;
-        
+    string_pool.string_count = string_pool_header_p->string_count;
+    
+    // If it is UTF-8 then each ASCII is represented using only 1 byte
+    string_pool.is_utf8 = \
+      !!(string_pool_header_p->flags & StringPoolHeader::Flags::UFT8);
+    
     return;
   }
   
