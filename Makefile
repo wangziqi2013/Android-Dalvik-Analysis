@@ -5,6 +5,8 @@ BUILD=./build
 TEST=./test
 CXX_FLAG=-g -Wl,--no-as-needed -lz -I$(SRC)/dex/ -I$(SRC)/apk/ -I$(SRC)/common/ -std=c++11 -Wall -Wextra 
 
+all: apk_test xml_test
+
 $(BIN)/apk_test: $(BUILD)/apk.o $(TEST)/apk_test.cpp $(TEST)/test_suite.h $(BUILD)/test_suite.o $(BUILD)/common.o 
 	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(BUILD)/apk.o $(TEST)/apk_test.cpp $(BUILD)/common.o -o $(BIN)/apk_test
 	ln -sf $(BIN)/apk_test ./apk_test-bin

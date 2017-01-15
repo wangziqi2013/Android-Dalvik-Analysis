@@ -180,7 +180,7 @@ class BinaryXml {
     string_pool{},
     resource_map_header_p{nullptr},
     resource_map_size{0UL},
-    resource_map{nullptr} {
+    resource_map_p{nullptr} {
     
     CommonHeader *next_header_p = VerifyXmlHeader();  
     if(next_header_p == nullptr) {
