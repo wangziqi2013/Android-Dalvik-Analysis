@@ -94,35 +94,7 @@ class BinaryXml {
     // (more precisely they are UTF-8 and UTF-16 length respectively)
     bool is_utf8;
     
-    /*
-     * DecodeUtf8Length() - Decode length field stored together with string
-     *
-     * This function targets at UTF8 string's length field, which could be 
-     * either 1 byte or 2 bytes, depending on the highest bit on the low byte
-     *
-     * Return value is next unused byte
-     */
-    static unsigned char *DecodeUtf8Length(unsigned char *p, 
-                                           size_t *str_length_p) {
-      assert(p != nullptr);
-      
-      // Zero extend it to be a size_t
-      *str_length_p = static_cast<size_t>(p[0]);
-      
-      // If the high bit is set then use the first byte as bit 8 - 15
-      // and the second byte as byte 0 - 7 to form a 16 bit string length field
-      if(*str_length_p >= 128UL) {
-        *str_length_p = \
-          ((*str_length_p - 128UL) << 8) | static_cast<size_t>(p[1]);
-          
-        return p + 2;
-      } else {
-        return p + 1; 
-      }
-      
-      assert(false);
-      return nullptr;
-    }
+    
     
     /*
      * DecodeUtf16Length() - Decode length field stored together with string

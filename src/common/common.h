@@ -79,6 +79,7 @@ enum ErrorCode : uint64_t {
   UNKNOWN_CHUNK_TYPE,
   ERROR_FLUSH_FILE,
   STRING_POOL_INDEX_TOO_LARGE,
+  ONLY_SUPPORT_ASCII,
 };
 
 // Error string table

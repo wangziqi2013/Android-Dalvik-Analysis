@@ -43,11 +43,20 @@ class UtfString {
    */
   ~UtfString() {}
   
-  // Return the length of the string depending on the type
-  virtual size_t GetLength() = delete;
+  /*
+   * GetLength() - Returns the length of the string which is either specified
+   *               oe decoded from the input stream
+   */
+  inline size_t GetLength() {
+    return length; 
+  }
   
-  // Serialize the string to a given buffer object
-  virtual size_t PrintToBuffer(Buffer *buffer_p) = delete;
+  // Return the length of the string depending on the type
+  virtual void DecodeLength() = delete;
+  
+  // Serialize the string to a given buffer object using only Ascii
+  // If non-ascii appears then it just report error
+  virtual void PrintAscii(Buffer *buffer_p) = delete;
 };
 
 /*
@@ -64,7 +73,15 @@ class Utf8String : public UtfString {
     UtfString{p_length}
   {}
   
-  Utf8String(unsigned char *p_data_p)
+  /*
+   * Constructor - This will also decode length encoded in either 1 or 2 bytes
+   */
+  Utf8String(unsigned char *p_data_p) :
+    UtfString{p_data_p} {
+    DecodeLength();
+    
+    return;
+  }
   
   /*
    * Destructor
@@ -72,26 +89,47 @@ class Utf8String : public UtfString {
   ~Utf8String() {}
   
   /*
-   * GetLength() - Decode length field stored together with string
+   * DecodeLength() - Decode length field stored together with string
    *
    * This function targets at UTF8 string's length field, which could be 
    * either 1 byte or 2 bytes, depending on the highest bit on the low byte
    *
    * Return value is next unused byte
    */
-  static size_t GetLength() {    
+  void DecodeLength() {    
     // Zero extend it to be a size_t
-    size_t length = static_cast<size_t>(data_p[0]);
+    length = static_cast<size_t>(data_p[0]);
   
     // If the high bit is set then use the first byte as bit 8 - 15
     // and the second byte as byte 0 - 7 to form a 16 bit string length field
     if(length >= 128UL) {
       length = ((length - 128UL) << 8) | static_cast<size_t>(data_p[1]);
-    } 
+      
+      data_p += 2;
+    } else {
+      data_p += 1;
+    }
     
-    return length;
+    return;
   }
   
+  /*
+   * PrintAscii() - Prints ASCII into a buffer
+   *
+   * If non-ASCII character is encoded inside the string we could detect it
+   * and report error 
+   */
+  void PrintAscii(Buffer *buffer_p) {
+    for(size_t i = 0;i < length;i++) {
+      if(data_p[i] >= 128) {
+        ReportError(ONLY_SUPPORT_ASCII);
+      } 
+    }
+    
+    buffer_p->Append(data_p, length);
+    
+    return;
+  }
 }
 
 } // namespace wangziqi2013
