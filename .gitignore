@@ -35,3 +35,4 @@ bin
 *.log
 test_*
 *.swp
+*.xml
