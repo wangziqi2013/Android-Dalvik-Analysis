@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "utf.h"
+#include <stack>
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 
@@ -23,6 +24,10 @@ class BinaryXml {
     XML_DOCUMENT = 0x0003,
     STRING_POOL = 0x0001,
     RESOURCE_MAP = 0x0180,
+    NAME_SPACE_START = 0x0100,
+    NAME_SPACE_END = 0x0101,
+    ELEMENT_START = 0x0102,
+    ELEMENT_END = 0x0103,
   };
   
   /*
@@ -131,6 +136,38 @@ class BinaryXml {
   using ResourceMapHeader = CommonHeader;
   using ResourceId = uint32_t;
   
+  /*
+   * class ElementHeader - XML elements all have an extra header that
+   *                       describes its property in the original file
+   */
+  class ElementHeader {
+   public:
+    uint32_t line_number;
+    
+    // This is a reference into the string table
+    uint32_t comment;
+  } BYTE_ALIGNED;
+  
+  /*
+   * class NameSpaceStart - Denotes the start of a namespace. All elements 
+   *                        inside this inherits the same ns unless specified
+   *                        otherwise
+   */
+  class NameSpaceStart {
+   public: 
+    // These two are common for all XML elements
+    CommonHeader common_header;
+    ElementHeader element_header;
+    
+    // The following two are indices in the string table
+    uint32_t prefix;
+    uint32_t uri;
+  } BYTE_ALIGNED;
+  
+  // They have exactly the same layout; just the type field in the common 
+  // header is different
+  using NameSpaceEnd = NameSpaceStart;
+  
  // Private data memver
  private: 
  
@@ -164,6 +201,12 @@ class BinaryXml {
   // Pointer to the first element of the resource map array
   ResourceId *resource_map_p;
   
+  // Namespaces are maintained in a stack; we only keep index into the 
+  // string table for reference
+  std::stack<uint32_t> name_space_stack;
+  
+  // Whether the lastest namespace has been printed in the attached tag
+  bool name_space_printed;
  public:
   
   /*
@@ -180,7 +223,9 @@ class BinaryXml {
     string_pool{},
     resource_map_header_p{nullptr},
     resource_map_size{0UL},
-    resource_map_p{nullptr} {
+    resource_map_p{nullptr},
+    name_space_stack{},
+    name_space_printed{false} {
     
     CommonHeader *next_header_p = VerifyXmlHeader();  
     if(next_header_p == nullptr) {
@@ -323,6 +368,22 @@ class BinaryXml {
   }
   
   /*
+   * ParseNameSpaceStart() - Parse the start of namespace
+   */
+  void ParseNameSpaceStart(CommonHeader *header_p) {
+    assert(header_p->type == ChunkType::NAMESPACE_START);
+    
+    NameSpaceStart *name_space_start_p = \
+      reinterpret_cast<NameSpaceStart *>(header_p);
+    
+    // We have seen a new ns and it is not printed yet
+    name_space_printed = false;
+    name_space_stack.push(name_space_start_p->prefix);
+    
+    return;
+  }
+  
+  /*
    * ParseNext() - Central scheduling function that acts as a state machine and 
    *               calls sorresponding routine based on its type in the common 
    *               header
@@ -352,6 +413,10 @@ class BinaryXml {
       } 
       case ChunkType::RESOURCE_MAP: {
         ParseResourceMap(next_header_p);
+        break; 
+      }
+      case ChunkType::NAME_SPACE_START: {
+        ParseNameSpaceStart(next_header_p);
         break; 
       }
       default: {
