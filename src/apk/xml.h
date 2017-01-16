@@ -6,7 +6,7 @@
 
 #include "common.h"
 #include "utf.h"
-#include <stack>
+#include <list>
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 
@@ -169,6 +169,28 @@ class BinaryXml {
   using NameSpaceEnd = NameSpaceStart;
   
   /*
+   * class NameSpaceStatus - Describes namespaces we have entered and not
+   *                         yet exited
+   */
+  class NameSpaceStatus {
+   public: 
+    uint32_t prefix;
+    uint32_t uri;
+    
+    // Whether the name space information has been printed on the most recent
+    // element tags
+    bool printed;
+    
+    /*
+     * Constructor
+     */
+    NameSpaceStatus(NameSpaceStart *start_p) :
+      prefix{start_p->prefix},
+      uri{start_p->uri}
+    {}
+  };
+  
+  /*
    * class ElementStart - The start of an element
    */
   class ElementStart {
@@ -212,6 +234,85 @@ class BinaryXml {
     uint32_t name;
   } BYTE_ALIGNED;
   
+  /*
+   * class ResourceValue - Typed representation of resource values
+   */
+  class ResourceValue {
+   public:
+    // The length of this struct
+    uint16_t length;
+    
+    // It is an empty file and should always be 0
+    uint8_t zero;
+    
+    /*
+     * enum class DataType - Denotes the type of the data contained in this 
+     *                       class instance
+     */
+    enum class DataType : uint8_t {
+      // The 'data' is either 0 or 1, specifying this resource is either
+      // undefined or empty, respectively.
+      NULL_TYPE = 0x00,
+      // The 'data' holds a ResTable_ref, a reference to another resource
+      // table entry.
+      REFERENCE = 0x01,
+      // The 'data' holds an attribute resource identifier.
+      ATTRIBUTE = 0x02,
+      // The 'data' holds an index into the containing resource table's
+      // global value string pool.
+      STRING = 0x03,
+      // The 'data' holds a single-precision floating point number.
+      FLOAT = 0x04,
+      // The 'data' holds a complex number encoding a dimension value,
+      // such as "100in".
+      DIMENSION = 0x05,
+      // The 'data' holds a complex number encoding a fraction of a
+      // container.
+      FRACTION = 0x06,
+      // The 'data' holds a dynamic ResTable_ref, which needs to be
+      // resolved before it can be used like a TYPE_REFERENCE.
+      DYNAMIC_REFERENCE = 0x07,
+      // The 'data' holds an attribute resource identifier, which needs to be resolved
+      // before it can be used like a TYPE_ATTRIBUTE.
+      DYNAMIC_ATTRIBUTE = 0x08,
+
+      // The 'data' is a raw integer value of the form n..n.
+      INT_DEC = 0x10,
+      // The 'data' is a raw integer value of the form 0xn..n.
+      INT_HEX = 0x11,
+      // The 'data' is either 0 or 1, for input "false" or "true" respectively.
+      INT_BOOLEAN = 0x12,
+
+      // The 'data' is a raw integer value of the form #aarrggbb.
+      INT_COLOR_ARGB8 = 0x1c,
+      // The 'data' is a raw integer value of the form #rrggbb.
+      INT_COLOR_RGB8 = 0x1d,
+      // The 'data' is a raw integer value of the form #argb.
+      INT_COLOR_ARGB4 = 0x1e,
+      // The 'data' is a raw integer value of the form #rgb.
+      INT_COLOR_RGB4 = 0x1f,
+    };
+    
+    // This is an enum type
+    DataType type;
+    uint32_t data;
+  } BYTE_ALIGNED;
+  
+  /*
+   * class Attribute - Represents attribute structure
+   */
+  class Attribute {
+   public:
+    uint32_t name_space;
+    uint32_t name;
+    
+    // This is a reference to the string pool. 0xFFFFFFFF if not available
+    uint32_t raw_value;
+    
+    // This describes typed value
+    ResourceValue resource_value;
+  } BYTE_ALIGNED;
+  
  // Private data memver
  private: 
  
@@ -245,12 +346,13 @@ class BinaryXml {
   // Pointer to the first element of the resource map array
   ResourceId *resource_map_p;
   
-  // Namespaces are maintained in a stack; we only keep index into the 
-  // string table for reference
-  std::stack<uint32_t> name_space_stack;
+  // A list of namespaces we are currently in. 
+  // These will be stored until they are exited
+  std::list<NameSpaceStatus> name_space_list;
   
-  // Whether the lastest namespace has been printed in the attached tag
-  bool name_space_printed;
+  // Number of name spaces not yet printed on the most recent element begin
+  // This is an optimization to avoid searching the list on every element start
+  size_t unprinted_name_space_count;
  public:
   
   /*
@@ -268,8 +370,8 @@ class BinaryXml {
     resource_map_header_p{nullptr},
     resource_map_size{0UL},
     resource_map_p{nullptr},
-    name_space_stack{},
-    name_space_printed{false} {
+    name_space_list{},
+    unprinted_name_space_count{0UL} {
     
     CommonHeader *next_header_p = VerifyXmlHeader();  
     if(next_header_p == nullptr) {
@@ -420,9 +522,11 @@ class BinaryXml {
     NameSpaceStart *name_space_start_p = \
       reinterpret_cast<NameSpaceStart *>(header_p);
     
+    assert(unprinted_name_space_count >= 0);
+    
     // We have seen a new ns and it is not printed yet
-    name_space_printed = false;
-    name_space_stack.push(name_space_start_p->prefix);
+    unprinted_name_space_count++;
+    name_space_list.push(name_space_start_p->prefix);
     
     return;
   }
