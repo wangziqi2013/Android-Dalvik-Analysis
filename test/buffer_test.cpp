@@ -2,7 +2,10 @@
 /*
  * buffer_test.cpp - Test class Buffer
  */
- 
+
+// To make class Buffer allocates smaller stack space for Printf()
+#define BUFFER_TEST_MODE 
+
 #include "test_suite.h"
 #include "common.h" 
 
@@ -55,8 +58,41 @@ void TestBasicExtend() {
   return;
 }
 
+/*
+ * Tests whether printf in the buffer works
+ */
+void TestPrintf() {
+  _PrintTestName();
+  
+  Buffer buffer{};
+  
+  char t[4096];
+  
+  buffer.Printf("%c", 'H');
+  buffer.Printf("ello, world!\n");
+  buffer.Printf("My name is: %s\n", "Ziqi Wang");
+  buffer.Printf("My birthday is %04d-%02d-%02d\n", 1993, 6, 1);
+  buffer.AppendByte('\0');
+  
+  int offset = 0;
+  
+  offset += sprintf(t + offset, "%c", 'H');
+  offset += sprintf(t + offset, "ello, world!\n");
+  offset += sprintf(t + offset, "My name is: %s\n", "Ziqi Wang");
+  offset += sprintf(t + offset, "My birthday is %04d-%02d-%02d\n", 1993, 6, 1);  
+  
+  // Make sure we did not overflow the buffer (for correctness testing)
+  assert(offset + 1 < 4096);
+  
+  buffer.WriteToFile(stderr); 
+  assert(strcmp(t, static_cast<const char *>(buffer.GetData())) == 0);
+  
+  return;
+}
+
 int main() {
   TestBasicExtend();
+  TestPrintf();
   
   return 0;
 }
