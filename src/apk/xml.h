@@ -186,7 +186,8 @@ class BinaryXml {
      */
     NameSpaceStatus(NameSpaceStart *start_p) :
       prefix{start_p->prefix},
-      uri{start_p->uri}
+      uri{start_p->uri},
+      printed{false}
     {}
   };
   
@@ -526,7 +527,9 @@ class BinaryXml {
     
     // We have seen a new ns and it is not printed yet
     unprinted_name_space_count++;
-    name_space_list.push(name_space_start_p->prefix);
+    // Construct a name space status object and then put that into the list
+    // and also the namespace is initialized to be not printed
+    name_space_list.emplace_back(name_space_start_p);
     
     return;
   }
