@@ -173,6 +173,7 @@ class BinaryXml {
    */
   class ElementStart {
    public:
+    // The header_length field in common header only covers the following two
     CommonHeader common_header;
     ElementHeader element_header;
     
@@ -182,6 +183,20 @@ class BinaryXml {
     uint32_t name_space;
     // The name of the element
     uint32_t name;
+    
+    // This is relative to the offset from "name_space"
+    uint16_t attribute_offset;
+    // Byte size of attribute structures
+    uint16_t attribute_length;
+    // Number of attributes with the element
+    uint16_t attribute_count;
+    
+    // The following also describes attributes, but they are special attributes
+    // so they are separately stored. 
+    // 0 means non-exist, and the index here starts at 1
+    uint16_t id_index;
+    uint16_t class_index;
+    uint16_t style_index;
   } BYTE_ALIGNED;
   
   using ElementEnd = ElementStart;
