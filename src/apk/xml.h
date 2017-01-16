@@ -354,6 +354,11 @@ class BinaryXml {
   // Number of name spaces not yet printed on the most recent element begin
   // This is an optimization to avoid searching the list on every element start
   size_t unprinted_name_space_count;
+  
+  // Always keep this the last object
+  // This is used to hold the results of converting it back to normal XML
+  Buffer buffer;
+  
  public:
   
   /*

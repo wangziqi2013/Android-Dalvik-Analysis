@@ -331,6 +331,10 @@ class Buffer {
   // Use 64K as default buffer size if none is given
   static constexpr size_t DEFAULT_SIZE = 0x1 << 16;
   
+  // 1 KB for stack buffer. Anything longer than this will be 
+  // allocated on the heap and then combined into existing data
+  static constexpr size_t STACK_BUFFER_SIZE = 0x1 << 10;
+  
   /*
    * Expand() - Adjust the size of the buffer for holding more data
    *
@@ -453,6 +457,29 @@ class Buffer {
     // Reset the pointer to cleared buffer
     current_length = 0;
     
+    return;
+  }
+  
+  /*
+   * Printf() - Formatted output into the buffer object
+   *
+   * This function operates by calling vsnprintf() twice: The first time we 
+   * do a stack allocation and count how many characters are required. And
+   * if the stack buffer is not sufficient we open a heap buffer with length
+   * indicated by the first call and then do a second try to print the content
+   * into the heap buffer. Fianlly the buffer is combined with existing data
+   * inside the buffer 
+   */
+  void Printf(const char *format, ...) {
+    va_list args;
+    va_start (args, code);
+    
+    char stack_buffer[STACK_BUFFER_SIZE];
+    
+    vsnprintf (stderr, error_str_table[code], args);
+    
+    
+    va_end (args);
     return;
   }
 };
