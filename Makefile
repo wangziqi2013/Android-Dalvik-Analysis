@@ -15,10 +15,15 @@ $(BIN)/xml_test: $(BUILD)/xml.o $(TEST)/xml_test.cpp $(TEST)/test_suite.h $(BUIL
 	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/xml_test.cpp $(BUILD)/common.o $(BUILD)/xml.o -o $(BIN)/xml_test
 	ln -sf $(BIN)/xml_test ./xml_test-bin
 
+$(BIN)/buffer_test: $(TEST)/buffer_test.cpp $(TEST)/test_suite.h $(BUILD)/test_suite.o $(BUILD)/common.o
+	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/buffer_test.cpp $(BUILD)/common.o -o $(BIN)/buffer_test
+	ln -sf $(BIN)/buffer_test ./buffer_test-bin
+
 apk_test: $(BIN)/apk_test
 xml_test: $(BIN)/xml_test
+buffer_test: $(BIN)/buffer_test
 
-$(BUILD)/common.o: $(SRC)/common/common.cpp $(SRC)/common/common.h
+$(BUILD)/common.o: $(SRC)/common/common.cpp $(SRC)/common/common.h $(SRC)/common/utf.h $(SRC)/common/buffer.h
 	g++ -c $(CXX_FLAG) $(SRC)/common/common.cpp -o $(BUILD)/common.o
 
 $(BUILD)/test_suite.o: $(TEST)/test_suite.cpp $(TEST)/test_suite.h
