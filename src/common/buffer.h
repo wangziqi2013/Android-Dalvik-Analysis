@@ -108,7 +108,7 @@ class Buffer {
    * This function might trigger Oversize() operation if requested size
    * is too large
    */
-  void Append(void *p, size_t request_length) {
+  void Append(const void *p, size_t request_length) {
     size_t resize_length = length;
     while(current_length + request_length > resize_length) {
       resize_length <<= 1;
