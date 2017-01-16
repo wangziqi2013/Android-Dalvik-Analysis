@@ -76,6 +76,13 @@ class Buffer {
   }
   
   /*
+   * GetLength() - Returns the current length of data
+   */
+  size_t GetLength() const {
+    return current_length; 
+  }
+  
+  /*
    * AppendByte() - Appends only a byte to the buffer
    *
    * This is more efficient since it takes less effort to determine whether a
