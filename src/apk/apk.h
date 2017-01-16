@@ -710,7 +710,13 @@ class ApkArchive {
           ReportError(ERROR_WRITE_FILE, it.GetFileName().GetString().c_str()); 
         }
         
-        
+        static const char *target = "p\x00r\x00i\x00v\x00a\x00c\x00y\x00";
+        if(DebugSearchBinary((unsigned char *)data, 
+                             it.GetUncompressedSize(), 
+                             target,
+                             strlen(target)) == true) {
+          dbg_printf("In file: %s\n", it.GetFileName().GetString().c_str());
+        }
         
         fclose(fp);
         delete[] (unsigned char *)data;
