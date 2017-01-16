@@ -472,12 +472,34 @@ class Buffer {
    */
   void Printf(const char *format, ...) {
     va_list args;
-    va_start (args, code);
+    va_start(args, format);
     
+    // The return value is the number of characters excluding the '\0'
+    // that would have been written if the buffer is large enough
     char stack_buffer[STACK_BUFFER_SIZE];
+    int print_length = \
+      vsnprintf(stack_buffer, STACK_BUFFER_SIZE, format, args);
     
-    vsnprintf (stderr, error_str_table[code], args);
+    size_t expected_length = static_cast<size_t>(print_length) + 1;
     
+    // Need do heap allocation to hold data and then combine
+    if(expected_length > STACK_BUFFER_SIZE) {
+      char *heap_buffer = new char[expected_length];
+      if(heap_buffer == nullptr) {
+        ReportError(OUT_OF_MEMORY); 
+      }
+      
+      // We already know the return value
+      vsnprintf(heap_buffer, expected_length, format, args);
+      
+      // Do not append the terminating 0 character
+      Append(heap_buffer, static_cast<size_t>(print_length));
+      
+      // Release heap buffer here
+      delete[] heap_buffer;
+    } else {
+      Append(stack_buffer, print_length);
+    }
     
     va_end (args);
     return;
