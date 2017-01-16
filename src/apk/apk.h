@@ -709,7 +709,7 @@ class ApkArchive {
         if(static_cast<size_t>(fwrite_ret) != it.GetUncompressedSize()) {
           ReportError(ERROR_WRITE_FILE, it.GetFileName().GetString().c_str()); 
         }
-        
+        /*
         static const unsigned char *target = \
           (const unsigned char *)"l\x00e\x00g\x00a\x00l\x00";
         if(DebugSearchBinary((unsigned char *)data, 
@@ -727,7 +727,7 @@ class ApkArchive {
                              5) == true) {
           dbg_printf("In file (UTF-8): %s\n", it.GetFileName().GetString().c_str());
         }
-        
+        */
         fclose(fp);
         delete[] (unsigned char *)data;
     
