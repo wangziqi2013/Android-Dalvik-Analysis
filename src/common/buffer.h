@@ -199,8 +199,14 @@ class Buffer {
         ReportError(OUT_OF_MEMORY); 
       }
       
+      // Must use a new set of states since the old one has been traversed
+      va_list args_2;
+      va_start(args_2, format);
+      
       // We already know the return value
-      vsnprintf(heap_buffer, expected_length, format, args);
+      vsnprintf(heap_buffer, expected_length, format, args_2);
+      
+      va_end (args_2);
       
       // Do not append the terminating 0 character
       Append(heap_buffer, static_cast<size_t>(print_length));
