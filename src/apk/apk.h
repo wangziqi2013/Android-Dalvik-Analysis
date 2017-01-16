@@ -710,6 +710,8 @@ class ApkArchive {
           ReportError(ERROR_WRITE_FILE, it.GetFileName().GetString().c_str()); 
         }
         
+        
+        
         fclose(fp);
         delete[] (unsigned char *)data;
     
@@ -726,6 +728,33 @@ class ApkArchive {
     delete[] cwd_before;
     
     return; 
+  }
+  
+  /*
+   * DebugSearchBinary() - Search binary data inside binary data 
+   *
+   * This function returns false if not found, otherwise returns true, and 
+   * the offset of found substring is printed on stderr
+   * matches
+   */
+  bool DebugSearchBinary(unsigned char *src, 
+                         size_t src_len, 
+                         const char *seq, 
+                         size_t seq_len) {
+    bool found = false;
+    size_t offset = 0UL;
+    
+    // While we still have data to consume from the input
+    while(src_len - offset >= seq_len) {
+      if(memcmp(src + offset, seq, seq_len) == 0) {
+        dbg_printf("*** Found sequence on offset %lu\n", offset);
+        found = true;
+      }
+      
+      offset++;
+    }
+    
+    return found;
   }
   
   /*
