@@ -21,9 +21,15 @@ class Buffer {
   // Use 64K as default buffer size if none is given
   static constexpr size_t DEFAULT_SIZE = 0x1 << 16;
   
+#ifndef BUFFER_TEST_MODE  
   // 1 KB for stack buffer. Anything longer than this will be 
   // allocated on the heap and then combined into existing data
   static constexpr size_t STACK_BUFFER_SIZE = 0x1 << 10;
+#else
+  // For buffer test we want to cover all branches so make it smaller 
+  // such that we have a change to test stack and heap allocation
+  static constexpr size_t STACK_BUFFER_SIZE = 4;
+#endif
   
   /*
    * Expand() - Adjust the size of the buffer for holding more data
@@ -80,6 +86,13 @@ class Buffer {
    */
   size_t GetLength() const {
     return current_length; 
+  }
+  
+  /*
+   * GetData() - Returns a const pointer to the data field
+   */
+  const void *GetData() const {
+    return data_p; 
   }
   
   /*
