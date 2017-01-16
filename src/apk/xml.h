@@ -199,7 +199,18 @@ class BinaryXml {
     uint16_t style_index;
   } BYTE_ALIGNED;
   
-  using ElementEnd = ElementStart;
+  /*
+   * class ElementEnd - The end of an element which only has its name space
+   *                    and element tag 
+   */
+  class ElementEnd {
+   public:
+    CommonHeader common_header;
+    ElementHeader element_header;
+    
+    uint32_t name_space;
+    uint32_t name;
+  } BYTE_ALIGNED;
   
  // Private data memver
  private: 
