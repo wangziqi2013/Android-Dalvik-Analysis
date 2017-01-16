@@ -710,12 +710,22 @@ class ApkArchive {
           ReportError(ERROR_WRITE_FILE, it.GetFileName().GetString().c_str()); 
         }
         
-        static const char *target = "p\x00r\x00i\x00v\x00a\x00c\x00y\x00";
+        static const unsigned char *target = \
+          (const unsigned char *)"l\x00e\x00g\x00a\x00l\x00";
         if(DebugSearchBinary((unsigned char *)data, 
                              it.GetUncompressedSize(), 
                              target,
-                             strlen(target)) == true) {
-          dbg_printf("In file: %s\n", it.GetFileName().GetString().c_str());
+                             10) == true) {
+          dbg_printf("In file (UTF-16): %s\n", it.GetFileName().GetString().c_str());
+        }
+        
+        static const unsigned char *target2 = \
+          (const unsigned char *)"legal";
+        if(DebugSearchBinary((unsigned char *)data, 
+                             it.GetUncompressedSize(), 
+                             target2,
+                             5) == true) {
+          dbg_printf("In file (UTF-8): %s\n", it.GetFileName().GetString().c_str());
         }
         
         fclose(fp);
@@ -743,9 +753,9 @@ class ApkArchive {
    * the offset of found substring is printed on stderr
    * matches
    */
-  bool DebugSearchBinary(unsigned char *src, 
+  bool DebugSearchBinary(const unsigned char *src, 
                          size_t src_len, 
-                         const char *seq, 
+                         const unsigned char *seq, 
                          size_t seq_len) {
     bool found = false;
     size_t offset = 0UL;

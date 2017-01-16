@@ -27,8 +27,8 @@ void TestReadFileHeader() {
 void TestExtractAll() {
   _PrintTestName();
   
-  ApkArchive apk{"./test.apk"};
-  apk.ExtractAll("./test_apk_root/actual_test/");
+  ApkArchive apk{"./whatsapp.apk"};
+  apk.ExtractAll("./whatsapp_test/");
  
   return;
 }
