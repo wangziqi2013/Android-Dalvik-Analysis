@@ -11,8 +11,8 @@ $(BIN)/apk_test: $(BUILD)/apk.o $(TEST)/apk_test.cpp $(TEST)/test_suite.h $(BUIL
 	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(BUILD)/apk.o $(TEST)/apk_test.cpp $(BUILD)/common.o -o $(BIN)/apk_test
 	ln -sf $(BIN)/apk_test ./apk_test-bin
 
-$(BIN)/xml_test: $(BUILD)/xml.o $(TEST)/xml_test.cpp $(TEST)/test_suite.h $(BUILD)/test_suite.o $(BUILD)/common.o $(BUILD)/utf.o
-	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/xml_test.cpp $(BUILD)/common.o $(BUILD)/xml.o $(BUILD)/utf.o -o $(BIN)/xml_test
+$(BIN)/xml_test: $(BUILD)/xml.o $(TEST)/xml_test.cpp $(TEST)/test_suite.h $(BUILD)/test_suite.o $(BUILD)/common.o
+	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/xml_test.cpp $(BUILD)/common.o $(BUILD)/xml.o -o $(BIN)/xml_test
 	ln -sf $(BIN)/xml_test ./xml_test-bin
 
 apk_test: $(BIN)/apk_test
@@ -20,10 +20,6 @@ xml_test: $(BIN)/xml_test
 
 $(BUILD)/common.o: $(SRC)/common/common.cpp $(SRC)/common/common.h
 	g++ -c $(CXX_FLAG) $(SRC)/common/common.cpp -o $(BUILD)/common.o
-
-$(BUILD)/utf.o: $(SRC)/common/utf.cpp $(SRC)/common/utf.h
-	g++ -c $(CXX_FLAG) $(SRC)/common/utf.cpp -o $(BUILD)/utf.o
-
 
 $(BUILD)/test_suite.o: $(TEST)/test_suite.cpp $(TEST)/test_suite.h
 	g++ -c $(CXX_FLAG) $(TEST)/test_suite.cpp -o $(BUILD)/test_suite.o
