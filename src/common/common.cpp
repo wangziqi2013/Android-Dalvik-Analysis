@@ -34,7 +34,7 @@ const char *error_str_table[] = {
   
   // 20
   "Error parsing XML: Unexpected start of a new XML document\n",
-  "Error parsing resource chunk header: Unknown chunk type (%u)\n",
+  "Error parsing resource chunk header: Unknown chunk type (0x%04X)\n",
   "Error flushing a file\n",
   "Index to string pool too large: %lu (total count %lu)\n",
   "Only ASCII is supported in PrintAscii() (UTF-%s)\n",
@@ -48,6 +48,8 @@ const char *error_str_table[] = {
   
   // 30
   "Unexpected start of resource table\n",
+  "Unecpected UTF-8 continuiation byte at offset %ld", 
+  "Base class function not implemented (internal error)\n",
 };
 
 /*
