@@ -36,3 +36,4 @@ bin
 test_*
 *.swp
 *.xml
+run_test

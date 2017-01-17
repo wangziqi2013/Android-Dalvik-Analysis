@@ -46,6 +46,7 @@ $(BUILD)/res_table.o: $(SRC)/res/res_table.cpp $(SRC)/res/res_table.h $(SRC)/res
 prepare:
 	mkdir -p bin
 	mkdir -p build
+	mkdir -o run_test
 
 clean:
 	rm -f ./build/*
