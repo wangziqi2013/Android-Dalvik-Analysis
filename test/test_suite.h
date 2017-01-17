@@ -29,6 +29,7 @@
 
 // Print a given name as test name
 void PrintTestName(const char *name);
+void EnterTestDir();
 
 #define _PrintTestName() { PrintTestName(__FUNCTION__); }
 

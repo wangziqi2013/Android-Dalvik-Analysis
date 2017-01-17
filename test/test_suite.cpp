@@ -20,3 +20,16 @@ void PrintTestName(const char *name) {
   
   return;
 }
+
+/*
+ * EnterTestDir() - Enter test directory (shuold not run tests under the repo
+ *                  root dir)
+ */
+void EnterTestDir() {
+  static const char *TEST_DIR = "./run_test/";
+  int ret = chdir(TEST_DIR);
+  
+  assert(ret == 0);
+  
+  return;
+}
