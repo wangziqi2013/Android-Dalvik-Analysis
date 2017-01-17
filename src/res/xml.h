@@ -5,7 +5,8 @@
 #define _XML_H
 
 #include "common.h"
-#include "utf.h"
+#include "res_base.h"
+
 #include <list>
 #include <cstddef>
 
@@ -706,19 +707,18 @@ class BinaryXml {
         break;
       }
       case ResourceValue::DataType::INT_BOOLEAN: {
-        if(res_value_p->data == 1) {
-          buffer.Append("true", 4);
-        } else if(res_value_p->data == 0) {
-          buffer.Append("false", 5); 
-        } else { 
-          ReportError(ILLEGAL_BOOLEAN_VALUE, res_value_p->data); 
-        }
+        if(res_value_p->data == 0) {
+          buffer.Append("false", 5);
+        } else {
+          buffer.Append("true", 4); 
+        } 
         
         break;
       }
       default: {
         ReportError(UNSUPPORTED_RESOURCE_VALUE_TYPE, 
-                    static_cast<uint32_t>(res_value_p->type)); 
+                    static_cast<uint32_t>(res_value_p->type),
+                    res_value_p->data); 
       }
     } // switch
   };
