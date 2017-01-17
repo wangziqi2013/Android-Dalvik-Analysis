@@ -33,7 +33,7 @@ void TestStringPool(const char *file_name) {
  
 int main() {
   // This is UTF-16
-  TestStringPool("AndroidManifest.xml");
+  //TestStringPool("AndroidManifest.xml");
   // This is UTF-8
   TestStringPool("fragment_edit_dns.xml");
   

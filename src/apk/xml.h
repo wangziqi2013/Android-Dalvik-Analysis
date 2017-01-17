@@ -390,8 +390,11 @@ class BinaryXml {
       return; 
     }
     
-    // This is only temporary measure to parse the string pool
-    ParseNext(next_header_p);
+    while(1) {
+      // This is only temporary measure to parse the string pool
+      next_header_p = ParseNext(next_header_p);
+    }
+    
     assert(string_pool_header_p != nullptr);
     
     return;  
@@ -638,11 +641,16 @@ class BinaryXml {
         
         string_pool.AppendToBuffer(ns_stat.uri, &buffer); 
         buffer.AppendByte('\"');
+        buffer.AppendByte(' ');
         
         // Set the mark to avoid it from being printed in the next tag
         ns_stat.printed = true;
       }
     }
+    
+    // Then close the tag and new line
+    buffer.AppendByte('>');
+    buffer.AppendByte('\n');
     
     return;
   }
@@ -663,7 +671,7 @@ class BinaryXml {
       string_pool.AppendToBuffer(attr_p->raw_value, &buffer);
     } else {
       // Temp measure
-      buffer.Append("\"???? \"", 7); 
+      buffer.Append("\"????\" ", 7); 
     }
     
     return;
@@ -712,6 +720,7 @@ class BinaryXml {
       default: {
         dbg_printf("The content of the buffer:\n");
         buffer.WriteToFile(stderr);
+        dbg_printf("==========\n");
         
         ReportError(UNKNOWN_CHUNK_TYPE, 
                     static_cast<uint32_t>(next_header_p->type)); 
