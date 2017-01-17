@@ -673,12 +673,38 @@ class BinaryXml {
     if(attr_p->raw_value != INVALID_STRING) {
       string_pool.AppendToBuffer(attr_p->raw_value, &buffer);
     } else {
-      // Temp measure
-      buffer.Append("\"????\" ", 7); 
+      buffer.AppendByte('\"');
+      // Otherwise the value is typed and the type needs to be considered
+      ParseResourceValue(&attr_p->resource_value);
+      buffer.AppendByte('\"');
     }
     
     return;
   }
+  
+  /*
+   * ParseResourceValue() - Parse the typed value and print it in a 
+   *                        correct format
+   *
+   * For unsupported types we simply raise an exception about unsupported
+   * resource type
+   */
+  void ParseResourceValue(ResourceValue *res_value_p) {
+    if(res_value_p->length != 8) {
+      ReportError(UNEXPECTED_RESOURCE_VALUE_LENGTH, 
+                  static_cast<uint16_t>(res_value_p->length)); 
+    }
+    
+    switch(res_value_p->type) {
+      case ResourceValue::DataType::INT_DEC: {
+        buffer.Printf("%d", static_cast<int32_t>(res_value_p->data));
+      }
+      default: {
+        ReportError(UNSUPPORTED_RESOURCE_VALUE_TYPE, 
+                    static_cast<uint32_t>(res_value_p->type)); 
+      }
+    } // switch
+  };
   
   /*
    * ParseNext() - Central scheduling function that acts as a state machine and 
