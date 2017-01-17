@@ -129,12 +129,6 @@ class BinaryXml : public ResourceBase {
   // This points to the valid document header if there is one
   // Otherwise set to nullptr
   XmlHeader *xml_header_p;
-
-  // Pointer to the string pool
-  StringPoolHeader *string_pool_header_p;  
-  
-  // The real string pool
-  StringPool string_pool;
   
   // This is actually a pointer to the common header
   ResourceMapHeader *resource_map_header_p;
@@ -167,8 +161,6 @@ class BinaryXml : public ResourceBase {
             bool p_own_data=false) :
     ResourceBase{p_raw_data_p, p_length, p_own_data},
     xml_header_p{nullptr},
-    string_pool_header_p{nullptr},
-    string_pool{},
     resource_map_header_p{nullptr},
     resource_map_size{0UL},
     resource_map_p{nullptr},
@@ -256,35 +248,6 @@ class BinaryXml : public ResourceBase {
     
     assert(false);
     return nullptr;
-  }
-  
-  /*
-   * ParseStringPool() - Parses the string pool and constructs the string 
-   *                     pool object
-   */
-  void ParseStringPool(CommonHeader *header_p) {
-    string_pool_header_p = reinterpret_cast<StringPoolHeader *>(header_p);
-    
-    // Do this as a temporary measure because we do not want to deal with it now
-    assert(string_pool_header_p->style_count == 0);
-    
-    // This is an array of uint32_t that stores the offset into string 
-    // content table. It is located right after the header
-    string_pool.string_index_p = reinterpret_cast<uint32_t *>(
-        TypeUtility::Advance(header_p, header_p->header_length));
-    
-    // This is a relative offset to the first byte of the header
-    string_pool.string_start = \
-      reinterpret_cast<unsigned char *>(
-        TypeUtility::Advance(header_p, string_pool_header_p->string_offset));
-        
-    string_pool.string_count = string_pool_header_p->string_count;
-    
-    // If it is UTF-8 then each ASCII is represented using only 1 byte
-    string_pool.is_utf8 = \
-      !!(string_pool_header_p->flags & StringPoolHeader::Flags::UTF8);
-    
-    return;
   }
   
   /*

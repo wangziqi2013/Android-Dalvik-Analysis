@@ -231,6 +231,12 @@ class ResourceBase {
   // The buffer is freed as unsigned char[]
   bool own_data;
   
+  // Pointer to the string pool
+  StringPoolHeader *string_pool_header_p;  
+  
+  // The real string pool
+  StringPool string_pool;
+  
  // Common functions
  protected: 
  
@@ -242,7 +248,9 @@ class ResourceBase {
                bool p_own_data=false) :
     raw_data_p{p_raw_data_p},
     length{p_length},
-    own_data{p_own_data}
+    own_data{p_own_data},
+    string_pool_header_p{nullptr},
+    string_pool{} 
   {}
   
   /*
@@ -255,6 +263,35 @@ class ResourceBase {
     }
     
     return; 
+  }
+  
+  /*
+   * ParseStringPool() - Parses the string pool and constructs the string 
+   *                     pool object
+   */
+  void ParseStringPool(CommonHeader *header_p) {
+    string_pool_header_p = reinterpret_cast<StringPoolHeader *>(header_p);
+    
+    // Do this as a temporary measure because we do not want to deal with it now
+    assert(string_pool_header_p->style_count == 0);
+    
+    // This is an array of uint32_t that stores the offset into string 
+    // content table. It is located right after the header
+    string_pool.string_index_p = reinterpret_cast<uint32_t *>(
+        TypeUtility::Advance(header_p, header_p->header_length));
+    
+    // This is a relative offset to the first byte of the header
+    string_pool.string_start = \
+      reinterpret_cast<unsigned char *>(
+        TypeUtility::Advance(header_p, string_pool_header_p->string_offset));
+        
+    string_pool.string_count = string_pool_header_p->string_count;
+    
+    // If it is UTF-8 then each ASCII is represented using only 1 byte
+    string_pool.is_utf8 = \
+      !!(string_pool_header_p->flags & StringPoolHeader::Flags::UTF8);
+    
+    return;
   }
 };
 
