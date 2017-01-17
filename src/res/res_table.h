@@ -16,7 +16,18 @@ namespace android_dalvik_analysis {
 class ResourceTable : public ResourceBase {
  // type declarations
  private: 
-  using TableHeader = CommonHeader;
+
+  /*
+   * class TableHeader - The resource table header which is at the beginning of 
+   *                     the table
+   */
+  class TableHeader {
+   public: 
+    CommonHeader common_header;
+    
+    // Number of packages included in this resource table
+    uint32_t package_count; 
+  } BYTE_ALIGNED;
 
  // Data members  
  private:
@@ -79,21 +90,22 @@ class ResourceTable : public ResourceBase {
   CommonHeader *VerifyTableHeader() {
     table_header_p = reinterpret_cast<TableHeader *>(raw_data_p);
     
-    if(table_header_p->type != ChunkType::RESOURCE_TABLE) {
+    if(table_header_p->common_header.type != ChunkType::RESOURCE_TABLE) {
       dbg_printf("Resource table type 0x%X is wrong (expecting 0x%X)\n", 
-                 static_cast<uint32_t>(table_header_p->type), 
+                 static_cast<uint32_t>(table_header_p->common_header.type), 
                  static_cast<uint32_t>(ChunkType::RESOURCE_TABLE));
       
       return nullptr; 
-    } else if(table_header_p->header_length != sizeof(TableHeader)) {
+    } else if(table_header_p->common_header.header_length != \
+              sizeof(TableHeader)) {
       dbg_printf("Resource table length 0x%X is wrong (expecting 0x%lX)\n", 
-                 table_header_p->header_length, 
+                 table_header_p->common_header.header_length, 
                  sizeof(TableHeader));
       
       return nullptr;      
-    } else if(table_header_p->total_length != length) {
+    } else if(table_header_p->common_header.total_length != length) {
       dbg_printf("XML total length 0x%X is wrong (expecting 0x%lX)\n", 
-                 table_header_p->total_length, 
+                 table_header_p->common_header.total_length, 
                  length);
       
       // We require that the entire document is part of the XML

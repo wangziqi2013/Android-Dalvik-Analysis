@@ -38,11 +38,15 @@ const char *error_str_table[] = {
   "Error flushing a file\n",
   "Index to string pool too large: %lu (total count %lu)\n",
   "Only ASCII is supported in PrintAscii() (UTF-%s)\n",
+  
+  // 25
   "Corrupt resource map: inconsistent header fields\n",
   "URI not found - no XML namespace available\n",
   "Unexpected length of struct ResourceValue: %u\n",
   "Unsupported resource value type: %u (data: %X)\n",
   "Illegal value for boolean type: %u\n",
+  
+  // 30
   "Unexpected start of resource table\n",
 };
 

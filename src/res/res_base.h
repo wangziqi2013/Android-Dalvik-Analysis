@@ -293,6 +293,13 @@ class ResourceBase {
     string_pool.is_utf8 = \
       !!(string_pool_header_p->flags & StringPoolHeader::Flags::UTF8);
     
+    dbg_printf("Finished parsing string pool of %u strings and %u styles\n", 
+               string_pool_header_p->string_count,
+               string_pool_header_p->style_count);
+               
+    assert(string_pool_header_p->style_count == 0 && \
+           "This is a temporary measure");
+    
     return;
   }
  
