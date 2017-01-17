@@ -84,15 +84,29 @@ class Buffer {
   /*
    * GetLength() - Returns the current length of data
    */
-  size_t GetLength() const {
+  inline size_t etLength() const {
     return current_length; 
   }
   
   /*
    * GetData() - Returns a const pointer to the data field
    */
-  const void *GetData() const {
+  inline const void *GetData() const {
     return data_p; 
+  }
+  
+  /*
+   * Rewind() - Move the tail pointer towards the beginning of the buffer
+   *
+   * The rewinded size is too large (i.e. larger than the current content)
+   * then assertion would fail
+   */
+  inline void Rewind(size_t size) {
+    assert(size <= current_length);
+    
+    current_length -= size;
+    
+    return;
   }
   
   /*

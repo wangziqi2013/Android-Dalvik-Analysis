@@ -648,6 +648,9 @@ class BinaryXml {
       }
     }
     
+    // To eliminate the tailing space character which is always present
+    buffer.Rewind(1UL);
+    
     // Then close the tag and new line
     buffer.AppendByte('>');
     buffer.AppendByte('\n');
