@@ -677,6 +677,7 @@ class BinaryXml {
       // Otherwise the value is typed and the type needs to be considered
       ParseResourceValue(&attr_p->resource_value);
       buffer.AppendByte('\"');
+      buffer.AppendByte(' ');
     }
     
     return;
@@ -698,6 +699,22 @@ class BinaryXml {
     switch(res_value_p->type) {
       case ResourceValue::DataType::INT_DEC: {
         buffer.Printf("%d", static_cast<int32_t>(res_value_p->data));
+        break;
+      }
+      case ResourceValue::DataType::INT_HEX: {
+        buffer.Printf("0x%X", res_value_p->data);
+        break;
+      }
+      case ResourceValue::DataType::INT_BOOLEAN: {
+        if(res_value_p->data == 1) {
+          buffer.Append("true", 4);
+        } else if(res_value_p->data == 0) {
+          buffer.Append("false", 5); 
+        } else { 
+          ReportError(ILLEGAL_BOOLEAN_VALUE, res_value_p->data); 
+        }
+        
+        break;
       }
       default: {
         ReportError(UNSUPPORTED_RESOURCE_VALUE_TYPE, 

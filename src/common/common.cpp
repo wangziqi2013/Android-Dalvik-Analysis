@@ -40,8 +40,9 @@ const char *error_str_table[] = {
   "Only ASCII is supported in PrintAscii() (UTF-%s)\n",
   "Corrupt resource map: inconsistent header fields\n",
   "URI not found - no XML namespace available\n",
-  "Unexpected length of struct ResourceValue: %u",
-  "Unsupported resource value type: %u",
+  "Unexpected length of struct ResourceValue: %u\n",
+  "Unsupported resource value type: %u\n",
+  "Illegal value for boolean type: %u\n",
 };
 
 /*

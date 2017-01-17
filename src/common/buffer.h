@@ -84,7 +84,7 @@ class Buffer {
   /*
    * GetLength() - Returns the current length of data
    */
-  inline size_t etLength() const {
+  inline size_t GetLength() const {
     return current_length; 
   }
   
