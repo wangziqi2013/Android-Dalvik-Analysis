@@ -16,126 +16,9 @@ namespace android_dalvik_analysis {
 /*
  * class BinaryXml - Class for representing and parsing binary XML data
  */
-class BinaryXml {
+class BinaryXml : public ResourceBase {
  private:
-  
-  /*
-   * enum class ChunkType - The type of a chunk
-   */
-  enum class ChunkType : uint16_t {
-    XML_DOCUMENT = 0x0003,
-    STRING_POOL = 0x0001,
-    RESOURCE_MAP = 0x0180,
-    NAME_SPACE_START = 0x0100,
-    NAME_SPACE_END = 0x0101,
-    ELEMENT_START = 0x0102,
-    ELEMENT_END = 0x0103,
-  };
-  
-  /*
-   * class CommonHeader - A common header to denote the type of the following 
-   *                      XML node
-   */
-  class CommonHeader {
-   public:
-    // This enum has the same value as recorded inside the binary XML
-    ChunkType type; 
-    
-    // The size of the header (may be larger than 8 because there will be 
-    // extra fields in extended header)
-    uint16_t header_length;
-    
-    // The total size of the chunk including the header
-    // If this equals header size then it is an indication of empty data
-    uint32_t total_length;
-    
-    // This points to the next field
-    unsigned char next[0];
-  } BYTE_ALIGNED;
-  
-  // These two are equivalent
-  using XmlHeader = CommonHeader;
-  
-  /*
-   * class StringPoolHeader - This class represents the string pool header
-   */
-  class StringPoolHeader {
-   public:
-    // Use this to decide chunk length
-    CommonHeader common_header;
-    
-    uint32_t string_count;
-    uint32_t style_count;
-    uint32_t flags;
-    uint32_t string_offset;
-    uint32_t style_offset;
-    
-    /*
-     * enum class Flags - The meaning of individual bits in the flag
-     */
-    enum Flags : uint32_t {
-      SORTED = 0x1 << 0,
-      UTF8 = 0x1 << 8,
-    };
-  } BYTE_ALIGNED;
-  
-  /*
-   * class StringPool - The class that actually stores string pool data
-   */
-  class StringPool {
-   public: 
-    // Number of strings stored in the pool
-    size_t string_count;
-    
-    // The pointer to the array that stores offset of each string
-    uint32_t *string_index_p;
-    
-    // The pointer to the table that strings are stored
-    // Begin offset of each string
-    unsigned char *string_start;
-    
-    // Whether the string is represented in UTF-format or not
-    // UTF-8 string has a one byte repfix denoting the length. However
-    // in this format there are two such bytes with replicated values
-    // (more precisely they are UTF-8 and UTF-16 length respectively)
-    bool is_utf8;
-    
-    /*
-     * AppendToBuffer() - Appends the string at a given index to the buffer
-     */
-    void AppendToBuffer(size_t index, Buffer *buffer_p) {
-      if(index >= string_count) {
-        ReportError(STRING_POOL_INDEX_TOO_LARGE, index, string_count); 
-      }
-      
-      // This is the byte offset relative to the beginning of the data area
-      uint32_t offset = string_index_p[index];
-      // This points to the actual string
-      unsigned char *string_p = string_start + offset;
-       
-      if(is_utf8 == true) {
-        // Since UTF8 string has 2 length fields for both UTF16 length and UTF8 
-        // length we should call an extra DecodeLength() to make sure the
-        // pointer moves to the correct position
-        Utf8String s{string_p};
-        
-        // This will discard the previous result
-        s.DecodeLength();
-        
-        s.PrintAscii(buffer_p);
-      } else {
-        Utf16String s{string_p};
-        
-        s.PrintAscii(buffer_p);
-      }
-      
-      return;
-    }
-  };
-  
-  // This is used to indicate the string is invalid (i.e. does not exist)
-  constexpr static uint32_t INVALID_STRING = 0xFFFFFFFF;
-  
+   
   // This is just a common header with its data being an array of uint32_t
   // as resource IDs
   using ResourceMapHeader = CommonHeader;
@@ -240,99 +123,9 @@ class BinaryXml {
     uint32_t name;
   } BYTE_ALIGNED;
   
-  /*
-   * class ResourceValue - Typed representation of resource values
-   */
-  class ResourceValue {
-   public:
-    // The length of this struct
-    uint16_t length;
-    
-    // It is an empty file and should always be 0
-    uint8_t zero;
-    
-    /*
-     * enum class DataType - Denotes the type of the data contained in this 
-     *                       class instance
-     */
-    enum class DataType : uint8_t {
-      // The 'data' is either 0 or 1, specifying this resource is either
-      // undefined or empty, respectively.
-      NULL_TYPE = 0x00,
-      // The 'data' holds a ResTable_ref, a reference to another resource
-      // table entry.
-      REFERENCE = 0x01,
-      // The 'data' holds an attribute resource identifier.
-      ATTRIBUTE = 0x02,
-      // The 'data' holds an index into the containing resource table's
-      // global value string pool.
-      STRING = 0x03,
-      // The 'data' holds a single-precision floating point number.
-      FLOAT = 0x04,
-      // The 'data' holds a complex number encoding a dimension value,
-      // such as "100in".
-      DIMENSION = 0x05,
-      // The 'data' holds a complex number encoding a fraction of a
-      // container.
-      FRACTION = 0x06,
-      // The 'data' holds a dynamic ResTable_ref, which needs to be
-      // resolved before it can be used like a TYPE_REFERENCE.
-      DYNAMIC_REFERENCE = 0x07,
-      // The 'data' holds an attribute resource identifier, which needs to be resolved
-      // before it can be used like a TYPE_ATTRIBUTE.
-      DYNAMIC_ATTRIBUTE = 0x08,
-
-      // The 'data' is a raw integer value of the form n..n.
-      INT_DEC = 0x10,
-      // The 'data' is a raw integer value of the form 0xn..n.
-      INT_HEX = 0x11,
-      // The 'data' is either 0 or 1, for input "false" or "true" respectively.
-      INT_BOOLEAN = 0x12,
-
-      // The 'data' is a raw integer value of the form #aarrggbb.
-      INT_COLOR_ARGB8 = 0x1c,
-      // The 'data' is a raw integer value of the form #rrggbb.
-      INT_COLOR_RGB8 = 0x1d,
-      // The 'data' is a raw integer value of the form #argb.
-      INT_COLOR_ARGB4 = 0x1e,
-      // The 'data' is a raw integer value of the form #rgb.
-      INT_COLOR_RGB4 = 0x1f,
-    };
-    
-    // This is an enum type
-    DataType type;
-    uint32_t data;
-  } BYTE_ALIGNED;
-  
-  /*
-   * class Attribute - Represents attribute structure
-   */
-  class Attribute {
-   public:
-    uint32_t name_space;
-    uint32_t name;
-    
-    // This is a reference to the string pool. 0xFFFFFFFF if not available
-    uint32_t raw_value;
-    
-    // This describes typed value
-    ResourceValue resource_value;
-  } BYTE_ALIGNED;
-  
  // Private data memver
  private: 
  
-  // This points to an external buffer. Whether the buffer belongs to the 
-  // class is determined by own_data flag
-  unsigned char *raw_data_p;
-  
-  // This is the length of the data buffer
-  size_t length;
-  
-  // Whether the buffer should be freed during destruction
-  // The buffer is freed as unsigned char[]
-  bool own_data;
-  
   // This points to the valid document header if there is one
   // Otherwise set to nullptr
   XmlHeader *xml_header_p;
@@ -372,9 +165,7 @@ class BinaryXml {
   BinaryXml(unsigned char *p_raw_data_p, 
             size_t p_length, 
             bool p_own_data=false) :
-    raw_data_p{p_raw_data_p},
-    length{p_length},
-    own_data{p_own_data},
+    ResourceBase{p_raw_data_p, p_length, p_own_data},
     xml_header_p{nullptr},
     string_pool_header_p{nullptr},
     string_pool{},
@@ -405,11 +196,6 @@ class BinaryXml {
    * Destructor
    */
   ~BinaryXml() {
-    // If the ownership is transferred to this instance then need to free data
-    if(own_data == true) {
-      delete[] raw_data_p;  
-    }
-    
     return;
   }
   

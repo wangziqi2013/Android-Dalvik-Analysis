@@ -10,7 +10,7 @@
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 
 
-class ResTable {
+class ResourceTable {
 
 };
 
