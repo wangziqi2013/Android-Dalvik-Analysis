@@ -609,7 +609,7 @@ class BinaryXml {
     buffer.AppendByte('<');
     
     // Prints the optional name space string with a colon
-    PrintOptionalNameSpace(element_start_p->name_space)
+    PrintOptionalNameSpace(element_start_p->name_space);
     
     // Then output the tag name
     string_pool.AppendToBuffer(element_start_p->name, &buffer);
@@ -629,6 +629,21 @@ class BinaryXml {
       ParseAttribute(attribute_p + i);
     }
     
+    for(NameSpaceStatus &ns_stat : name_space_list) {
+      if(ns_stat.printed == false) {
+        buffer.Append("xmlns:", 6);
+        string_pool.AppendToBuffer(ns_stat.prefix, &buffer);
+        
+        buffer.Append("=\"", 2);
+        
+        string_pool.AppendToBuffer(ns_stat.uri, &buffer); 
+        buffer.AppendByte('\"');
+        
+        // Set the mark to avoid it from being printed in the next tag
+        ns_stat.printed = true;
+      }
+    }
+    
     return;
   }
   
@@ -642,13 +657,13 @@ class BinaryXml {
     PrintOptionalNameSpace(attr_p->name_space);
     
     string_pool.AppendToBuffer(attr_p->name, &buffer);
-    Buffer.AppendByte('=');
+    buffer.AppendByte('=');
     
     if(attr_p->raw_value != INVALID_STRING) {
       string_pool.AppendToBuffer(attr_p->raw_value, &buffer);
     } else {
       // Temp measure
-      buffer.Append("????", 4); 
+      buffer.Append("\"???? \"", 7); 
     }
     
     return;
@@ -695,6 +710,9 @@ class BinaryXml {
         break; 
       }
       default: {
+        dbg_printf("The content of the buffer:\n");
+        buffer.WriteToFile(stderr);
+        
         ReportError(UNKNOWN_CHUNK_TYPE, 
                     static_cast<uint32_t>(next_header_p->type)); 
         break;
