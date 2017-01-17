@@ -293,6 +293,25 @@ class ResourceBase {
     
     return;
   }
+ 
+ public:
+  
+  /*
+   * DebugPrintAllStrings() - Prints all strings inside the string pool to
+   *                          stderr for debugging purposes
+   */
+  void DebugPrintAllStrings() {
+    for(size_t i = 0;i < string_pool.string_count;i++) {
+      Buffer buffer{};
+      
+      fprintf(stderr, "string %lu: ", i);
+      string_pool.AppendToBuffer(i, &buffer);
+      buffer.WriteToFile(stderr);
+      fprintf(stderr, "\n");
+    }
+    
+    return;
+  }
 };
 
 } // namespace android_dalvik_analysis
