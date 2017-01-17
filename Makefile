@@ -3,7 +3,7 @@ SRC=./src
 BIN=./bin
 BUILD=./build
 TEST=./test
-CXX_FLAG=-g -Wl,--no-as-needed -lz -I$(SRC)/dex/ -I$(SRC)/apk/ -I$(SRC)/common/ -std=c++11 -Wall -Wextra 
+CXX_FLAG=-g -Wl,--no-as-needed -lz -I$(SRC)/dex/ -I$(SRC)/apk/ -I$(SRC)/common/ -I$(SRC)/res/ -std=c++11 -Wall -Wextra 
 
 all: apk_test xml_test
 
@@ -32,8 +32,8 @@ $(BUILD)/test_suite.o: $(TEST)/test_suite.cpp $(TEST)/test_suite.h
 $(BUILD)/apk.o: $(SRC)/apk/apk.cpp $(SRC)/apk/apk.h
 	g++ -c $(CXX_FLAG) $(SRC)/apk/apk.cpp -o $(BUILD)/apk.o
 
-$(BUILD)/xml.o: $(SRC)/apk/xml.cpp $(SRC)/apk/xml.h
-	g++ -c $(CXX_FLAG) $(SRC)/apk/xml.cpp -o $(BUILD)/xml.o
+$(BUILD)/xml.o: $(SRC)/res/xml.cpp $(SRC)/res/xml.h
+	g++ -c $(CXX_FLAG) $(SRC)/res/xml.cpp -o $(BUILD)/xml.o
 
 prepare:
 	mkdir -p bin
