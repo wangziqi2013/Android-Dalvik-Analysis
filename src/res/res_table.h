@@ -34,9 +34,9 @@ class ResourceTable : public ResourceBase {
     table_header_p{nullptr} {
     
     // Check whether all header fields are valid; if not just exit
-    CommonHeader *next_header_p = VerifyXmlHeader();  
-    if(next_header_p == nullptr) {
-      xml_header_p = nullptr;
+    CommonHeader *next_header_p = VerifyTableHeader();  
+    if(IsValidTable() == false) {
+      table_header_p = nullptr;
       
       return; 
     }
