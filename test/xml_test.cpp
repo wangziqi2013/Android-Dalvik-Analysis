@@ -32,6 +32,8 @@ void TestStringPool(const char *file_name) {
 }
  
 int main() {
+  EnterTestDir();
+  
   // This is UTF-16
   //TestStringPool("AndroidManifest.xml");
   // This is UTF-8

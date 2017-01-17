@@ -91,6 +91,8 @@ void TestPrintf() {
 }
 
 int main() {
+  EnterTestDir();
+  
   TestBasicExtend();
   TestPrintf();
   

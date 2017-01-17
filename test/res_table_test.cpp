@@ -23,6 +23,8 @@ void TestResourceTableBasic() {
 }
 
 int main() {
+  EnterTestDir();
+  
   TestResourceTableBasic();
   
   return 0; 

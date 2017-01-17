@@ -63,6 +63,8 @@ void ZlibVersionTest() {
 }
 
 int main() {
+  EnterTestDir();
+  
   //TestMalformedFile();
   TestReadFileHeader();
   TestExtractAll();
