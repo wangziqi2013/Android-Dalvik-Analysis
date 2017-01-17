@@ -227,7 +227,21 @@ class Utf16String : public UtfString {
    * and byte sequences for determining the starting byte
    */
   void ScanForLength() {
+    // Always read data in uint16_t units
+    uint16_t *p = reinterpret_cast<uint16_t *>(data_p);
     
+    // UTF-16 also uses 0x0000 as terminating sequence
+    while(*p != 0x0000) {
+      uint16_t ch = *p;
+      if(ch < 0xD800 || ch > 0xDFFF) {
+        // According to RFC 2781 this means it is a single unit character
+        p++; 
+      } else {
+        p += 2; 
+      }
+    }
+    
+    return;
   }
   
  public:
