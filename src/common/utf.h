@@ -74,33 +74,6 @@ class UtfString {
  */
 class Utf8String : public UtfString {
  public:
-   
-  /*
-   * Constructor
-   */
-  Utf8String(unsigned char *p_data_p, size_t p_length) :
-    UtfString{p_data_p, p_length}
-  {}
-  
-  /*
-   * Constructor - This will also decode length encoded in either 1 or 2 bytes
-   */
-  Utf8String(unsigned char *p_data_p, bool length_prefixed=true) :
-    UtfString{p_data_p} {
-    if(length_prefixed == true) {
-      DecodeLength();
-    } else {
-      ScanForLength(); 
-    }
-    
-    return;
-  }
-  
-  /*
-   * Destructor
-   */
-  ~Utf8String() {}
-  
   /*
    * DecodeLength() - Decode length field stored together with string
    *
@@ -163,7 +136,35 @@ class Utf8String : public UtfString {
     }
     
     return;
+  } 
+  
+ public:
+   
+  /*
+   * Constructor
+   */
+  Utf8String(unsigned char *p_data_p, size_t p_length) :
+    UtfString{p_data_p, p_length}
+  {}
+  
+  /*
+   * Constructor - This will also decode length encoded in either 1 or 2 bytes
+   */
+  Utf8String(unsigned char *p_data_p, bool length_prefixed=true) :
+    UtfString{p_data_p} {
+    if(length_prefixed == true) {
+      DecodeLength();
+    } else {
+      ScanForLength(); 
+    }
+    
+    return;
   }
+  
+  /*
+   * Destructor
+   */
+  ~Utf8String() {}
   
   /*
    * PrintAscii() - Prints ASCII into a buffer
@@ -192,7 +193,7 @@ class Utf8String : public UtfString {
  * Utf16String - UTF-8 encoded string
  */
 class Utf16String : public UtfString {
- private:
+ public:
    
    /*
    * DecodeLength() - Decode length field stored together with string
