@@ -7,6 +7,7 @@
 #include "common.h"
 #include "utf.h"
 #include <list>
+#include <cstddef>
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 
@@ -597,6 +598,20 @@ class BinaryXml {
     // Then output the tag name
     string_pool.AppendToBuffer(element_start_p->name, &buffer);
     buffer.AppendByte(' ');
+    
+    // It is attribute offset + relative offset of name_space field inside 
+    // the structure
+    Attribute *attribute_p = \
+      reinterpret_cast<Attribute *>(
+        TypeUtility::Advance(
+          header_p, 
+          element_start_p->attribute_offset + \
+            offsetof(ElementStart, name_space)));
+    
+    // For each attribute parse it using the i-th element's pointer
+    for(uint16_t i = 0;i < element_start_p->attribute_count;i++) {
+      ParseAttribute(attribute_p + i);
+    }
     
     return;
   }
