@@ -587,7 +587,10 @@ class BinaryXml {
     // Element opening character
     buffer.AppendByte('<');
     if(element_start_p->name_space != INVALID_STRING) {
-      string_pool.AppendToBuffer(element_start_p->name_space, &buffer);
+      // Since it is URI we need to convert it to prefix
+      uint32_t ns_prefix = UriToNameSpace(element_start_p->name_space);
+      
+      string_pool.AppendToBuffer(ns_prefix, &buffer);
       buffer.AppendByte(':');
     } 
     
