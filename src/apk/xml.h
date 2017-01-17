@@ -577,6 +577,26 @@ class BinaryXml {
   }
   
   /*
+   * PrintOptionalNameSpace() - This prints the name space using its URI if 
+   *                            the URI is not invalid
+   *
+   * This function prints the namespace as:
+   *   "namespace:" 
+   * where namespace is the name space string translated using URI
+   */
+  void PrintOptionalNameSpace(uint32_t uri) {
+    if(uri != INVALID_STRING) {
+      // Since it is URI we need to convert it to prefix
+      uint32_t ns_prefix = UriToNameSpace(uri);
+      
+      string_pool.AppendToBuffer(ns_prefix, &buffer);
+      buffer.AppendByte(':');
+    }
+    
+    return;
+  }
+  
+  /*
    * ParseElementStart() - Parse the start of element
    */
   void ParseElementStart(CommonHeader *header_p) {
@@ -587,13 +607,9 @@ class BinaryXml {
     
     // Element opening character
     buffer.AppendByte('<');
-    if(element_start_p->name_space != INVALID_STRING) {
-      // Since it is URI we need to convert it to prefix
-      uint32_t ns_prefix = UriToNameSpace(element_start_p->name_space);
-      
-      string_pool.AppendToBuffer(ns_prefix, &buffer);
-      buffer.AppendByte(':');
-    } 
+    
+    // Prints the optional name space string with a colon
+    PrintOptionalNameSpace(element_start_p->name_space)
     
     // Then output the tag name
     string_pool.AppendToBuffer(element_start_p->name, &buffer);
@@ -622,7 +638,8 @@ class BinaryXml {
    * This function assumes attributes are of fixed length
    */
   void ParseAttribute(Attribute *attr_p) {
-    
+    if(element_start_p->name_space != INVALID_STRING) {
+      uint32_t ns_prefix = UriToNameSpace(attr_p->name_space);
   }
   
   /*
