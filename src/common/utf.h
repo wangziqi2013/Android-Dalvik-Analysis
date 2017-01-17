@@ -139,13 +139,6 @@ class Utf8String : public UtfString {
   } 
   
  public:
-   
-  /*
-   * Constructor
-   */
-  Utf8String(unsigned char *p_data_p, size_t p_length) :
-    UtfString{p_data_p, p_length}
-  {}
   
   /*
    * Constructor - This will also decode length encoded in either 1 or 2 bytes
@@ -245,13 +238,6 @@ class Utf16String : public UtfString {
   }
   
  public:
-   
-  /*
-   * Constructor
-   */
-  Utf16String(unsigned char *p_data_p, size_t p_length) :
-    UtfString{p_data_p, p_length}
-  {}
   
   /*
    * Constructor
