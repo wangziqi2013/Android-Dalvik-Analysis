@@ -175,7 +175,6 @@ class BinaryXml : public ResourceBase {
     }
     
     while(1) {
-      // This is only temporary measure to parse the string pool
       next_header_p = ParseNext(next_header_p);
     }
     

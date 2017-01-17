@@ -43,6 +43,7 @@ const char *error_str_table[] = {
   "Unexpected length of struct ResourceValue: %u\n",
   "Unsupported resource value type: %u (data: %X)\n",
   "Illegal value for boolean type: %u\n",
+  "Unexpected start of resource table\n",
 };
 
 /*

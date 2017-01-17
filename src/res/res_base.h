@@ -32,6 +32,8 @@ class ResourceBase {
     NAME_SPACE_END = 0x0101,
     ELEMENT_START = 0x0102,
     ELEMENT_END = 0x0103,
+    
+    RESOURCE_TABLE = 0x0002,
   };
   
   /*
