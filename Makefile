@@ -35,6 +35,9 @@ $(BUILD)/apk.o: $(SRC)/apk/apk.cpp $(SRC)/apk/apk.h
 $(BUILD)/xml.o: $(SRC)/res/xml.cpp $(SRC)/res/xml.h $(SRC)/res/res_base.h
 	g++ -c $(CXX_FLAG) $(SRC)/res/xml.cpp -o $(BUILD)/xml.o
 
+$(BUILD)/res_table.o: $(SRC)/res/res_table.cpp $(SRC)/res/res_table.h $(SRC)/res/res_base.h
+	g++ -c $(CXX_FLAG) $(SRC)/res/res_table.cpp -o $(BUILD)/res_table.o
+
 prepare:
 	mkdir -p bin
 	mkdir -p build
