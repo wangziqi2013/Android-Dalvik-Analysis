@@ -32,7 +32,7 @@ $(BUILD)/test_suite.o: $(TEST)/test_suite.cpp $(TEST)/test_suite.h
 $(BUILD)/apk.o: $(SRC)/apk/apk.cpp $(SRC)/apk/apk.h
 	g++ -c $(CXX_FLAG) $(SRC)/apk/apk.cpp -o $(BUILD)/apk.o
 
-$(BUILD)/xml.o: $(SRC)/res/xml.cpp $(SRC)/res/xml.h
+$(BUILD)/xml.o: $(SRC)/res/xml.cpp $(SRC)/res/xml.h $(SRC)/res/res_base.h
 	g++ -c $(CXX_FLAG) $(SRC)/res/xml.cpp -o $(BUILD)/xml.o
 
 prepare:
