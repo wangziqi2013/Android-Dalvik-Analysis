@@ -131,6 +131,9 @@ class BinaryXml {
     }
   };
   
+  // This is used to indicate the string is invalid (i.e. does not exist)
+  constexpr static uint32_t INVALID_STRING = 0xFFFFFFFF;
+  
   // This is just a common header with its data being an array of uint32_t
   // as resource IDs
   using ResourceMapHeader = CommonHeader;
@@ -528,8 +531,6 @@ class BinaryXml {
     NameSpaceStart *name_space_start_p = \
       reinterpret_cast<NameSpaceStart *>(header_p);
     
-    assert(unprinted_name_space_count >= 0);
-    
     // We have seen a new ns and it is not printed yet
     unprinted_name_space_count++;
     // Construct a name space status object and then put that into the list
@@ -540,6 +541,41 @@ class BinaryXml {
   }
   
   /*
+   * UriToNameSpace() - This converts an URI string to its associated name 
+   *                    space string
+   *
+   * If the URI is not found for all active name spaces then return 
+   * Otherwise it is an error and an exception is thrown
+   *
+   * Note that we store both URI and name space ID as string index, so we do
+   * not have to actually do string comparison
+   */
+  uint32_t UriToNameSpace(uint32_t uri) {
+    for(const NameSpaceStatus &ns_stat : name_space_list) {
+      if(ns_stat.uri == uri) {
+        return ns_stat.prefix; 
+      }
+    }
+    
+    // If debug mode is ON we need to print the URI here for debugging
+#ifndef NDEBUG
+    Buffer buffer{};
+    string_pool.AppendToBuffer(uri, &buffer);
+    
+    dbg_printf("URI: ");
+    buffer.WriteToFile(stderr);
+    
+    fputc('\n', stderr);
+#endif
+
+    ReportError(NAME_SPACE_URI_NOT_FOUND);
+    
+    // Should never reach here
+    assert(false);
+    return INVALID_STRING;
+  }
+  
+  /*
    * ParseElementStart() - Parse the start of element
    */
   void ParseElementStart(CommonHeader *header_p) {
@@ -547,10 +583,28 @@ class BinaryXml {
     
     ElementStart *element_start_p = \
       reinterpret_cast<ElementStart *>(header_p);
-      
     
+    // Element opening character
+    buffer.AppendByte('<');
+    if(element_start_p->name_space != INVALID_STRING) {
+      string_pool.AppendToBuffer(element_start_p->name_space, &buffer);
+      buffer.AppendByte(':');
+    } 
+    
+    // Then output the tag name
+    string_pool.AppendToBuffer(element_start_p->name, &buffer);
+    buffer.AppendByte(' ');
     
     return;
+  }
+  
+  /*
+   * ParseAttribute() - Parses attribute and print to the buffer
+   *
+   * This function assumes attributes are of fixed length
+   */
+  void ParseAttribute(Attribute *attr_p) {
+    
   }
   
   /*

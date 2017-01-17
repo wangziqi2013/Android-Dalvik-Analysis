@@ -39,6 +39,7 @@ const char *error_str_table[] = {
   "Index to string pool too large: %lu (total count %lu)\n",
   "Only ASCII is supported in PrintAscii() (UTF-%s)\n",
   "Corrupt resource map: inconsistent header fields\n",
+  "URI not found - no XML namespace available\n",
 };
 
 /*
