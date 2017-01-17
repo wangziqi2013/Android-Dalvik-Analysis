@@ -638,8 +638,20 @@ class BinaryXml {
    * This function assumes attributes are of fixed length
    */
   void ParseAttribute(Attribute *attr_p) {
-    if(element_start_p->name_space != INVALID_STRING) {
-      uint32_t ns_prefix = UriToNameSpace(attr_p->name_space);
+    // This prints the optional ns with a colon after it
+    PrintOptionalNameSpace(attr_p->name_space);
+    
+    string_pool.AppendToBuffer(attr_p->name, &buffer);
+    Buffer.AppendByte('=');
+    
+    if(attr_p->raw_value != INVALID_STRING) {
+      string_pool.AppendToBuffer(attr_p->raw_value, &buffer);
+    } else {
+      // Temp measure
+      buffer.Append("????", 4); 
+    }
+    
+    return;
   }
   
   /*
