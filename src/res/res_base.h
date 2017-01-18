@@ -108,7 +108,9 @@ class ResourceBase {
      * AppendToBuffer() - Appends the string at a given index to the buffer
      *
      * This function always append UTF-8 string to the buffer no matter
-     * whether the original is UTF-8 or UTF-16
+     * whether the original is UTF-8 or UTF-16, because UTF-8 is widely 
+     * supported on all platforms and on most applications (even like 
+     * Linux terminal)
      */
     void AppendToBuffer(size_t index, Buffer *buffer_p) {
       if(index >= string_count) {
@@ -157,7 +159,7 @@ class ResourceBase {
       // For UTF-8 it is always the terminating character
       buffer.AppendByte('\0');
       
-      dbg_printf(format, buffer.GetData());
+      fprintf(stderr, format, buffer.GetData());
 #else
       (void)index;
       (void)format;
@@ -297,37 +299,55 @@ class ResourceBase {
   }
   
   /*
-   * ParseStringPool() - Parses the string pool and constructs the string 
-   *                     pool object
+   * ConstructStringPool() - Constructs a string pool given a pointer
    */
-  void ParseStringPool(CommonHeader *header_p) {
-    string_pool_header_p = reinterpret_cast<StringPoolHeader *>(header_p);
-    
-    // Do this as a temporary measure because we do not want to deal with it now
-    assert(string_pool_header_p->style_count == 0);
-    
+  static void ConstructStringPool(CommonHeader *header_p,
+                                  StringPool *string_pool_p) {
+    // Since it is a static function this does not mask off
+    // the member because anyway the member is not accessible from here
+    StringPoolHeader *string_pool_header_p = \
+      reinterpret_cast<StringPoolHeader *>(header_p);
+                                    
     // This is an array of uint32_t that stores the offset into string 
     // content table. It is located right after the header
-    string_pool.string_index_p = reinterpret_cast<uint32_t *>(
+    string_pool_p->string_index_p = \
+      reinterpret_cast<uint32_t *>(
         TypeUtility::Advance(header_p, header_p->header_length));
     
     // This is a relative offset to the first byte of the header
-    string_pool.string_start = \
+    string_pool_p->string_start = \
       reinterpret_cast<unsigned char *>(
         TypeUtility::Advance(header_p, string_pool_header_p->string_offset));
         
-    string_pool.string_count = string_pool_header_p->string_count;
+    string_pool_p->string_count = string_pool_header_p->string_count;
     
     // If it is UTF-8 then each ASCII is represented using only 1 byte
-    string_pool.is_utf8 = \
+    string_pool_p->is_utf8 = \
       !!(string_pool_header_p->flags & StringPoolHeader::Flags::UTF8);
     
     dbg_printf("Finished parsing string pool of %u strings and %u styles\n", 
                string_pool_header_p->string_count,
                string_pool_header_p->style_count);
-               
+    
     assert(string_pool_header_p->style_count == 0 && \
            "This is a temporary measure");
+    
+    return;                                  
+  }
+  
+  /*
+   * ParseStringPool() - Parses the string pool and constructs the string 
+   *                     pool object
+   *
+   * Note that this function writes to the current string pool object inside
+   * the class instance
+   */
+  void ParseStringPool(CommonHeader *header_p) {
+    // First assign header pointer
+    string_pool_header_p = reinterpret_cast<StringPoolHeader *>(header_p);
+    
+    // Construct a string pool on the embedded string pool object
+    ConstructStringPool(header_p, &string_pool);
     
     return;
   }

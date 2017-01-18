@@ -34,6 +34,8 @@ class ResourceTable : public ResourceBase {
    */
   class PackageHeader {
    public:
+    CommonHeader common_header; 
+     
     // Base package's ID (also in the res identifier)
     // If 0 then it is not a base package; it is always 0x7F for application
     // package type
@@ -43,12 +45,35 @@ class ResourceTable : public ResourceBase {
     // The length is fixed 256 bytes encoded in UTF16 though UTF16 itself
     // is a variable length encoding scheme
     unsigned char name_utf16[128 * sizeof(char16_t)];
+    
+    // An offset from the beginning of this struct to the string pool for types
+    uint32_t type_string_pool_offset;
+    
+    // Index into string pool to indicate the last type visible
+    uint32_t last_public_type;
+    
+    // Same - an offset from this struct as the key string pool
+    uint32_t key_string_pool_offset;
+    
+    // The last index of a key that is visible
+    uint32_t last_public_key;
+    
   } BYTE_ALIGNED;
+  
+  /*
+   * class Package - Represents internals of a package
+   */
+  class Package {
+   public: 
+  };
 
  // Data members  
  private:
   TableHeader *table_header_p;
   
+  // A list of packages
+  // We do reserve space for this vector such that only 1 malloc() is done
+  std::vector<Package> package_list;
  public:
   
   /*
@@ -135,6 +160,13 @@ class ResourceTable : public ResourceBase {
     
     assert(false);
     return nullptr;
+  }
+  
+  /*
+   * ParsePackageHeader() - Parses the package header
+   */
+  void ParsePackageHeader(CommonHeader *header_p) {
+    
   }
   
   /*
