@@ -106,6 +106,9 @@ class ResourceBase {
     
     /*
      * AppendToBuffer() - Appends the string at a given index to the buffer
+     *
+     * This function always append UTF-8 string to the buffer no matter
+     * whether the original is UTF-8 or UTF-16
      */
     void AppendToBuffer(size_t index, Buffer *buffer_p) {
       if(index >= string_count) {
@@ -135,6 +138,30 @@ class ResourceBase {
         s.PrintUtf8(buffer_p);
       }
       
+      return;
+    }
+    
+    /*
+     * DebugPrint() - Prints a string on screen using debug printing
+     *
+     * This function is only functional if debug flag is turned on.
+     *
+     * The format string must carries only one format specifier, %s, which
+     * will be replaced by the actual string
+     */
+    void DebugPrint(size_t index, const char *format) {
+#ifndef NDEBUG
+      Buffer buffer;
+      AppendToBuffer(index, &buffer);
+      
+      // For UTF-8 it is always the terminating character
+      buffer.AppendByte('\0');
+      
+      dbg_printf(format, buffer.GetData());
+#else
+      (void)index;
+      (void)format;
+#endif      
       return;
     }
   };

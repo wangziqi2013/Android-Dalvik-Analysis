@@ -98,7 +98,7 @@ class Buffer {
   /*
    * Rewind() - Move the tail pointer towards the beginning of the buffer
    *
-   * The rewinded size is too large (i.e. larger than the current content)
+   * If the rewinded size is too large (i.e. larger than the current content)
    * then assertion would fail
    */
   inline void Rewind(size_t size) {

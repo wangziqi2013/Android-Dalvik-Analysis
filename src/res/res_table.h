@@ -28,6 +28,22 @@ class ResourceTable : public ResourceBase {
     // Number of packages included in this resource table
     uint32_t package_count; 
   } BYTE_ALIGNED;
+  
+  /*
+   * class PackageHeader - Package header that records metadata about package
+   */
+  class PackageHeader {
+   public:
+    // Base package's ID (also in the res identifier)
+    // If 0 then it is not a base package; it is always 0x7F for application
+    // package type
+    uint32_t id; 
+    
+    // UTF-16 encoded name of the package
+    // The length is fixed 256 bytes encoded in UTF16 though UTF16 itself
+    // is a variable length encoding scheme
+    unsigned char name_utf16[128 * sizeof(char16_t)];
+  } BYTE_ALIGNED;
 
  // Data members  
  private:
