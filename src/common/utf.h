@@ -31,6 +31,8 @@ class UtfString {
   
   /*
    * Constructor - Leave length field unspecified
+   *
+   * This is used by derived classes to compute length later from the data
    */
   UtfString(unsigned char *p_data_p) :
     data_p{p_data_p},
@@ -58,6 +60,12 @@ class UtfString {
     (void)buffer_p; 
     ReportError(BASE_CLASS_NOT_IMPLEMENTED);
   } 
+  
+  // Print in a UTF-8 format
+  void PrintUtf8(Buffer *buffer_p) { 
+    (void)buffer_p;
+    ReportError(BASE_CLASS_NOT_IMPLEMENTED); 
+  }
   
   // Return the physical length of the string
   inline size_t GetLength() const {
