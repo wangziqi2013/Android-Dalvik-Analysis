@@ -126,11 +126,13 @@ class ResourceBase {
         // This will discard the previous result
         s.DecodeLength();
         
-        s.PrintAscii(buffer_p);
+        // This makes sure that mainstream applications including linux terminal
+        // could display it properly
+        s.PrintUtf8(buffer_p);
       } else {
         Utf16String s{string_p};
         
-        s.PrintAscii(buffer_p);
+        s.PrintUtf8(buffer_p);
       }
       
       return;
