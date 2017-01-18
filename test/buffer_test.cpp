@@ -95,18 +95,29 @@ void TestPrintf() {
  *               print it to the buffer
  */
 void TestUtf16() {
+  _PrintTestName();
+  
   Buffer buffer;
+  Buffer buffer2;
   
   // UTF16 string with 0x00 0x00 as terminating character
   const char *p = "\x34\x78\x53\x66\x00\x00";
   
   // Not length prefixed
   Utf16String s{const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(p)), false};
+  
   s.PrintUtf8(&buffer);
+  buffer.AppendByte('\n');
+  
+  buffer2.Append(reinterpret_cast<const unsigned char *>(p), 4);
+  buffer2.AppendByte('\n');
+  
+  // This should be an error because we try to interpret UTF16 in UTF8 format
+  dbg_printf("Original bytes: ");
+  buffer2.WriteToFile(stderr);
   
   dbg_printf("UTF-8 result: ");
   buffer.WriteToFile(stderr);
-  dbg_printf("\n");
   
   return;
 }
