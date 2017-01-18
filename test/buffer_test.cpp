@@ -90,11 +90,33 @@ void TestPrintf() {
   return;
 }
 
+/*
+ * TestUtf16() - Tests whether we could convert UTF16 string to UTF8 and 
+ *               print it to the buffer
+ */
+void TestUtf16() {
+  Buffer buffer;
+  
+  // UTF16 string with 0x00 0x00 as terminating character
+  const char *p = "\x34\x78\x53\x66\x00\x00";
+  
+  // Not length prefixed
+  Utf16String s{const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(p)), false};
+  s.PrintUtf8(&buffer);
+  
+  dbg_printf("UTF-8 result: ");
+  buffer.WriteToFile(stderr);
+  dbg_printf("\n");
+  
+  return;
+}
+
 int main() {
   EnterTestDir();
   
   TestBasicExtend();
   TestPrintf();
+  TestUtf16();
   
   return 0;
 }
