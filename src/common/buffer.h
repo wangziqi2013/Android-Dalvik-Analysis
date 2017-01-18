@@ -110,6 +110,13 @@ class Buffer {
   }
   
   /*
+   * Reset() - Resets the current length to 0
+   */
+  inline void Reset() {
+    current_length = 0;
+  }
+  
+  /*
    * AppendByte() - Appends only a byte to the buffer
    *
    * This is more efficient since it takes less effort to determine whether a
