@@ -184,6 +184,18 @@ class Utf8String : public UtfString {
     
     return;
   }
+  
+  /*
+   * PrintUtf8() - Prints the UTF-8 to buffer without any modification
+   *
+   * Since the string itself is UTF-8 what we need to do is just to get
+   * it to the buffer using memcpy
+   */
+  inline void PrintUtf8(Buffer *buffer_p) {
+    buffer_p->Append(data, length);
+    
+    return;
+  }
 }; // class Utf8String
 
 ///////////////////////////////////////////////////////////////////// 
