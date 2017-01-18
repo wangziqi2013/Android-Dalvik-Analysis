@@ -180,6 +180,8 @@ class ResourceTable : public ResourceBase {
     PackageHeader *package_header_p = \
       reinterpret_cast<PackageHeader *>(header_p);
       
+    dbg_printf("    Package ID = 0x%02X\n", package_header_p->id);  
+      
     // Construct a packge object at the back of the vector
     // This saves the cost of copying the object
     package_list.emplace_back();
@@ -201,8 +203,33 @@ class ResourceTable : public ResourceBase {
     
     ConstructStringPool(key_string_pool_header_p, 
                         &package_p->key_string_pool);
+     
+#ifndef NDEBUG
+    dbg_printf("    Resource types: ");
+    
+    if(package_p->type_string_pool.string_count > 0) {
+      package_p->type_string_pool.DebugPrint(0, "%s");
+      // Print out all types in debug output; if debug is turned off this will
+      // be optimized out                   
+      for(size_t i = 1;i < package_p->type_string_pool.string_count;i++) {
+        fprintf(stderr, " | ");
+        package_p->type_string_pool.DebugPrint(i, "%s");
+      }
+      
+      fprintf(stderr, "\n");
+    } else {
+      fprintf(stderr, "[None]\n"); 
+    }
+#endif
                         
     return;
+  }
+  
+  /*
+   * ParseTypeSpec() - Parses type specification header and body
+   */
+  void ParseTypeSpec() {
+    
   }
   
   /*

@@ -109,7 +109,8 @@ void TestUtf16() {
                   0x0074, 0x0000};
   
   // Not length prefixed
-  Utf16String s{const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(p)), false};
+  Utf16String s{const_cast<unsigned char *>( \
+                  reinterpret_cast<const unsigned char *>(p)), false};
   
   s.PrintUtf8(&buffer);
   buffer.AppendByte('\n');

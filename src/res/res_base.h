@@ -89,6 +89,9 @@ class ResourceBase {
    */
   class StringPool {
    public: 
+    // We may want to access meta-data such as total size of the string pool
+    StringPoolHeader *header_p;
+   
     // Number of strings stored in the pool
     size_t string_count;
     
@@ -308,7 +311,10 @@ class ResourceBase {
     // the member because anyway the member is not accessible from here
     StringPoolHeader *string_pool_header_p = \
       reinterpret_cast<StringPoolHeader *>(header_p);
-                                    
+    
+    // This is for accessing metadata of the pool such as size
+    string_pool_p->header_p = string_pool_header_p;
+         
     // This is an array of uint32_t that stores the offset into string 
     // content table. It is located right after the header
     string_pool_p->string_index_p = \
@@ -326,7 +332,7 @@ class ResourceBase {
     string_pool_p->is_utf8 = \
       !!(string_pool_header_p->flags & StringPoolHeader::Flags::UTF8);
     
-    dbg_printf("Finished parsing string pool of %u strings and %u styles\n", 
+    dbg_printf("    Finished parsing string pool of %u strings and %u styles\n", 
                string_pool_header_p->string_count,
                string_pool_header_p->style_count);
     
