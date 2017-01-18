@@ -6,6 +6,10 @@
 
 #include "common.h"
 
+// C++11 for UTF support
+#include <codecvt>
+#include <locale>
+
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 
 
@@ -192,7 +196,7 @@ class Utf8String : public UtfString {
    * it to the buffer using memcpy
    */
   inline void PrintUtf8(Buffer *buffer_p) {
-    buffer_p->Append(data, length);
+    buffer_p->Append(data_p, length);
     
     return;
   }
@@ -304,6 +308,27 @@ class Utf16String : public UtfString {
       // Advance by 2 bytes each time
       p++;
     }
+    
+    return;
+  }
+  
+  /*
+   * PrintUtf8() - Prints the UTF-8 to buffer
+   *
+   * This function requires converting UTF-16 to UTF-8. Note that currently we
+   * just use C++ std library for converting, so it is not in the fatest form
+   * e.g. 
+   */
+  inline void PrintUtf8(Buffer *buffer_p) {
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>,char16_t> conversion;
+    
+    // Although a std::string is generated here hopefully it could be 
+    // optimized out
+    const std::string &utf_8_s = \
+      conversion.to_bytes(reinterpret_cast<char16_t *>(data_p));
+    
+    // Append binary data to the buffer
+    buffer_p->Append(utf_8_s.c_str(), utf_8_s.length()); 
     
     return;
   }
