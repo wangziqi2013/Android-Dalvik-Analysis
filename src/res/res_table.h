@@ -65,6 +65,12 @@ class ResourceTable : public ResourceBase {
    */
   class Package {
    public: 
+    // Pointer to the package header
+    PackageHeader *header_p;
+    
+    // Two string pools indicated in the header
+    StringPool type_string_pool;
+    StringPool key_string_pool;
   };
 
  // Data members  
@@ -93,7 +99,7 @@ class ResourceTable : public ResourceBase {
       return; 
     }
     
-    while(1) {
+    while(next_header_p != nullptr) {
       next_header_p = ParseNext(next_header_p);
     }
     
@@ -152,32 +158,74 @@ class ResourceTable : public ResourceBase {
       // We require that the entire document is part of the XML
       // Otherwise we are unable to decode the rest of it
       return nullptr; 
-    } else {
-      // Return the next byte and cast it as common header for later parsing
-      return reinterpret_cast<CommonHeader *>(
-               TypeUtility::Advance(table_header_p, sizeof(TableHeader))); 
     }
     
-    assert(false);
-    return nullptr;
+    dbg_printf("Verified resource table header; package count = %u\n",
+               table_header_p->package_count);
+               
+    // This serves as an optimization such that we only allocate once
+    // for the parsing process
+    package_list.reserve(table_header_p->package_count);
+    
+    // Return the next byte and cast it as common header for later parsing
+    return reinterpret_cast<CommonHeader *>(
+             TypeUtility::Advance(table_header_p, sizeof(TableHeader))); 
   }
   
   /*
-   * ParsePackageHeader() - Parses the package header
+   * ParsePackage() - Parses the package header and push a package
+   *                  object to the package list
    */
-  void ParsePackageHeader(CommonHeader *header_p) {
+  void ParsePackage(CommonHeader *header_p) {
+    PackageHeader *package_header_p = \
+      reinterpret_cast<PackageHeader *>(header_p);
+      
+    // Construct a packge object at the back of the vector
+    // This saves the cost of copying the object
+    package_list.emplace_back();
+    // This points to the package object we just inserted
+    Package *package_p = &package_list.back();
     
+    package_p->header_p = package_header_p;
+    
+    CommonHeader *type_string_pool_header_p = \
+      TypeUtility::Advance(header_p, 
+                           package_header_p->type_string_pool_offset);
+    
+    ConstructStringPool(type_string_pool_header_p, 
+                        &package_p->type_string_pool);
+                        
+    CommonHeader *key_string_pool_header_p = \
+      TypeUtility::Advance(header_p, 
+                           package_header_p->key_string_pool_offset);
+    
+    ConstructStringPool(key_string_pool_header_p, 
+                        &package_p->key_string_pool);
+                        
+    return;
   }
   
   /*
    * ParseNext() - Parse the contents of the resource table
    *
    * This function has the same structure as the one in class BinaryXml
+   *
+   * If we have reached the end then just return nullptr and that's it
    */ 
   CommonHeader *ParseNext(CommonHeader *next_header_p) {
     assert(next_header_p != nullptr);
+    
+    if(static_cast<size_t>((reinterpret_cast<unsigned char *>(next_header_p) - \
+        raw_data_p)) >= length) {
+      return nullptr;      
+    }
+    
     CommonHeader *ret_header_p = \
       TypeUtility::Advance(next_header_p, next_header_p->total_length);
+    
+    dbg_printf("Parsing header of type %u @ offset 0x%lX\n",
+               (uint32_t)next_header_p->type,
+               (size_t)next_header_p - (size_t)raw_data_p);
     
     switch(next_header_p->type) {
       case ChunkType::RESOURCE_TABLE: {
@@ -188,9 +236,14 @@ class ResourceTable : public ResourceBase {
         ParseStringPool(next_header_p);
         break;
       } 
+      case ChunkType::PACKAGE: {
+        ParsePackage(next_header_p);
+        break; 
+      }
       default: {
         ReportError(UNKNOWN_CHUNK_TYPE, 
-                    static_cast<uint32_t>(next_header_p->type)); 
+                    static_cast<uint32_t>(next_header_p->type),
+                    (size_t)next_header_p - (size_t)raw_data_p); 
         break;
       }
     } // switch type

@@ -174,7 +174,7 @@ class BinaryXml : public ResourceBase {
       return; 
     }
     
-    while(1) {
+    while(next_header_p != nullptr) {
       next_header_p = ParseNext(next_header_p);
     }
     
@@ -485,6 +485,12 @@ class BinaryXml : public ResourceBase {
   CommonHeader *ParseNext(CommonHeader *next_header_p) {
     assert(next_header_p != nullptr);
     
+    // If we have reached the end of the chunk just return nullptr
+    if(static_cast<size_t>((reinterpret_cast<unsigned char *>(next_header_p) - \
+        raw_data_p)) >= length) {
+      return nullptr;      
+    }
+    
     // The return value is the next header pointer (hopefully)
     CommonHeader *ret_header_p = \
       TypeUtility::Advance(next_header_p, next_header_p->total_length);
@@ -517,7 +523,8 @@ class BinaryXml : public ResourceBase {
         dbg_printf("==========\n");
         
         ReportError(UNKNOWN_CHUNK_TYPE, 
-                    static_cast<uint32_t>(next_header_p->type)); 
+                    static_cast<uint32_t>(next_header_p->type),
+                    (size_t)next_header_p - (size_t)raw_data_p); 
         break;
       }
     } // switch type

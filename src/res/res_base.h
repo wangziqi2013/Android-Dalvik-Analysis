@@ -34,6 +34,7 @@ class ResourceBase {
     ELEMENT_END = 0x0103,
     
     RESOURCE_TABLE = 0x0002,
+    PACKAGE = 0x0200,
   };
   
   /*
