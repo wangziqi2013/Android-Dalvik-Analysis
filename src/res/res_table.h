@@ -506,7 +506,7 @@ class ResourceTable : public ResourceBase {
         
         return;
       }
-  
+      
       // We are writing the modified BCP 47 tag.
       // It starts with 'b+' and uses '+' as a separator.
   
@@ -580,8 +580,7 @@ class ResourceTable : public ResourceBase {
             buffer_p->Printf("ldrtl");
             break;
           default:
-            buffer_p->Printf("layoutDir=%d", 
-            screenLayout & MASK_LAYOUTDIR);
+            buffer_p->Printf("layoutDir=%d", screenLayout & MASK_LAYOUTDIR);
             break;
         }
       }
@@ -918,12 +917,12 @@ class ResourceTable : public ResourceBase {
     uint16_t zero2;
     
     // Number of resource value instances inside this chunk
-    size_t entry_count;
+    uint32_t entry_count;
     
     // The offset to the starting address of the data part
     // Between this structure and the header is an array of uint32_t
     // that records the offset of each instance into the data part
-    size_t data_offset;
+    uint32_t data_offset;
     
     // This structure records the config of this group of values
     // i.e. they are used under common configurations
@@ -1220,11 +1219,14 @@ class ResourceTable : public ResourceBase {
     
     // Under debug mode we need to store the name of the type somewhere
 #ifndef NDEBUG
-    dbg_printf("    Parsing type header: ");
+    dbg_printf("    Parsing type header @ 0x%lX: ", 
+               TypeUtility::GetPtrDiff(raw_data_p, header_p));
     Buffer buffer;
     type_header_p->config.GetName(&buffer);
     buffer.WriteToFile(stderr);
     fputc('\n', stderr);
+    
+    dbg_printf("        Entry count = %u\n", type_header_p->entry_count);
 #endif
     
     // The ID must match
