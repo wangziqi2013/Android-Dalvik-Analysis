@@ -943,7 +943,18 @@ class ResourceTable : public ResourceBase {
     
     // This list contains type spec header for each type, one header
     // for exactly one type. Type i has an entry on index i - 1
-    std::vector<TypeSpecHeader *> type_spec_header_list;
+    std::vector<std::pair<TypeSpecHeader *, std::vector<TypeHeader *>>> \
+      type_list;
+      
+    /*
+     * GetTypeCount() - Returns the number of types defined as resources
+     *
+     * Since the number of strings in the string pool defines all types
+     * we could treat this as the number of types
+     */
+    size_t GetTypeCount() const {
+      return type_string_pool.string_count;
+    }
   };
 
  // Data members  
@@ -1072,10 +1083,11 @@ class ResourceTable : public ResourceBase {
       &package_p->key_string_pool);
     
     // Give each type a type spec header slot in the list inside class Package
-    // Resize it and initialize all elements to null pointer to identify
-    // whether it has been initialized or not
-    package_p->type_spec_header_list.resize( \
-      package_p->type_string_pool.string_count, nullptr);
+    // Resize by assign nullptr to pointer (1st element) and assign empty vector
+    // to the second element
+    package_p->type_list.resize(package_p->GetTypeCount());
+    
+    for(size_t i = 0;i < )
     
     return;
   }
@@ -1088,11 +1100,11 @@ class ResourceTable : public ResourceBase {
   void DebugPrintPackageTypeString(Package *package_p) {
     dbg_printf("    Resource types: ");
     
-    if(package_p->type_string_pool.string_count > 0) {
+    if(package_p->GetTypeCount() > 0) {
       package_p->type_string_pool.DebugPrint(0, "%s");
       // Print out all types in debug output; if debug is turned off this will
       // be optimized out                   
-      for(size_t i = 1;i < package_p->type_string_pool.string_count;i++) {
+      for(size_t i = 1;i < package_p->GetTypeCount();i++) {
         fprintf(stderr, " | ");
         package_p->type_string_pool.DebugPrint(i, "%s");
       }
@@ -1142,8 +1154,8 @@ class ResourceTable : public ResourceBase {
      
     // Each type will have a type spec chunk, so just use the number of 
     // elements in type string pool     
-    for(size_t i = 0;i < package_p->type_string_pool.string_count;i++) {
-      ParseTypeSpec(type_spec_header_p, package_p);
+    for(size_t i = 0;i < package_p->GetTypeCount();i++) {
+      ParseTypeSpecHeader(type_spec_header_p, package_p);
       
       // Use its length field to find the following type spec chunk
       type_spec_header_p = \
@@ -1155,9 +1167,10 @@ class ResourceTable : public ResourceBase {
   }
   
   /*
-   * ParseTypeSpec() - Parses type specification header and body
+   * ParseTypeSpecHeader() - Parses type specification header and
+   *                         returns the type ID
    */
-  void ParseTypeSpec(CommonHeader *header_p, Package *package_p) {
+  uint32_t ParseTypeSpecHeader(CommonHeader *header_p, Package *package_p) {
     dbg_printf("Parsing TypeSpec chunk @ offset 0x%lX\n", 
                TypeUtility::GetPtrDiff(raw_data_p, header_p));
     assert(header_p->type == ChunkType::TYPE_SPEC);
@@ -1166,17 +1179,31 @@ class ResourceTable : public ResourceBase {
       reinterpret_cast<TypeSpecHeader *>(header_p);
     
     // Get the type ID which also represents its position in the vector
+    // NOTE: The real ID is always 1 less then the recodrd ID
     uint32_t type_id = static_cast<uint32_t>(type_spec_header_p->id);
     assert(type_id != 0);
     
-    // Each type only has one type spec header?
-    //package_p->type_spec_header_p = type_spec_header_p
+    // Assert the type has never be seen
+    assert(package_p->type_list[type_id - 1].first == nullptr);
+    package_p->type_list[type_id - 1].first = type_spec_header_p;
     
     dbg_printf("    Type id = %u; entry_count = %u\n", 
                static_cast<uint32_t>(type_spec_header_p->id),
                static_cast<uint32_t>(type_spec_header_p->entry_count));
     
-    return;
+    return type_id;
+  }
+  
+  /*
+   * ParseTypeHeader() - Parses type header
+   *
+   * Note that the ID of the type recorded in the type spec header is
+   * passed in to verify that the type header has the same ID
+   */
+  void ParseTypeHeader(CommonHeader *header_p, 
+                       Package *package_p, 
+                       uint32_t id) {
+    
   }
   
   /*
