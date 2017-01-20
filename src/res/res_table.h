@@ -912,6 +912,11 @@ class ResourceTable : public ResourceBase {
    public: 
     CommonHeader common_header;
     
+    // This is the ID of the type being described here
+    uint8_t id;
+    uint8_t zero1;
+    uint16_t zero2;
+    
     // Number of resource value instances inside this chunk
     size_t entry_count;
     
@@ -1087,8 +1092,6 @@ class ResourceTable : public ResourceBase {
     // to the second element
     package_p->type_list.resize(package_p->GetTypeCount());
     
-    for(size_t i = 0;i < )
-    
     return;
   }
   
@@ -1155,7 +1158,7 @@ class ResourceTable : public ResourceBase {
     // Each type will have a type spec chunk, so just use the number of 
     // elements in type string pool     
     for(size_t i = 0;i < package_p->GetTypeCount();i++) {
-      ParseTypeSpecHeader(type_spec_header_p, package_p);
+      uint32_t type_id = ParseTypeSpecHeader(type_spec_header_p, package_p);
       
       // Use its length field to find the following type spec chunk
       type_spec_header_p = \
@@ -1203,7 +1206,22 @@ class ResourceTable : public ResourceBase {
   void ParseTypeHeader(CommonHeader *header_p, 
                        Package *package_p, 
                        uint32_t id) {
+    TypeHeader *type_header_p = \
+      reinterpret_cast<TypeHeader *>(header_p);
     
+    // Under debug mode we need to store the name of the type somewhere
+#ifndef NDEBUG
+    dbg_printf("    Parsing type header: ");
+    Buffer buffer;
+    type_header_p->config.GetName(&buffer);
+    buffer.WriteToFile(stderr);
+    fputc('\n', stderr);
+#endif
+    
+    // The ID must match
+    assert(static_cast<uint32_t>(type_header_p->id) == id);
+    
+    return;
   }
   
   /*

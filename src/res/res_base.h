@@ -36,6 +36,7 @@ class ResourceBase {
     RESOURCE_TABLE = 0x0002,
     PACKAGE = 0x0200,
     TYPE_SPEC = 0x0202,
+    TYPE = 0x0201,
   };
   
   /*
