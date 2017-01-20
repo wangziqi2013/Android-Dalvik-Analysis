@@ -427,6 +427,54 @@ class ResourceTable : public ResourceBase {
     };
     
     /*
+     * UnpackLanguageOrRegion() - As name suggests
+     *
+     * This function is copied form Android runtime code:
+     *    https://github.com/android/platform_frameworks_base/blob/master/libs/androidfw/ResourceTypes.cpp
+     * Apache 2.0 License
+     */
+    static size_t UnpackLanguageOrRegion(const char in[2], 
+                                         const char base,
+                                         char out[4]) {
+      if (in[0] & 0x80) {
+        const uint8_t first = in[1] & 0x1f;
+        const uint8_t second = ((in[1] & 0xe0) >> 5) + ((in[0] & 0x03) << 3);
+        const uint8_t third = (in[0] & 0x7c) >> 2;
+  
+        out[0] = first + base;
+        out[1] = second + base;
+        out[2] = third + base;
+        out[3] = 0;
+  
+        return 3;
+      }
+    
+      if (in[0]) {
+        memcpy(out, in, 2);
+        memset(out + 2, 0, 2);
+        return 2;
+      }
+    
+      memset(out, 0, 4);
+      
+      return 0;
+    }
+    
+    /*
+     * UnpackLanguage() - As name suggests
+     */
+    size_t UnpackLanguage(char output[4]) const {
+      return UnpackLanguageOrRegion(language, 'a', output);
+    }
+    
+    /*
+     * UnpackRegion() - As name suggests
+     */
+    size_t UnpackRegion(char output[4]) const {
+      return UnpackLanguageOrRegion(country, '0', output);
+    }
+    
+    /*
      * AppendDirLocale() - Prints the dir and locale into a buffer
      *
      * This function is copied form Android runtime code:
@@ -447,12 +495,12 @@ class ResourceTable : public ResourceBase {
         }
 
         char buf[4];
-        size_t len = unpackLanguage(buf);
+        size_t len = UnpackLanguage(buf);
         buffer_p->Append(buf, len);
 
         if(country[0]){
           buffer_p->Printf("-r");
-          len = unpackRegion(buf);
+          len = UnpackRegion(buf);
           buffer_p->Append(buf, len);
         }
         
@@ -469,7 +517,7 @@ class ResourceTable : public ResourceBase {
       buffer_p->Printf("b+");
   
       char buf[4];
-      size_t len = unpackLanguage(buf);
+      size_t len = UnpackLanguage(buf);
       buffer_p->Append(buf, len);
   
       if(scriptWasProvided) {
@@ -479,7 +527,7 @@ class ResourceTable : public ResourceBase {
   
       if(country[0]) {
         buffer_p->Printf("+");
-        len = unpackRegion(buf);
+        len = UnpackRegion(buf);
         buffer_p->Append(buf, len);
       }
   
