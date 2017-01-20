@@ -18,17 +18,19 @@ class Buffer {
   
   size_t current_length;
   
+#ifndef BUFFER_TEST_MODE
   // Use 64K as default buffer size if none is given
-  static constexpr size_t DEFAULT_SIZE = 0x1 << 16;
-  
-#ifndef BUFFER_TEST_MODE  
+  static constexpr size_t DEFAULT_SIZE = 0x1UL << 16;
   // 1 KB for stack buffer. Anything longer than this will be 
   // allocated on the heap and then combined into existing data
-  static constexpr size_t STACK_BUFFER_SIZE = 0x1 << 10;
+  static constexpr size_t STACK_BUFFER_SIZE = 0x1UL << 10;
 #else
+  // Under debug mode make is as small as possible to test whether 
+  // bufer expansion works
+  static constexpr size_t DEFAULT_SIZE = 4UL;
   // For buffer test we want to cover all branches so make it smaller 
   // such that we have a change to test stack and heap allocation
-  static constexpr size_t STACK_BUFFER_SIZE = 4;
+  static constexpr size_t STACK_BUFFER_SIZE = 4UL;
 #endif
   
   /*
@@ -37,6 +39,10 @@ class Buffer {
    * Do not use this to shrink the buffer
    */
   void Expand(size_t resize_length) {
+#ifdef BUFFER_TEST_MODE
+    dbg_printf("Expand() called: from %lu to %lu\n", length, resize_length);
+#endif
+    
     assert(resize_length > length);
     
     unsigned char *temp = new unsigned char[resize_length];
