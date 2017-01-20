@@ -84,6 +84,37 @@ class ResourceTable : public ResourceBase {
   } BYTE_ALIGNED;
   
   /*
+   * class TypeConfig - The configuration under which values should be used
+   *
+   * This structure is a complete set of possible configurations a Android
+   * device could be configured
+   */
+  class TypeConfig {
+   public:
+    
+  } BYTE_ALIGNED;
+  
+  /*
+   * class TypeHeader - Header of the type instance chunk
+   */
+  class TypeHeader {
+   public: 
+    CommonHeader common_header;
+    
+    // Number of resource value instances inside this chunk
+    size_t entry_count;
+    
+    // The offset to the starting address of the data part
+    // Between this structure and the header is an array of uint32_t
+    // that records the offset of each instance into the data part
+    size_t data_offset;
+    
+    // This structure records the config of this group of values
+    // i.e. they are used under common configurations
+    TypeConfig config;
+  } BYTE_ALIGNED;
+  
+  /*
    * class Package - Represents internals of a package
    */
   class Package {
