@@ -426,6 +426,79 @@ class ResourceTable : public ResourceBase {
       CONFIG_SCREEN_ROUND = ACONFIGURATION_SCREEN_ROUND,
     };
     
+    /*
+     * AppendDirLocale() - Prints the dir and locale into a buffer
+     *
+     * This function is copied form Android runtime code:
+     *    https://github.com/android/platform_frameworks_base/blob/master/libs/androidfw/ResourceTypes.cpp
+     * Apache 2.0 License
+     */
+    void AppendDirLocale(Buffer *buffer_p) const {
+      if(!language[0]) {
+        return;
+      }
+      
+      const bool scriptWasProvided = \
+        localeScript[0] != '\0' && !localeScriptWasComputed;
+        
+      if(!scriptWasProvided && !localeVariant[0]) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+
+        char buf[4];
+        size_t len = unpackLanguage(buf);
+        buffer_p->Append(buf, len);
+
+        if(country[0]){
+          buffer_p->Printf("-r");
+          len = unpackRegion(buf);
+          buffer_p->Append(buf, len);
+        }
+        
+        return;
+      }
+  
+      // We are writing the modified BCP 47 tag.
+      // It starts with 'b+' and uses '+' as a separator.
+  
+      if(buffer_p->GetLength() > 0) {
+        buffer_p->AppendByte('-');
+      }
+      
+      buffer_p->Printf("b+");
+  
+      char buf[4];
+      size_t len = unpackLanguage(buf);
+      buffer_p->Append(buf, len);
+  
+      if(scriptWasProvided) {
+        buffer_p->Printf("+");
+        buffer_p->Append(localeScript, sizeof(localeScript));
+      }
+  
+      if(country[0]) {
+        buffer_p->Printf("+");
+        len = unpackRegion(buf);
+        buffer_p->Append(buf, len);
+      }
+  
+      if(localeVariant[0]) {
+        buffer_p->Printf("+");
+        buffer_p->Append(localeVariant, 
+                         strnlen(localeVariant, sizeof(localeVariant)));
+      }
+      
+      return;
+    }
+    
+    /*
+     * GetName() - Prints the name of a config into a buffer
+     *
+     * This function is copied form Android runtime code:
+     *    https://github.com/android/platform_frameworks_base/blob/master/libs/androidfw/ResourceTypes.cpp
+     * Apache 2.0 License
+     */
     void GetName(Buffer *buffer_p) const {
       if(mcc != 0) {
         if(buffer_p->GetLength() > 0) {
@@ -444,7 +517,7 @@ class ResourceTable : public ResourceBase {
       }
       
       // Adding country code and locale
-      appendDirLocale(buffer_p);
+      AppendDirLocale(buffer_p);
   
       if((screenLayout & MASK_LAYOUTDIR) != 0) {
         if(buffer_p->GetLength() > 0) {
@@ -523,7 +596,7 @@ class ResourceTable : public ResourceBase {
           case SCREENLONG_NO:
             buffer_p->Printf("notlong");
             break;
-          case ResTable_config::SCREENLONG_YES:
+          case SCREENLONG_YES:
             buffer_p->Printf("long");
             break;
           default:
@@ -546,7 +619,7 @@ class ResourceTable : public ResourceBase {
             buffer_p->Printf("round");
             break;
           default:
-            buffer_p->Printf("screenRound=%d", dtohs(screenLayout2&MASK_SCREENROUND));
+            buffer_p->Printf("screenRound=%d", screenLayout2&MASK_SCREENROUND);
             break;
         }
       }
@@ -780,7 +853,7 @@ class ResourceTable : public ResourceBase {
         }
       }
   
-      return res;
+      return;
     }
   } BYTE_ALIGNED;
   
