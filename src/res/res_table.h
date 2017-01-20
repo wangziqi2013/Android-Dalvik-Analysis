@@ -425,6 +425,363 @@ class ResourceTable : public ResourceBase {
       CONFIG_LAYOUTDIR = ACONFIGURATION_LAYOUTDIR,
       CONFIG_SCREEN_ROUND = ACONFIGURATION_SCREEN_ROUND,
     };
+    
+    void GetName(Buffer *buffer_p) const {
+      if(mcc != 0) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        buffer_p->Printf("mcc%d", mcc);
+      }
+      
+      if(mnc != 0) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+          
+        buffer_p->Printf("mnc%d", mnc);
+      }
+      
+      // Adding country code and locale
+      appendDirLocale(buffer_p);
+  
+      if((screenLayout & MASK_LAYOUTDIR) != 0) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+          
+        switch(screenLayout & MASK_LAYOUTDIR) {
+          case LAYOUTDIR_LTR:
+            buffer_p->Printf("ldltr");
+            break;
+          case LAYOUTDIR_RTL:
+            buffer_p->Printf("ldrtl");
+            break;
+          default:
+            buffer_p->Printf("layoutDir=%d", 
+            screenLayout & MASK_LAYOUTDIR);
+            break;
+        }
+      }
+      
+      if(smallestScreenWidthDp != 0) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        buffer_p->Printf("sw%ddp", smallestScreenWidthDp);
+      }
+      
+      if(screenWidthDp != 0) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        buffer_p->Printf("w%ddp", screenWidthDp);
+      }
+      
+      if(screenHeightDp != 0) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        buffer_p->Printf("h%ddp", screenHeightDp);
+      }
+      
+      if((screenLayout & MASK_SCREENSIZE) != SCREENSIZE_ANY) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        switch(screenLayout & MASK_SCREENSIZE) {
+          case SCREENSIZE_SMALL:
+            buffer_p->Printf("small");
+            break;
+          case SCREENSIZE_NORMAL:
+            buffer_p->Printf("normal");
+            break;
+          case SCREENSIZE_LARGE:
+            buffer_p->Printf("large");
+            break;
+          case SCREENSIZE_XLARGE:
+            buffer_p->Printf("xlarge");
+            break;
+          default:
+            buffer_p->Printf("screenLayoutSize=%d",
+                             screenLayout & MASK_SCREENSIZE);
+            break;
+        }
+      }
+      
+      if((screenLayout & MASK_SCREENLONG) != 0) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        switch(screenLayout & MASK_SCREENLONG) {
+          case SCREENLONG_NO:
+            buffer_p->Printf("notlong");
+            break;
+          case ResTable_config::SCREENLONG_YES:
+            buffer_p->Printf("long");
+            break;
+          default:
+            buffer_p->Printf("screenLayoutLong=%d",
+                             screenLayout & MASK_SCREENLONG);
+            break;
+        }
+      }
+      
+      if((screenLayout2 & MASK_SCREENROUND) != 0) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        switch(screenLayout2 & MASK_SCREENROUND) {
+          case SCREENROUND_NO:
+            buffer_p->Printf("notround");
+            break;
+          case SCREENROUND_YES:
+            buffer_p->Printf("round");
+            break;
+          default:
+            buffer_p->Printf("screenRound=%d", dtohs(screenLayout2&MASK_SCREENROUND));
+            break;
+        }
+      }
+      
+      if(orientation != ORIENTATION_ANY) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        switch(orientation) {
+          case ORIENTATION_PORT:
+            buffer_p->Printf("port");
+            break;
+          case ORIENTATION_LAND:
+            buffer_p->Printf("land");
+            break;
+          case ORIENTATION_SQUARE:
+            buffer_p->Printf("square");
+            break;
+          default:
+            buffer_p->Printf("orientation=%d", orientation);
+            break;
+        }
+      }
+      
+      if((uiMode & MASK_UI_MODE_TYPE) != UI_MODE_TYPE_ANY) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        switch(uiMode&MASK_UI_MODE_TYPE) {
+          case UI_MODE_TYPE_DESK:
+            buffer_p->Printf("desk");
+            break;
+          case UI_MODE_TYPE_CAR:
+            buffer_p->Printf("car");
+            break;
+          case UI_MODE_TYPE_TELEVISION:
+            buffer_p->Printf("television");
+            break;
+          case UI_MODE_TYPE_APPLIANCE:
+            buffer_p->Printf("appliance");
+            break;
+          case UI_MODE_TYPE_WATCH:
+            buffer_p->Printf("watch");
+            break;
+          default:
+            buffer_p->Printf("uiModeType=%d",
+                             screenLayout&MASK_UI_MODE_TYPE);
+            break;
+        }
+      }
+      
+      if((uiMode & MASK_UI_MODE_NIGHT) != 0) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        switch(uiMode&MASK_UI_MODE_NIGHT) {
+          case UI_MODE_NIGHT_NO:
+            buffer_p->Printf("notnight");
+            break;
+          case UI_MODE_NIGHT_YES:
+            buffer_p->Printf("night");
+            break;
+          default:
+            buffer_p->Printf("uiModeNight=%d",
+                             uiMode&MASK_UI_MODE_NIGHT);
+            break;
+          }
+      }
+      
+      if(density != DENSITY_DEFAULT) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        switch(density) {
+          case DENSITY_LOW:
+            buffer_p->Printf("ldpi");
+            break;
+          case DENSITY_MEDIUM:
+            buffer_p->Printf("mdpi");
+            break;
+          case DENSITY_TV:
+            buffer_p->Printf("tvdpi");
+            break;
+          case DENSITY_HIGH:
+            buffer_p->Printf("hdpi");
+            break;
+          case DENSITY_XHIGH:
+            buffer_p->Printf("xhdpi");
+            break;
+          case DENSITY_XXHIGH:
+            buffer_p->Printf("xxhdpi");
+            break;
+          case DENSITY_XXXHIGH:
+            buffer_p->Printf("xxxhdpi");
+            break;
+          case DENSITY_NONE:
+            buffer_p->Printf("nodpi");
+            break;
+          case DENSITY_ANY:
+            buffer_p->Printf("anydpi");
+            break;
+          default:
+            buffer_p->Printf("%ddpi", density);
+            break;
+        }
+      }
+      
+      if(touchscreen != TOUCHSCREEN_ANY) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        switch(touchscreen) {
+          case TOUCHSCREEN_NOTOUCH:
+            buffer_p->Printf("notouch");
+            break;
+          case TOUCHSCREEN_FINGER:
+            buffer_p->Printf("finger");
+            break;
+          case TOUCHSCREEN_STYLUS:
+            buffer_p->Printf("stylus");
+            break;
+          default:
+            buffer_p->Printf("touchscreen=%d", touchscreen);
+            break;
+        }
+      }
+      
+      if((inputFlags & MASK_KEYSHIDDEN) != 0) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        switch(inputFlags&MASK_KEYSHIDDEN) {
+          case KEYSHIDDEN_NO:
+            buffer_p->Printf("keysexposed");
+            break;
+          case KEYSHIDDEN_YES:
+            buffer_p->Printf("keyshidden");
+            break;
+          case KEYSHIDDEN_SOFT:
+            buffer_p->Printf("keyssoft");
+            break;
+        }
+      }
+      
+      if(keyboard != KEYBOARD_ANY) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        switch(keyboard) {
+          case KEYBOARD_NOKEYS:
+            buffer_p->Printf("nokeys");
+            break;
+          case KEYBOARD_QWERTY:
+            buffer_p->Printf("qwerty");
+            break;
+          case KEYBOARD_12KEY:
+            buffer_p->Printf("12key");
+            break;
+          default:
+            buffer_p->Printf("keyboard=%d", keyboard);
+            break;
+        }
+      }
+      
+      if((inputFlags&MASK_NAVHIDDEN) != 0) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        switch(inputFlags&MASK_NAVHIDDEN) {
+          case NAVHIDDEN_NO:
+            buffer_p->Printf("navexposed");
+            break;
+          case NAVHIDDEN_YES:
+            buffer_p->Printf("navhidden");
+            break;
+          default:
+            buffer_p->Printf("inputFlagsNavHidden=%d",
+                             inputFlags & MASK_NAVHIDDEN);
+            break;
+        }
+      }
+      
+      if(navigation != NAVIGATION_ANY) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        switch (navigation) {
+          case NAVIGATION_NONAV:
+            buffer_p->Printf("nonav");
+            break;
+          case NAVIGATION_DPAD:
+            buffer_p->Printf("dpad");
+            break;
+          case NAVIGATION_TRACKBALL:
+            buffer_p->Printf("trackball");
+            break;
+          case NAVIGATION_WHEEL:
+            buffer_p->Printf("wheel");
+            break;
+          default:
+            buffer_p->Printf("navigation=%d", navigation);
+            break;
+        }
+      }
+      
+      if(screenSize != 0) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        buffer_p->Printf("%dx%d", screenWidth, screenHeight);
+      }
+      
+      if(version != 0) {
+        if(buffer_p->GetLength() > 0) {
+          buffer_p->AppendByte('-');
+        }
+        
+        buffer_p->Printf("v%d", sdkVersion);
+        if (minorVersion != 0) {
+          buffer_p->Printf(".%d", minorVersion);
+        }
+      }
+  
+      return res;
+    }
   } BYTE_ALIGNED;
   
   /*
