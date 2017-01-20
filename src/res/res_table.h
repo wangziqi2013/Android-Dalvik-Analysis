@@ -1164,6 +1164,15 @@ class ResourceTable : public ResourceBase {
       type_spec_header_p = \
         TypeUtility::Advance(type_spec_header_p, 
                              type_spec_header_p->total_length);
+
+      // Then loop to parse types
+      while(type_spec_header_p->type == ChunkType::TYPE) {
+        ParseTypeHeader(type_spec_header_p, package_p, type_id);
+        
+        type_spec_header_p = \
+          TypeUtility::Advance(type_spec_header_p, 
+                               type_spec_header_p->total_length);
+      }
     }
                         
     return;
