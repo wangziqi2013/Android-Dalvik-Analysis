@@ -167,6 +167,15 @@ class Buffer {
   }
   
   /*
+   * Append() - Appends a C srting (i.e. null-terminated string) to the buffer
+   *
+   * This function overloads the most common form of Append()
+   */
+  inline void Append(const char *p) {
+    Append(p, strlen(p));
+  }
+  
+  /*
    * WriteToFile() - Flushes all contents to a file and clear buffer
    *
    * This function will flush the buffer, so it is relatively slow
