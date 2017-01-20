@@ -236,7 +236,23 @@ class ResourceTable : public ResourceBase {
    * This function is meant for debugging
    */
   void DebugPrintPackageTypeString(Package *package_p) {
+    dbg_printf("    Resource types: ");
     
+    if(package_p->type_string_pool.string_count > 0) {
+      package_p->type_string_pool.DebugPrint(0, "%s");
+      // Print out all types in debug output; if debug is turned off this will
+      // be optimized out                   
+      for(size_t i = 1;i < package_p->type_string_pool.string_count;i++) {
+        fprintf(stderr, " | ");
+        package_p->type_string_pool.DebugPrint(i, "%s");
+      }
+      
+      fprintf(stderr, "\n");
+    } else {
+      fprintf(stderr, "[None]\n"); 
+    }
+    
+    return;
   }
   
   /*
@@ -263,21 +279,7 @@ class ResourceTable : public ResourceBase {
     InitPackage(package_p, package_header_p);
     
 #ifndef NDEBUG
-    dbg_printf("    Resource types: ");
-    
-    if(package_p->type_string_pool.string_count > 0) {
-      package_p->type_string_pool.DebugPrint(0, "%s");
-      // Print out all types in debug output; if debug is turned off this will
-      // be optimized out                   
-      for(size_t i = 1;i < package_p->type_string_pool.string_count;i++) {
-        fprintf(stderr, " | ");
-        package_p->type_string_pool.DebugPrint(i, "%s");
-      }
-      
-      fprintf(stderr, "\n");
-    } else {
-      fprintf(stderr, "[None]\n"); 
-    }
+    DebugPrintPackageTypeString(package_p);
 #endif
 
     // The first type spec chunk must be after the key string pool
