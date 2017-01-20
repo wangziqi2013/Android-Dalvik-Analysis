@@ -61,6 +61,29 @@ class ResourceTable : public ResourceBase {
   } BYTE_ALIGNED;
   
   /*
+   * class TypeSpecHeader - Type specification header
+   *
+   * This header is followed by an array of uint32_t integers denoting the 
+   * configuration of resources available for a certain resource of this
+   * type. There is excatly one entry for each resource instance
+   */
+  class TypeSpecHeader {
+   public: 
+    CommonHeader common_header;
+    
+    // Low 8 bits of a 32 bit integer represents the type id
+    uint8_t id;
+    uint8_t zero1;
+    uint16_t zero2;
+    
+    // Number of entries after this struct
+    uint32_t entry_count;
+    
+    // The pointer to the first entry (it does not consume struct space)
+    uint32_t data[0];
+  } BYTE_ALIGNED;
+  
+  /*
    * class Package - Represents internals of a package
    */
   class Package {
@@ -71,6 +94,10 @@ class ResourceTable : public ResourceBase {
     // Two string pools indicated in the header
     StringPool type_string_pool;
     StringPool key_string_pool;
+    
+    // This list contains type spec header for each type, one header
+    // for exactly one type. Type i has an entry on index i - 1
+    std::vector<TypeSpecHeader *> type_spec_header_list;
   };
 
  // Data members  
@@ -181,7 +208,11 @@ class ResourceTable : public ResourceBase {
       reinterpret_cast<PackageHeader *>(header_p);
       
     dbg_printf("    Package ID = 0x%02X\n", package_header_p->id);  
-      
+    
+    // Even in Android runtime this is not taken care, so ....
+    assert(package_header_p->type_string_pool_offset != 0);
+    assert(package_header_p->key_string_pool_offset != 0);
+    
     // Construct a packge object at the back of the vector
     // This saves the cost of copying the object
     package_list.emplace_back();
@@ -203,7 +234,11 @@ class ResourceTable : public ResourceBase {
     
     ConstructStringPool(key_string_pool_header_p, 
                         &package_p->key_string_pool);
-     
+    
+    // Give each type a type spec header slot in the list inside class Package
+    package_p->type_spec_header_list.reserve( \
+      package_p->type_string_pool.string_count);
+    
 #ifndef NDEBUG
     dbg_printf("    Resource types: ");
     
@@ -221,6 +256,23 @@ class ResourceTable : public ResourceBase {
       fprintf(stderr, "[None]\n"); 
     }
 #endif
+
+    // The first type spec chunk must be after the key string pool
+    // so use its total size to determine (hopefully string pool is aligned)
+    CommonHeader *type_spec_header_p = \
+      TypeUtility::Advance(key_string_pool_header_p, 
+                           key_string_pool_header_p->total_length);
+     
+    // Each type will have a type spec chunk, so just use the number of 
+    // elements in type string pool                      
+    for(size_t i = 0;i < package_p->type_string_pool.string_count;i++) {
+      ParseTypeSpec(type_spec_header_p, package_p);
+      
+      // Use its length field to find the following type spec chunk
+      type_spec_header_p = \
+        TypeUtility::Advance(type_spec_header_p, 
+                             type_spec_header_p->total_length);
+    }
                         
     return;
   }
@@ -228,8 +280,22 @@ class ResourceTable : public ResourceBase {
   /*
    * ParseTypeSpec() - Parses type specification header and body
    */
-  void ParseTypeSpec() {
+  void ParseTypeSpec(CommonHeader *header_p, Package *package_p) {
+    dbg_printf("Parsing TypeSpec chunk @ offset 0x%lX\n", 
+               TypeUtility::GetPtrDiff(raw_data_p, header_p));
+    assert(header_p->type == ChunkType::TYPE_SPEC);
     
+    TypeSpecHeader *type_spec_header_p = \
+      reinterpret_cast<TypeSpecHeader *>(header_p);
+    
+    // Each type only has one type spec header?
+    //package_p->type_spec_header_p = type_spec_header_p
+    
+    dbg_printf("    Type id = %u; entry_count = %u\n", 
+               static_cast<uint32_t>(type_spec_header_p->id),
+               static_cast<uint32_t>(type_spec_header_p->entry_count));
+    
+    return;
   }
   
   /*
@@ -252,7 +318,7 @@ class ResourceTable : public ResourceBase {
     
     dbg_printf("Parsing header of type %u @ offset 0x%lX\n",
                (uint32_t)next_header_p->type,
-               (size_t)next_header_p - (size_t)raw_data_p);
+               TypeUtility::GetPtrDiff(raw_data_p, next_header_p));
     
     switch(next_header_p->type) {
       case ChunkType::RESOURCE_TABLE: {

@@ -318,6 +318,18 @@ class TypeUtility {
   static T *Retract(T *ptr, size_t offset) {
     return reinterpret_cast<T *>((reinterpret_cast<uint8_t *>(ptr) - offset));
   }
+  
+  /*
+   * GetPtrDiff() - Returns the difference between two pointers
+   *
+   * ptr1 must be less than ptr2
+   */
+  static size_t GetPtrDiff(const void *ptr1, const void *ptr2) {
+    assert(ptr1 <= ptr2);
+    
+    return static_cast<size_t>(static_cast<const unsigned char *>(ptr2) - \
+                               static_cast<const unsigned char *>(ptr1));
+  }
 };
 
 /////////////////////////////////////////////////////////////////////
