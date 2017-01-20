@@ -91,6 +91,10 @@ class ResourceTable : public ResourceBase {
     // Pointer to the package header
     PackageHeader *header_p;
     
+    // These two are used to store headers
+    StringPoolHeader *type_string_pool_header_p;
+    StringPoolHeader *key_string_pool_header_p;
+    
     // Two string pools indicated in the header
     StringPool type_string_pool;
     StringPool key_string_pool;
@@ -207,19 +211,23 @@ class ResourceTable : public ResourceBase {
   void InitPackage(Package *package_p, PackageHeader *package_header_p) {
     package_p->header_p = package_header_p;
     
-    CommonHeader *type_string_pool_header_p = \
-      TypeUtility::Advance(header_p, 
-                           package_header_p->type_string_pool_offset);
+    package_p->type_string_pool_header_p = \
+      reinterpret_cast<StringPoolHeader *>( \
+        TypeUtility::Advance(package_header_p, 
+                             package_header_p->type_string_pool_offset));
     
-    ConstructStringPool(type_string_pool_header_p, 
-                        &package_p->type_string_pool);
+    ConstructStringPool( \
+      reinterpret_cast<CommonHeader *>(package_p->type_string_pool_header_p), 
+      &package_p->type_string_pool);
                         
-    CommonHeader *key_string_pool_header_p = \
-      TypeUtility::Advance(header_p, 
-                           package_header_p->key_string_pool_offset);
+    package_p->key_string_pool_header_p = \
+      reinterpret_cast<StringPoolHeader *>( \
+        TypeUtility::Advance(package_header_p, 
+                             package_header_p->key_string_pool_offset));
     
-    ConstructStringPool(key_string_pool_header_p, 
-                        &package_p->key_string_pool);
+    ConstructStringPool( \
+      reinterpret_cast<CommonHeader *>(package_p->key_string_pool_header_p), 
+      &package_p->key_string_pool);
     
     // Give each type a type spec header slot in the list inside class Package
     // Resize it and initialize all elements to null pointer to identify
@@ -285,11 +293,13 @@ class ResourceTable : public ResourceBase {
     // The first type spec chunk must be after the key string pool
     // so use its total size to determine (hopefully string pool is aligned)
     CommonHeader *type_spec_header_p = \
-      TypeUtility::Advance(key_string_pool_header_p, 
-                           key_string_pool_header_p->total_length);
+      reinterpret_cast<CommonHeader *>( \
+        TypeUtility::Advance(
+          package_p->key_string_pool_header_p, 
+          package_p->key_string_pool_header_p->common_header.total_length));
      
     // Each type will have a type spec chunk, so just use the number of 
-    // elements in type string pool                      
+    // elements in type string pool     
     for(size_t i = 0;i < package_p->type_string_pool.string_count;i++) {
       ParseTypeSpec(type_spec_header_p, package_p);
       
@@ -312,6 +322,10 @@ class ResourceTable : public ResourceBase {
     
     TypeSpecHeader *type_spec_header_p = \
       reinterpret_cast<TypeSpecHeader *>(header_p);
+    
+    // Get the type ID which also represents its position in the vector
+    uint32_t type_id = static_cast<uint32_t>(type_spec_header_p->id);
+    assert(type_id != 0);
     
     // Each type only has one type spec header?
     //package_p->type_spec_header_p = type_spec_header_p
