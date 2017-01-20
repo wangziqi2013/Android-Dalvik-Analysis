@@ -200,6 +200,46 @@ class ResourceTable : public ResourceBase {
   }
   
   /*
+   * InitPackage() - Initialize a package object
+   *
+   * We could have done this in the package constructor
+   */
+  void InitPackage(Package *package_p, PackageHeader *package_header_p) {
+    package_p->header_p = package_header_p;
+    
+    CommonHeader *type_string_pool_header_p = \
+      TypeUtility::Advance(header_p, 
+                           package_header_p->type_string_pool_offset);
+    
+    ConstructStringPool(type_string_pool_header_p, 
+                        &package_p->type_string_pool);
+                        
+    CommonHeader *key_string_pool_header_p = \
+      TypeUtility::Advance(header_p, 
+                           package_header_p->key_string_pool_offset);
+    
+    ConstructStringPool(key_string_pool_header_p, 
+                        &package_p->key_string_pool);
+    
+    // Give each type a type spec header slot in the list inside class Package
+    // Resize it and initialize all elements to null pointer to identify
+    // whether it has been initialized or not
+    package_p->type_spec_header_list.resize( \
+      package_p->type_string_pool.string_count, nullptr);
+    
+    return;
+  }
+  
+  /*
+   * DebugPrintPackageTypeString() - Prints all type strings in a package
+   *
+   * This function is meant for debugging
+   */
+  void DebugPrintPackageTypeString(Package *package_p) {
+    
+  }
+  
+  /*
    * ParsePackage() - Parses the package header and push a package
    *                  object to the package list
    */
@@ -219,25 +259,8 @@ class ResourceTable : public ResourceBase {
     // This points to the package object we just inserted
     Package *package_p = &package_list.back();
     
-    package_p->header_p = package_header_p;
-    
-    CommonHeader *type_string_pool_header_p = \
-      TypeUtility::Advance(header_p, 
-                           package_header_p->type_string_pool_offset);
-    
-    ConstructStringPool(type_string_pool_header_p, 
-                        &package_p->type_string_pool);
-                        
-    CommonHeader *key_string_pool_header_p = \
-      TypeUtility::Advance(header_p, 
-                           package_header_p->key_string_pool_offset);
-    
-    ConstructStringPool(key_string_pool_header_p, 
-                        &package_p->key_string_pool);
-    
-    // Give each type a type spec header slot in the list inside class Package
-    package_p->type_spec_header_list.reserve( \
-      package_p->type_string_pool.string_count);
+    // Initialize members inside the package object
+    InitPackage(package_p, package_header_p);
     
 #ifndef NDEBUG
     dbg_printf("    Resource types: ");
