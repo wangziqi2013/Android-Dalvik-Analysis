@@ -176,6 +176,16 @@ class Buffer {
   }
   
   /*
+   * Append() - Appends a character
+   *
+   * Since this could be made more efficient because we know the storage
+   * grows by 1 at most so just call AppendByte() inside
+   */
+  inline void Append(char ch) {
+    AppendByte(ch); 
+  }
+  
+  /*
    * WriteToFile() - Flushes all contents to a file and clear buffer
    *
    * This function will flush the buffer, so it is relatively slow
