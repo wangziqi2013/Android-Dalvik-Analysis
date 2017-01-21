@@ -912,7 +912,7 @@ class ResourceTable : public ResourceBase {
     CommonHeader common_header;
     
     // This is the ID of the type being described here
-    uint8_t id;
+    uint8_t type_id;
     uint8_t zero1;
     uint16_t zero2;
     
@@ -957,6 +957,9 @@ class ResourceTable : public ResourceBase {
     // This points to the offset table
     uint32_t *offset_table;
     
+    // Points to the resource entry indexed by the offset table
+    unsigned char *data_p;
+    
     /*
      * Constructor
      */
@@ -965,7 +968,8 @@ class ResourceTable : public ResourceBase {
       type_spec_p{nullptr},
       readable_name{INIT_BUFFER_LENGTH},
       entry_count{0UL},
-      offset_table{nullptr}
+      offset_table{nullptr},
+      data_p{nullptr}
     {}
   };
   
@@ -974,6 +978,7 @@ class ResourceTable : public ResourceBase {
    */
   class TypeSpec {
    public: 
+    // This points to the type spec header
     TypeSpecHeader *header_p;
     
     // Type ID - begins at 1, and 0 means invalid (so whenever we use this
@@ -1018,10 +1023,8 @@ class ResourceTable : public ResourceBase {
     StringPool type_string_pool;
     StringPool key_string_pool;
     
-    // This list contains type spec header for each type, one header
-    // for exactly one type. Type i has an entry on index i - 1
-    std::vector<std::pair<TypeSpecHeader *, std::vector<TypeHeader *>>> \
-      type_list;
+    // A list of type spec objects
+    std::vector<TypeSpec> type_spec_list;
       
     /*
      * GetTypeCount() - Returns the number of types defined as resources
@@ -1159,10 +1162,9 @@ class ResourceTable : public ResourceBase {
       reinterpret_cast<CommonHeader *>(package_p->key_string_pool_header_p), 
       &package_p->key_string_pool);
     
-    // Give each type a type spec header slot in the list inside class Package
-    // Resize by assign nullptr to pointer (1st element) and assign empty vector
-    // to the second element
-    package_p->type_list.resize(package_p->GetTypeCount());
+    // This is done to only allocate exactly GetTypeCount() slots for type
+    // spec objects
+    package_p->type_spec_list.resize(package_p->GetTypeCount());
     
     return;
   }
@@ -1265,11 +1267,24 @@ class ResourceTable : public ResourceBase {
     // Get the type ID which also represents its position in the vector
     // NOTE: The real ID is always 1 less then the recodrd ID
     uint32_t type_id = static_cast<uint32_t>(type_spec_header_p->id);
-    assert(type_id != 0);
+    
+    // It could not be 0 and also could not exceed the maximum
+    if(type_id == 0 || type_id > package_p->GetTypeCount()) {
+      ReportError(INVALID_TYPE_ID, type_id);
+    }
+    
+    // This is the type spec object already allocated on the type spec list
+    TypeSpec *type_spec_p = &package_p->type_spec_list[type_id - 1];
     
     // Assert the type has never be seen
-    assert(package_p->type_list[type_id - 1].first == nullptr);
-    package_p->type_list[type_id - 1].first = type_spec_header_p;
+    assert(type_spec_p->header_p == nullptr);
+    assert(type_spec_p->type_list.size() == 0);
+    
+    // Assign data members
+    type_spec_p->header_p = type_spec_header_p;
+    type_spec_p->type_id = type_id;
+    type_spec_p->entry_count = type_spec_header_p->entry_count;
+    type_spec_p->config_table = type_spec_header_p->data;
     
     dbg_printf("    Type id = %u; entry_count = %u\n", 
                static_cast<uint32_t>(type_spec_header_p->id),
@@ -1286,24 +1301,40 @@ class ResourceTable : public ResourceBase {
    */
   void ParseTypeHeader(CommonHeader *header_p, 
                        Package *package_p, 
-                       uint32_t id) {
+                       uint32_t type_id) {
     TypeHeader *type_header_p = \
       reinterpret_cast<TypeHeader *>(header_p);
     
-    // Under debug mode we need to store the name of the type somewhere
+    // This points to the type spec object
+    TypeSpec *type_spec_p = &package_p->type_spec_list[type_id - 1];
+    
+    // Construct a new type object in-place and grab a pointer to it
+    type_spec_p->type_list.emplace_back();
+    Type *type_p = &type_spec_p->type_list.back();
+    
+    type_p->header_p = type_header_p;
+    type_p->type_spec_p = type_spec_p;
+    type_header_p->config.GetName(&type_p->readable_name);
+    type_p->entry_count = type_header_p->entry_count;
+    
+    // The offset table is just located after the header
+    type_p->offset_table = reinterpret_cast<uint32_t *>( \
+      TypeUtility::Advance(type_header_p, 
+                           type_header_p->common_header.header_length));
+    
+    // Under debug mode we print it out
 #ifndef NDEBUG
     dbg_printf("    Parsing type header @ 0x%lX: ", 
                TypeUtility::GetPtrDiff(raw_data_p, header_p));
-    Buffer buffer;
-    type_header_p->config.GetName(&buffer);
-    buffer.WriteToFile(stderr);
+    
+    type_p->readable_name.WriteToFile(stderr);
     fputc('\n', stderr);
     
     dbg_printf("        Entry count = %u\n", type_header_p->entry_count);
 #endif
     
     // The ID must match
-    assert(static_cast<uint32_t>(type_header_p->id) == id);
+    assert(static_cast<uint32_t>(type_header_p->type_id) == type_id);
     
     return;
   }
