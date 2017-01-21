@@ -1240,7 +1240,10 @@ class ResourceTable : public ResourceBase {
                              type_spec_header_p->total_length);
 
       // Then loop to parse types
-      while(type_spec_header_p->type == ChunkType::TYPE) {
+      // Note that here everytime we speculate a type header we need to
+      // check whether the pointer is still in the range of the data area
+      while(IsValidPointer(type_spec_header_p) == true && \
+            type_spec_header_p->type == ChunkType::TYPE) {
         ParseTypeHeader(type_spec_header_p, package_p, type_id);
         
         type_spec_header_p = \
@@ -1340,6 +1343,14 @@ class ResourceTable : public ResourceBase {
   }
   
   /*
+   * IsValidPointer() - Checks whether a pointer is still in the range of the 
+   *                    data area
+   */
+  bool IsValidPointer(void *p) const {
+    return TypeUtility::GetPtrDiff(raw_data_p, p) >= length;
+  }
+  
+  /*
    * ParseNext() - Parse the contents of the resource table
    *
    * This function has the same structure as the one in class BinaryXml
@@ -1349,8 +1360,7 @@ class ResourceTable : public ResourceBase {
   CommonHeader *ParseNext(CommonHeader *next_header_p) {
     assert(next_header_p != nullptr);
     
-    if(static_cast<size_t>((reinterpret_cast<unsigned char *>(next_header_p) - \
-        raw_data_p)) >= length) {
+    if(IsValidPointer(next_header_p) == true) {
       return nullptr;      
     }
     
