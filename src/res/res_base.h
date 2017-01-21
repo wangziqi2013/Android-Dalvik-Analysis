@@ -238,6 +238,8 @@ class ResourceBase {
     
     // This is an enum type
     DataType type;
+    
+    // This holds actual data
     uint32_t data;
   } BYTE_ALIGNED;
   

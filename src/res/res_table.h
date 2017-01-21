@@ -929,6 +929,79 @@ class ResourceTable : public ResourceBase {
     TypeConfig config;
   } BYTE_ALIGNED;
   
+  // We need the pointer type before it is declared
+  class TypeSpec;
+  
+  /*
+   * class Type - Represents a certain type of resource and all its contents
+   */
+  class Type {
+   private: 
+    // This is the number of bytes we use to initialize the buffer
+    static constexpr size_t INIT_BUFFER_LENGTH = 16UL;
+   public:
+    // Original pointer to the header
+    TypeHeader *header_p;
+    
+    // A pointer to the spec object (not the header!)
+    TypeSpec *type_spec_p;
+     
+    // This stores readable names of the type
+    // Note that we need to specify a length for buffer objects because by
+    // default the buffer uses 64 KB internal storage on initialization
+    Buffer readable_name;
+    
+    // Number of entries in this type table
+    size_t entry_count;
+    
+    // This points to the offset table
+    uint32_t *offset_table;
+    
+    /*
+     * Constructor
+     */
+    Type() :
+      header_p{nullptr},
+      type_spec_p{nullptr},
+      readable_name{INIT_BUFFER_LENGTH},
+      entry_count{0UL},
+      offset_table{nullptr}
+    {}
+  };
+  
+  /*
+   * class TypeSpec - General type specification on configurations
+   */
+  class TypeSpec {
+   public: 
+    TypeSpecHeader *header_p;
+    
+    // Type ID - begins at 1, and 0 means invalid (so whenever we use this
+    // to probe the string table we need to decrease it by 1)
+    uint32_t type_id;
+    
+    // Number of entries in the table
+    size_t entry_count;
+    
+    // Pointer to the configuration table about configurations of different
+    // value instances (i.e. a bit field indicating which kind of resources 
+    // are available)
+    uint32_t *config_table;
+    
+    // Type values of different configurations
+    std::vector<Type> type_list;
+    
+    /*
+     * Constructor
+     */
+    TypeSpec() :
+      header_p{nullptr},
+      entry_count{0UL},
+      config_table{nullptr},
+      type_list{}
+    {}
+  };
+  
   /*
    * class Package - Represents internals of a package
    */
