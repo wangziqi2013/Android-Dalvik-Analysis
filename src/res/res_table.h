@@ -1050,8 +1050,10 @@ class ResourceTable : public ResourceBase {
      * enum class Flags
      */
     enum class Flags : uint16_t {
-      // If set, this is a complex entry, holding a set of name/value
-      // mappings.  It is followed by an array of ResTable_map structures.
+      // This flag decides how the following data is organized
+      // For a simple entry the following data is just a ResourceValue instance
+      // Otherwise it is followed by a mapping descriptor and several maps
+      // to form a composite value
       FLAG_COMPLEX = 0x0001,
       FLAG_PUBLIC = 0x0002,
     };
@@ -1324,6 +1326,35 @@ class ResourceTable : public ResourceBase {
   }
   
   /*
+   * DebugPrintAllEntryNames() - Prints on stderr names of all entries in the
+   *                             chunk body
+   */
+  void DebugPrintAllEntryNames(Package *package_p, Type *type_p) {
+    for(size_t i = 0;i < type_p->entry_count;i++) {
+      uint32_t offset = type_p->offset_table[i];
+      
+      // Resource does not exist
+      if(offset == 0xFFFFFFFF) {
+        //dbg_printf("        [INVALID ENTRY]\n");
+        continue;
+      }
+       
+      // This is a pointer to the resource entry
+      ResourceEntry *resource_entry_p = reinterpret_cast<ResourceEntry *>( \
+        type_p->data_p + offset); 
+        
+      dbg_printf("        Name %lu = ", i);
+      Buffer buffer{128};
+      
+      package_p->key_string_pool.AppendToBuffer(resource_entry_p->key, &buffer);
+      buffer.Append('\n');
+      buffer.WriteToFile(stderr);
+    }
+    
+    return;
+  }
+  
+  /*
    * ParseTypeHeader() - Parses type header
    *
    * Note that the ID of the type recorded in the type spec header is
@@ -1355,6 +1386,12 @@ class ResourceTable : public ResourceBase {
       TypeUtility::Advance(type_header_p, 
                            type_header_p->common_header.header_length));
     
+    // This is the base address of offset_table and its offset itself is
+    // specified by a header field
+    type_p->data_p = reinterpret_cast<unsigned char *>( \
+      TypeUtility::Advance(type_header_p, 
+                           type_header_p->data_offset));
+    
     // Under debug mode we print it out
 #ifndef NDEBUG
     dbg_printf("    Parsing type header @ 0x%lX: ", 
@@ -1364,6 +1401,8 @@ class ResourceTable : public ResourceBase {
     fputc('\n', stderr);
     
     dbg_printf("        Entry count = %u\n", type_header_p->entry_count);
+    
+    DebugPrintAllEntryNames(package_p, type_p);
 #endif
     
     // The ID must match
