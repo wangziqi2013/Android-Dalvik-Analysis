@@ -1347,7 +1347,7 @@ class ResourceTable : public ResourceBase {
    *                    data area
    */
   bool IsValidPointer(void *p) const {
-    return TypeUtility::GetPtrDiff(raw_data_p, p) >= length;
+    return TypeUtility::GetPtrDiff(raw_data_p, p) < length;
   }
   
   /*
@@ -1360,8 +1360,8 @@ class ResourceTable : public ResourceBase {
   CommonHeader *ParseNext(CommonHeader *next_header_p) {
     assert(next_header_p != nullptr);
     
-    if(IsValidPointer(next_header_p) == true) {
-      return nullptr;      
+    if(IsValidPointer(next_header_p) == false) {
+      return nullptr;
     }
     
     CommonHeader *ret_header_p = \
