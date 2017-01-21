@@ -1038,6 +1038,25 @@ class ResourceTable : public ResourceBase {
   };
   
   /*
+   * class ResourceId - Resource identifier in 32-bit field
+   */
+  union ResourceId {
+   public:
+    struct {
+      uint8_t package_id;
+      uint8_t type_id;
+      uint16_t entry_id;
+    } BYTE_ALIGNED;
+    
+    // 32 bit identifier used as a whole
+    uint32_t data;
+  } BYTE_ALIGNED;
+  
+  // Make sure the size of the union is always correct
+  static_assert(sizeof(ResourceId) == sizeof(uint32_t), 
+                "Invalid size of resource ID");
+  
+  /*
    * class ResourceEntry - Represents resource entry in the body of type chunk
    */
   class ResourceEntry {
@@ -1047,15 +1066,15 @@ class ResourceTable : public ResourceBase {
     uint16_t entry_length;
   
     /*
-     * enum class Flags
+     * enum Flags
      */
-    enum class Flags : uint16_t {
+    enum Flags : uint16_t {
       // This flag decides how the following data is organized
       // For a simple entry the following data is just a ResourceValue instance
       // Otherwise it is followed by a mapping descriptor and several maps
       // to form a composite value
-      FLAG_COMPLEX = 0x0001,
-      FLAG_PUBLIC = 0x0002,
+      COMPLEX = 0x0001,
+      PUBLIC = 0x0002,
     };
     
     // As defined above
@@ -1064,6 +1083,29 @@ class ResourceTable : public ResourceBase {
     // A string into key string table of the package denoting the name of the
     // resource entry
     uint32_t key;
+    
+    // THE FOLLOWING IS ONLY VALID IF THE ENTRY IS A COMPLEX ONE
+    
+    // The resource ID of its parent which refers to another resource
+    // 0x00000000 if there is no parent
+    ResourceId parent_id;
+    
+    // The number of key-value pairs after the body
+    uint32_t entry_count;
+    
+    /*
+     * IsComplex() - Whether the resource entry is composite
+     */
+    inline bool IsComplex() const {
+      return flags & Flags::COMPLEX;
+    }
+    
+    /*
+     * IsPublic() - Returns true if the entry is in the public name space
+     */
+    inline bool IsPublic() const {
+      return flags & Flags::PUBLIC; 
+    }
   } BYTE_ALIGNED;
 
  // Data members  
