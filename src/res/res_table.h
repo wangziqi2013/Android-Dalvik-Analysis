@@ -1036,6 +1036,33 @@ class ResourceTable : public ResourceBase {
       return type_string_pool.string_count;
     }
   };
+  
+  /*
+   * class ResourceEntry - Represents resource entry in the body of type chunk
+   */
+  class ResourceEntry {
+   public: 
+    // The length of only this structure (i.e. not responsible for 
+    // data after this structure)
+    uint16_t entry_length;
+  
+    /*
+     * enum class Flags
+     */
+    enum class Flags : uint16_t {
+      // If set, this is a complex entry, holding a set of name/value
+      // mappings.  It is followed by an array of ResTable_map structures.
+      FLAG_COMPLEX = 0x0001,
+      FLAG_PUBLIC = 0x0002,
+    };
+    
+    // As defined above
+    Flags flags;
+
+    // A string into key string table of the package denoting the name of the
+    // resource entry
+    uint32_t key;
+  } BYTE_ALIGNED;
 
  // Data members  
  private:
@@ -1321,6 +1348,9 @@ class ResourceTable : public ResourceBase {
     type_p->entry_count = type_header_p->entry_count;
     
     // The offset table is just located after the header
+    // Note that since we are not certain about the length of the config
+    // structure, currently just use header length to determine the end
+    // of the header
     type_p->offset_table = reinterpret_cast<uint32_t *>( \
       TypeUtility::Advance(type_header_p, 
                            type_header_p->common_header.header_length));
@@ -1346,7 +1376,7 @@ class ResourceTable : public ResourceBase {
    * IsValidPointer() - Checks whether a pointer is still in the range of the 
    *                    data area
    */
-  bool IsValidPointer(void *p) const {
+  inline bool IsValidPointer(void *p) const {
     return TypeUtility::GetPtrDiff(raw_data_p, p) < length;
   }
   
