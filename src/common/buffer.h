@@ -76,13 +76,31 @@ class Buffer {
     Buffer{DEFAULT_SIZE}
   {}
   
+  // Deleted functions to avoid copy construction and assignment
+  Buffer(const Buffer &) = delete;
+  Buffer &operator=(const Buffer &) = delete;
+  Buffer &operator=(Buffer &&) = delete;
+  
+  /*
+   * Move constructor - This is called be vector::emplace_back()
+   */
+  Buffer(Buffer &&other) :
+    data_p{other.data_p},
+    length{other.length},
+    current_length{other.current_length} {
+    // Set it to null to avoid destruction
+    other.data_p = nullptr;
+    
+    return;    
+  }
+  
   /*
    * Destructor
    */
   ~Buffer() {
-    assert(data_p != nullptr);
-    
-    delete[] data_p;
+    if(data_p != nullptr) {
+      delete[] data_p;
+    }
     
     return; 
   }

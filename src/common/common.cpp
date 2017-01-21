@@ -51,6 +51,7 @@ const char *error_str_table[] = {
   "Unexpected start of resource table\n",
   "Unecpected UTF-8 continuiation byte at offset %ld", 
   "Base class function not implemented (internal error)\n",
+  "Invalid type ID: %u\n",
 };
 
 /*
