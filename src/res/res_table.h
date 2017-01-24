@@ -1081,6 +1081,10 @@ class ResourceTable : public ResourceBase {
       // to form a composite value
       COMPLEX = 0x0001,
       PUBLIC = 0x0002,
+      // If set, this is a weak resource and may be overriden by strong
+      // resources of the same name/type. This is only useful during
+      // linking with other resource tables.
+      FLAG_WEAK = 0x0004,
     };
     
     // As defined above
@@ -1216,7 +1220,9 @@ class ResourceTable : public ResourceBase {
   /*
    * InitPackage() - Initialize a package object
    *
-   * We could have done this in the package constructor
+   * This function initializes the type spec list with proper number
+   * of slots to hold type spec, since we know the number of type spec objects
+   * is exactly the size of the string pool
    */
   void InitPackage(Package *package_p, PackageHeader *package_header_p) {
     package_p->header_p = package_header_p;
@@ -1240,7 +1246,7 @@ class ResourceTable : public ResourceBase {
       &package_p->key_string_pool);
     
     // This is done to only allocate exactly GetTypeCount() slots for type
-    // spec objects
+    // spec objects (i.e. string pool size)
     package_p->type_spec_list.resize(package_p->GetTypeCount());
     
     return;
@@ -1401,7 +1407,26 @@ class ResourceTable : public ResourceBase {
       Buffer buffer{128};
       
       package_p->key_string_pool.AppendToBuffer(resource_entry_p->key, &buffer);
-      buffer.Append('\n');
+      
+      buffer.Append(" (");
+      
+      // For complex types it has two more fields - parent resource ID and 
+      // count of the key value pair that follows
+      if(resource_entry_p->IsComplex() == true) {
+        assert(resource_entry_p->entry_length == 16UL);
+        buffer.Append("COMPLEX "); 
+      } else {
+        assert(resource_entry_p->entry_length == 8UL); 
+      }
+      
+      if(resource_entry_p->IsPublic() == true) {
+        buffer.Append("PUBLIC "); 
+      }
+      
+      // Eat back the last space character
+      buffer.Rewind(1);
+      buffer.Append(")\n");
+      
       buffer.WriteToFile(stderr);
     }
     
@@ -1504,6 +1529,7 @@ class ResourceTable : public ResourceBase {
         break;
       } 
       case ChunkType::PACKAGE: {
+        // This function also needs to recognize the end of data
         ParsePackage(next_header_p);
         break; 
       }
