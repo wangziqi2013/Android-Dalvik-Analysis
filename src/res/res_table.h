@@ -1063,6 +1063,17 @@ class ResourceTable : public ResourceBase {
                 "Invalid size of resource ID");
   
   /*
+   * class ResourceEntryField - If a resource entry is a complicated one then
+   *                            this represents fields inside the resource entry
+   */
+  class ResourceEntryField {
+   public:
+    // This field has different interpretations
+    ResourceId name;
+    ResourceValue value; 
+  } BYTE_ALIGNED;
+  
+  /*
    * class ResourceEntry - Represents resource entry in the body of type chunk
    */
   class ResourceEntry {
@@ -1094,14 +1105,29 @@ class ResourceTable : public ResourceBase {
     // resource entry
     uint32_t key;
     
-    // THE FOLLOWING IS ONLY VALID IF THE ENTRY IS A COMPLEX ONE
+    // Different interpretation of the following bytes depending on
+    // whether the type is complex or not
+    // Note that the following structure is not counted as the length in
+    // the common header
     
-    // The resource ID of its parent which refers to another resource
-    // 0x00000000 if there is no parent
-    ResourceId parent_id;
-    
-    // The number of key-value pairs after the body
-    uint32_t entry_count;
+    union {
+      // This struct is used only if the resource is a complex one
+      struct {
+        // The resource ID of its parent which refers to another resource
+        // 0x00000000 if there is no parent
+        ResourceId parent_id;
+      
+        // The number of key-value pairs after the body
+        uint32_t entry_count;
+        
+        // This is the starting address of entry fields, there are 
+        // entry_count of them
+        ResourceEntryField field_data[0];
+      } BYTE_ALIGNED;
+      
+      // If the resource is not a complex one then use this one
+      ResourceValue value;
+    } BYTE_ALIGNED;
     
     /*
      * IsComplex() - Whether the resource entry is composite
@@ -1408,7 +1434,10 @@ class ResourceTable : public ResourceBase {
       
       package_p->key_string_pool.AppendToBuffer(resource_entry_p->key, &buffer);
       
-      buffer.Append(" (");
+      if(resource_entry_p->IsComplex() == true || \
+         resource_entry_p->IsPublic() == true) {
+        buffer.Append(" (");
+      }
       
       // For complex types it has two more fields - parent resource ID and 
       // count of the key value pair that follows
@@ -1423,11 +1452,32 @@ class ResourceTable : public ResourceBase {
         buffer.Append("PUBLIC "); 
       }
       
-      // Eat back the last space character
-      buffer.Rewind(1);
-      buffer.Append(")\n");
+      if(resource_entry_p->IsComplex() == true || \
+         resource_entry_p->IsPublic() == true) {
+        // Eat back the last space character
+        buffer.Rewind(1);
+        buffer.Append(')');
+      }
       
+      buffer.Append('\n');
       buffer.WriteToFile(stderr);
+      
+      // In the next line print out the extra complex field
+      if(resource_entry_p->IsComplex() == true) {
+        dbg_printf("            * Parent ID = 0x%X; entry count = %u\n", 
+                   resource_entry_p->parent_id.data, 
+                   resource_entry_p->entry_count);
+        
+        // This is the starting address of the array of ResourceEntryField
+        ResourceEntryField *entry_field_p = resource_entry_p->field_data;
+        
+        // Loop through each entry to see its internal data         
+        for(uint32_t j = 0;j < resource_entry_p->entry_count;j++) {
+          // Print out the 32 bit integer resource ID
+          dbg_printf("            entry name = %.8X\n", 
+                     entry_field_p[j].name.data);
+        }
+      }
     }
     
     return;
