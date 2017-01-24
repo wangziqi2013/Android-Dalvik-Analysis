@@ -973,6 +973,8 @@ class ResourceTable : public ResourceBase {
     {}
   };
   
+  class Package;
+  
   /*
    * class TypeSpec - General type specification on configurations
    */
@@ -980,6 +982,9 @@ class ResourceTable : public ResourceBase {
    public: 
     // This points to the type spec header
     TypeSpecHeader *header_p;
+    
+    // This points to the containing package instance (not the package header)
+    Package *package_p;
     
     // Type ID - begins at 1, and 0 means invalid (so whenever we use this
     // to probe the string table we need to decrease it by 1)
@@ -1001,6 +1006,7 @@ class ResourceTable : public ResourceBase {
      */
     TypeSpec() :
       header_p{nullptr},
+      package_p{nullptr},
       entry_count{0UL},
       config_table{nullptr},
       type_list{}
@@ -1361,6 +1367,7 @@ class ResourceTable : public ResourceBase {
     
     // Assign data members
     type_spec_p->header_p = type_spec_header_p;
+    type_spec-p->package_p = package_p; 
     type_spec_p->type_id = type_id;
     type_spec_p->entry_count = type_spec_header_p->entry_count;
     type_spec_p->config_table = type_spec_header_p->data;
