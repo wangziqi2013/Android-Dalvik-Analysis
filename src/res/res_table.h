@@ -1268,6 +1268,11 @@ class ResourceTable : public ResourceBase {
   /*
    * ParsePackage() - Parses the package header and push a package
    *                  object to the package list
+   *
+   * This function locates all type specs inside the package and then parses
+   * all type headers after the type spec header. Each typespec stores metadata
+   * about a type and each type object stores the resource value under a certain
+   * configuration (e.g. language, screen resolution, etc.)
    */
   void ParsePackage(CommonHeader *header_p) {
     PackageHeader *package_header_p = \
@@ -1368,14 +1373,14 @@ class ResourceTable : public ResourceBase {
   }
   
   /*
-   * DebugPrintAllEntryNames() - Prints on stderr names of all entries in the
-   *                             chunk body
+   * DebugPrintAllTypeEntryNames() - Prints on stderr names of all entries in the
+   *                                 type chunk body
    */
-  void DebugPrintAllEntryNames(Package *package_p, Type *type_p) {
+  void DebugPrintAllTypeEntryNames(Package *package_p, Type *type_p) {
     for(size_t i = 0;i < type_p->entry_count;i++) {
       uint32_t offset = type_p->offset_table[i];
       
-      // Resource does not exist
+      // Resource does not exist for current configuration
       if(offset == 0xFFFFFFFF) {
         //dbg_printf("        [INVALID ENTRY]\n");
         continue;
@@ -1444,7 +1449,7 @@ class ResourceTable : public ResourceBase {
     
     dbg_printf("        Entry count = %u\n", type_header_p->entry_count);
     
-    DebugPrintAllEntryNames(package_p, type_p);
+    DebugPrintAllTypeEntryNames(package_p, type_p);
 #endif
     
     // The ID must match
