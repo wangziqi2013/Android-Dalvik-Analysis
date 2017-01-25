@@ -330,7 +330,7 @@ class Argv {
   }
   
   /*
-   * Exists() - Whetehr a key exists
+   * Exists() - Whether a key exists
    *
    * This could either be used for switches, i.e. --key or -key
    * or with key-value pairs, i.e. --key=value or -key=value which just
