@@ -56,6 +56,7 @@ const char *error_str_table[] = {
   
   // 35
   "Error closing the file\n",
+  "Invalid type attr entry: %s\n",
 };
 
 /*

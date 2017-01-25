@@ -92,6 +92,7 @@ enum ErrorCode : uint64_t {
   UNKNOWN_TYPE_TO_WRITE_XML,
   
   ERROR_CLOSE_FILE = 35,
+  INVALID_ATTR_ENTRY,
 };
 
 // Error string table
@@ -151,7 +152,7 @@ class FileUtility {
     int ret;
     if(ident != 0) {
       // This prints space characters of a given length
-      ret = fprintf(fp, "%*c", ident * ident_length, ' ');
+      ret = fprintf(fp, "%*s", ident * ident_length, "");
       if(ret < 0) {
         ReportError(ERROR_WRITE_FILE, "[Unknown]"); 
       }

@@ -132,6 +132,13 @@ class Buffer {
   }
   
   /*
+   * GetCharData() - Returns const char * typed pointer
+   */
+  inline const char *GetCharData() const {
+    return reinterpret_cast<const char *>(data_p); 
+  }
+  
+  /*
    * Rewind() - Move the tail pointer towards the beginning of the buffer
    *
    * If the rewinded size is too large (i.e. larger than the current content)

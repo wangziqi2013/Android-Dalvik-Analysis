@@ -1053,6 +1053,46 @@ class ResourceTable : public ResourceBase {
     }
     
     /*
+     * PrintAttrFormat() - Prints the format of attributes
+     */
+    void PrintAttrFormat(Buffer *buffer_p, uint32_t format) {
+      // Hopefully this is optimized using a jump table
+      switch(format) {
+        case ResourceEntryField::TYPE_REFERENCE:
+          buffer_p->Append("reference | ");
+          break;
+        case ResourceEntryField::TYPE_STRING:
+          buffer_p->Append("string | ");
+          break;
+        case ResourceEntryField::TYPE_INTEGER:
+          buffer_p->Append("integer | ");
+          break;
+        case ResourceEntryField::TYPE_BOOLEAN:
+          buffer_p->Append("boolean | ");
+          break;
+        case ResourceEntryField::TYPE_COLOR:
+          buffer_p->Append("color | ");
+          break;
+        case ResourceEntryField::TYPE_FLOAT:
+          buffer_p->Append("float | ");
+          break;
+        case ResourceEntryField::TYPE_DIMENSION:
+          buffer_p->Append("dimension | ");
+          break;
+        case ResourceEntryField::TYPE_FRACTION:
+          buffer_p->Append("fraction | ");
+          break;
+        default:
+          ReportError(INVALID_ATTR_ENTRY, "Unknown format type");
+          break;
+      }
+      
+      buffer_p->Rewind(3);
+      
+      return;
+    }
+    
+    /*
      * WriteAttrXml() - Treat this as an attribute type resource and write XML
      *
      * We try to create and enter the directory res/values-???/ where ??? is the
@@ -1066,7 +1106,63 @@ class ResourceTable : public ResourceBase {
       
       FileUtility::WriteString(fp, XML_HEADER_LINE);
       
+      // We re-use this buffer for each entry and rewind it to 
+      // the beginning everytime
+      Buffer buffer;
+      
       // Then loop through all attributes and print them to the file 
+      for(size_t i = 0;i < entry_count;i++) {
+        uint32_t offset = offset_table[i];
+        ResourceEntry *entry_p = reinterpret_cast<ResourceEntry *>( \
+         data_p + offset);
+        
+        // Attributes must be complex because we want to know its format
+        if(entry_p->IsComplex() == false) {
+          ReportError(INVALID_ATTR_ENTRY, "Attribute entry must be complex"); 
+        } else if(entry_p->entry_count == 0) {
+          ReportError(INVALID_ATTR_ENTRY, 
+                      "Attribute entry must have at least 1 field"); 
+        } else if(entry_p->parent_id.data != 0x00000000) {
+          ReportError(INVALID_ATTR_ENTRY, 
+                      "Attribute parent ID must be 0"); 
+        }
+        
+        Package *package_p = type_spec_p->package_p;
+        
+        // First print name:
+        buffer.Append("<attr name=\"");
+        package_p->key_string_pool.AppendToBuffer(entry_p->key, 
+                                                  &buffer);
+        buffer.Append("\" ");
+        
+        // This points to the only field
+        ResourceEntryField *field_p = entry_p->field_data; 
+        // This defines the format of the following data, so must appear here
+        assert(field_p->name.data == 0x01000000);
+        
+        // Common case: Just one attribute, print format
+        if(entry_p->entry_count == 1) {
+          buffer.Append("format=\"");
+          
+          // This is a bit mask that specifies the format of data allowed
+          uint32_t format_mask = field_p->value.data;
+          // Must have at least type specified here
+          assert((format_mask & ResourceEntryField::TYPE_ANY) != 0x00000000);
+          
+          PrintAttrFormat(&buffer, format_mask);
+          
+          buffer.Append("\" />\n");
+          
+          // Terminate this string
+          buffer.Append('\0');
+          // Write with identation level = 1
+          FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+        } else {
+          break;
+        }
+        
+        buffer.Reset();
+      } // loop through all entries
       
       FileUtility::WriteString(fp, RESOURCE_END_TAG);
       FileUtility::CloseFile(fp);
@@ -1173,6 +1269,86 @@ class ResourceTable : public ResourceBase {
    */
   class ResourceEntryField {
    public:
+    
+    /*
+     * Res_MAKEINTERNAL() - Makes special name field values for attr types
+     */
+    #define Res_MAKEINTERNAL(entry) (0x01000000 | (entry&0xFFFF))
+    
+    // Special values for 'name' when defining attribute resources.
+    enum {
+      // This entry holds the attribute's type code.
+      ATTR_TYPE = Res_MAKEINTERNAL(0),
+
+      // For integral attributes, this is the minimum value it can hold.
+      ATTR_MIN = Res_MAKEINTERNAL(1),
+
+      // For integral attributes, this is the maximum value it can hold.
+      ATTR_MAX = Res_MAKEINTERNAL(2),
+
+      // Localization of this resource is can be encouraged or required with
+      // an aapt flag if this is set
+      ATTR_L10N = Res_MAKEINTERNAL(3),
+
+      // for plural support, see android.content.res.PluralRules#attrForQuantity(int)
+      ATTR_OTHER = Res_MAKEINTERNAL(4),
+      ATTR_ZERO = Res_MAKEINTERNAL(5),
+      ATTR_ONE = Res_MAKEINTERNAL(6),
+      ATTR_TWO = Res_MAKEINTERNAL(7),
+      ATTR_FEW = Res_MAKEINTERNAL(8),
+      ATTR_MANY = Res_MAKEINTERNAL(9), 
+    };
+
+    #undef Res_MAKEINTERNAL
+
+    // Bit mask of allowed types, for use with ATTR_TYPE.
+    enum {
+      // No type has been defined for this attribute, use generic
+      // type handling.  The low 16 bits are for types that can be
+      // handled generically; the upper 16 require additional information
+      // in the bag so can not be handled generically for TYPE_ANY.
+      TYPE_ANY = 0x0000FFFF,
+
+      // Attribute holds a references to another resource.
+      TYPE_REFERENCE = 1<<0,
+
+      // Attribute holds a generic string.
+      TYPE_STRING = 1<<1,
+
+      // Attribute holds an integer value.  ATTR_MIN and ATTR_MIN can
+      // optionally specify a constrained range of possible integer values.
+      TYPE_INTEGER = 1<<2,
+
+      // Attribute holds a boolean integer.
+      TYPE_BOOLEAN = 1<<3,
+
+      // Attribute holds a color value.
+      TYPE_COLOR = 1<<4,
+
+      // Attribute holds a floating point value.
+      TYPE_FLOAT = 1<<5,
+
+      // Attribute holds a dimension value, such as "20px".
+      TYPE_DIMENSION = 1<<6,
+
+      // Attribute holds a fraction value, such as "20%".
+      TYPE_FRACTION = 1<<7,
+
+      // Attribute holds an enumeration.  The enumeration values are
+      // supplied as additional entries in the map.
+      TYPE_ENUM = 1<<16,
+
+      // Attribute holds a bitmaks of flags.  The flag bit values are
+      // supplied as additional entries in the map.
+      TYPE_FLAGS = 1<<17
+    };
+
+    // Enum of localization modes, for use with ATTR_L10N.
+    enum {
+        L10N_NOT_REQUIRED = 0,
+        L10N_SUGGESTED    = 1
+    }; 
+     
     // This field has different interpretations
     ResourceId name;
     ResourceValue value; 
