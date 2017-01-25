@@ -1048,10 +1048,13 @@ class ResourceTable : public ResourceBase {
    */
   union ResourceId {
    public:
+    // The structural of resource ID is 0xpptteeee
+    // so we start declaring the entry ID at low address and then
+    // type ID and then package ID
     struct {
-      uint8_t package_id;
-      uint8_t type_id;
       uint16_t entry_id;
+      uint8_t type_id;
+      uint8_t package_id;
     } BYTE_ALIGNED;
     
     // 32 bit identifier used as a whole
@@ -1407,82 +1410,93 @@ class ResourceTable : public ResourceBase {
     dbg_printf("    Type id = %u; entry_count = %u\n", 
                static_cast<uint32_t>(type_spec_header_p->id),
                static_cast<uint32_t>(type_spec_header_p->entry_count));
-    
+
     return type_id;
   }
-  
+
   /*
    * DebugPrintAllTypeEntryNames() - Prints on stderr names of all entries in the
    *                                 type chunk body
    */
   void DebugPrintAllTypeEntryNames(Package *package_p, Type *type_p) {
-    for(size_t i = 0;i < type_p->entry_count;i++) {
-      uint32_t offset = type_p->offset_table[i];
-      
+	  for(size_t i = 0;i < type_p->entry_count;i++) {
+	    uint32_t offset = type_p->offset_table[i];
+
       // Resource does not exist for current configuration
       if(offset == 0xFFFFFFFF) {
         //dbg_printf("        [INVALID ENTRY]\n");
         continue;
       }
-       
+
       // This is a pointer to the resource entry
       ResourceEntry *resource_entry_p = reinterpret_cast<ResourceEntry *>( \
-        type_p->data_p + offset); 
-        
+        type_p->data_p + offset);
+
       dbg_printf("        Name %lu = ", i);
       Buffer buffer{128};
-      
+
       package_p->key_string_pool.AppendToBuffer(resource_entry_p->key, &buffer);
-      
+
       if(resource_entry_p->IsComplex() == true || \
          resource_entry_p->IsPublic() == true) {
         buffer.Append(" (");
       }
-      
-      // For complex types it has two more fields - parent resource ID and 
+
+      // For complex types it has two more fields - parent resource ID and
       // count of the key value pair that follows
       if(resource_entry_p->IsComplex() == true) {
         assert(resource_entry_p->entry_length == 16UL);
-        buffer.Append("COMPLEX "); 
+        buffer.Append("COMPLEX ");
       } else {
-        assert(resource_entry_p->entry_length == 8UL); 
+        assert(resource_entry_p->entry_length == 8UL);
       }
-      
+
       if(resource_entry_p->IsPublic() == true) {
-        buffer.Append("PUBLIC "); 
+        buffer.Append("PUBLIC ");
       }
-      
+
       if(resource_entry_p->IsComplex() == true || \
          resource_entry_p->IsPublic() == true) {
         // Eat back the last space character
         buffer.Rewind(1);
         buffer.Append(')');
       }
-      
+
       buffer.Append('\n');
       buffer.WriteToFile(stderr);
-      
+
       // In the next line print out the extra complex field
       if(resource_entry_p->IsComplex() == true) {
-        dbg_printf("            * Parent ID = 0x%X; entry count = %u\n", 
-                   resource_entry_p->parent_id.data, 
+        dbg_printf("            * Parent ID = 0x%X; entry count = %u\n",
+                   resource_entry_p->parent_id.data,
                    resource_entry_p->entry_count);
-        
+
         // This is the starting address of the array of ResourceEntryField
         ResourceEntryField *entry_field_p = resource_entry_p->field_data;
-        
-        // Loop through each entry to see its internal data         
+
+        // Loop through each entry to see its internal data
         for(uint32_t j = 0;j < resource_entry_p->entry_count;j++) {
+          // This is the current entry filed being processed
+          ResourceEntryField *field_p = entry_field_p + j;
           // Print out the 32 bit integer resource ID
-          dbg_printf("            entry name = %.8X\n", 
-                     entry_field_p[j].name.data);
-        }
-      }
-    }
-    
+          dbg_printf("            "
+                     "entry name = 0x%.8X; type = 0x%.4X, data = 0x%.8X\n",
+                     field_p->name.data,
+                     static_cast<uint32_t>(field_p->value.type),
+                     field_p->value.data);
+
+          // If the type ID is not attr then the field name must have
+          // a ATTR type ID
+          if(type_p->type_spec_p->type_id != 0x01) {
+            assert(field_p->name.type_id == 0x01);
+          }
+        } // Loop through entry fields
+      } // If is complex type
+	  } // for resource entry for the current type
+
     return;
   }
-  
+
   /*
    * ParseTypeHeader() - Parses type header
    *
