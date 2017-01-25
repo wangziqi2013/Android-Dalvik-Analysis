@@ -933,315 +933,6 @@ class ResourceTable : public ResourceBase {
   class TypeSpec;
   
   /*
-   * class Type - Represents a certain type of resource and all its contents
-   */
-  class Type {
-   private: 
-    // This is the number of bytes we use to initialize the buffer
-    static constexpr size_t INIT_BUFFER_LENGTH = 16UL;
-   public:
-    // Original pointer to the header
-    TypeHeader *header_p;
-    
-    // A pointer to the spec object (not the header!)
-    TypeSpec *type_spec_p;
-     
-    // This stores readable names of the type
-    // Note that we need to specify a length for buffer objects because by
-    // default the buffer uses 64 KB internal storage on initialization
-    // Note that this name does not have any type information, so when
-    // use this to create directory we need to prepend the directory name
-    Buffer readable_name;
-    
-    // This is the name of the base type, i.e. attr without any postfix
-    Buffer base_type_name;
-    
-    // Number of entries in this type table
-    size_t entry_count;
-    
-    // This points to the offset table
-    uint32_t *offset_table;
-    
-    // Points to the resource entry indexed by the offset table
-    unsigned char *data_p;
-    
-    /*
-     * Constructor
-     */
-    Type() :
-      header_p{nullptr},
-      type_spec_p{nullptr},
-      readable_name{INIT_BUFFER_LENGTH},
-      base_type_name{INIT_BUFFER_LENGTH},
-      entry_count{0UL},
-      offset_table{nullptr},
-      data_p{nullptr}
-    {}
-    
-    /*
-     * WriteXml() - Writes an XML file that represents the structure of the
-     *              current type
-     *
-     * The XML file is written according to the type of the resource. We
-     * hardcode the format for each type and its identifier, e.g. attr, string,
-     * drawable, etc.
-     */
-    void WriteXml() {
-      if(base_type_name == "attr") {
-        WriteAttrXml("attrs.xml");
-      } else {
-#ifndef NDEBUG
-        dbg_printf("Unknown attribute name: ");
-        base_type_name.WriteToFile(stderr);
-        fprintf(stderr, "\n");
-#endif
-
-        ReportError(UNKNOWN_TYPE_TO_WRITE_XML); 
-      }
-      
-      return;
-    }
-    
-    static constexpr const char *RES_PATH = "res";
-    static constexpr const char *VALUE_PATH_PREFIX = "values";
-    static constexpr const char *XML_SUFFIX = ".xml";
-    
-    /*
-     * SwitchToValuesDir() - Switch to the values directory and opens the 
-     *                       file for current base type
-     *
-     * This function takes care of possible postfix of "values"; The CWD
-     * is not changed after returning. If file open or directory operations
-     * returns error then exception is thrown
-     */
-    FILE *SwitchToValuesDir(const char *file_name) {
-      // Save current directory first to get back after we have finished this 
-      const char *cwd = FileUtility::GetCwd();
-      
-      // Enters 'res' first
-      FileUtility::CreateOrEnterDir(RES_PATH);
-      
-      // So the total length we need is "values-" + length of the readable name
-      // and if readable name is empty just omit the dash after "values"
-      // so need 1 more bytes for '\0' and 1 byte for the possible '-'
-      size_t value_path_length = strlen(VALUE_PATH_PREFIX) + \
-                                 readable_name.GetLength() + \
-                                 2;
-      
-      Buffer value_path{value_path_length};
-      value_path.Append("values");
-      // If there is a special name then append them also after the dash
-      if(readable_name.GetLength() != 0UL) {
-        value_path.Append('-');
-        value_path.Append(readable_name); 
-      }
-      
-      // Make it a valid C string
-      value_path.Append('\0');
-      
-      // And then enters the dir or creates it if first time
-      FileUtility::CreateOrEnterDir( \
-        static_cast<const char *>(value_path.GetData()));
-
-      FILE *fp = FileUtility::OpenFile(file_name, "w");
-      
-      // Frees current directory after switching back
-      FileUtility::EnterDir(cwd);
-      delete[] cwd;
-      
-      return fp;
-    }
-    
-    /*
-     * PrintAttrFormat() - Prints the format of attributes
-     */
-    void PrintAttrFormat(Buffer *buffer_p, uint32_t format) {
-      // Hopefully this is optimized using a jump table
-      switch(format) {
-        case ResourceEntryField::TYPE_REFERENCE:
-          buffer_p->Append("reference | ");
-          break;
-        case ResourceEntryField::TYPE_STRING:
-          buffer_p->Append("string | ");
-          break;
-        case ResourceEntryField::TYPE_INTEGER:
-          buffer_p->Append("integer | ");
-          break;
-        case ResourceEntryField::TYPE_BOOLEAN:
-          buffer_p->Append("boolean | ");
-          break;
-        case ResourceEntryField::TYPE_COLOR:
-          buffer_p->Append("color | ");
-          break;
-        case ResourceEntryField::TYPE_FLOAT:
-          buffer_p->Append("float | ");
-          break;
-        case ResourceEntryField::TYPE_DIMENSION:
-          buffer_p->Append("dimension | ");
-          break;
-        case ResourceEntryField::TYPE_FRACTION:
-          buffer_p->Append("fraction | ");
-          break;
-        default:
-          ReportError(INVALID_ATTR_ENTRY, "Unknown format type");
-          break;
-      }
-      
-      buffer_p->Rewind(3);
-      
-      return;
-    }
-    
-    /*
-     * WriteAttrXml() - Treat this as an attribute type resource and write XML
-     *
-     * We try to create and enter the directory res/values-???/ where ??? is the
-     * type information, and then create an XML file named "attrs.xml"
-     *
-     * Note that this function takes the file name tobe written since the file
-     * name is different from what is recorded in the type string pool
-     */
-    void WriteAttrXml(const char *file_name) {
-      FILE *fp = SwitchToValuesDir(file_name);
-      
-      FileUtility::WriteString(fp, XML_HEADER_LINE);
-      
-      // We re-use this buffer for each entry and rewind it to 
-      // the beginning everytime
-      Buffer buffer;
-      
-      // Then loop through all attributes and print them to the file 
-      for(size_t i = 0;i < entry_count;i++) {
-        uint32_t offset = offset_table[i];
-        ResourceEntry *entry_p = reinterpret_cast<ResourceEntry *>( \
-         data_p + offset);
-        
-        // Attributes must be complex because we want to know its format
-        if(entry_p->IsComplex() == false) {
-          ReportError(INVALID_ATTR_ENTRY, "Attribute entry must be complex"); 
-        } else if(entry_p->entry_count == 0) {
-          ReportError(INVALID_ATTR_ENTRY, 
-                      "Attribute entry must have at least 1 field"); 
-        } else if(entry_p->parent_id.data != 0x00000000) {
-          ReportError(INVALID_ATTR_ENTRY, 
-                      "Attribute parent ID must be 0"); 
-        }
-        
-        Package *package_p = type_spec_p->package_p;
-        
-        // First print name:
-        buffer.Append("<attr name=\"");
-        package_p->key_string_pool.AppendToBuffer(entry_p->key, 
-                                                  &buffer);
-        buffer.Append("\" ");
-        
-        // This points to the only field
-        ResourceEntryField *field_p = entry_p->field_data; 
-        // This defines the format of the following data, so must appear here
-        assert(field_p->name.data == 0x01000000);
-        
-        // Common case: Just one attribute, print format
-        if(entry_p->entry_count == 1) {
-          buffer.Append("format=\"");
-          
-          // This is a bit mask that specifies the format of data allowed
-          uint32_t format_mask = field_p->value.data;
-          // Must have at least type specified here
-          assert((format_mask & ResourceEntryField::TYPE_ANY) != 0x00000000);
-          
-          PrintAttrFormat(&buffer, format_mask);
-          
-          buffer.Append("\" />\n");
-          
-          // Terminate this string
-          buffer.Append('\0');
-          // Write with identation level = 1
-          FileUtility::WriteString(fp, buffer.GetCharData(), 1);
-        } else {
-          break;
-        }
-        
-        buffer.Reset();
-      } // loop through all entries
-      
-      FileUtility::WriteString(fp, RESOURCE_END_TAG);
-      FileUtility::CloseFile(fp);
-      
-      return;
-    }
-  };
-  
-  class Package;
-  
-  /*
-   * class TypeSpec - General type specification on configurations
-   */
-  class TypeSpec {
-   public: 
-    // This points to the type spec header
-    TypeSpecHeader *header_p;
-    
-    // This points to the containing package instance (not the package header)
-    Package *package_p;
-    
-    // Type ID - begins at 1, and 0 means invalid (so whenever we use this
-    // to probe the string table we need to decrease it by 1)
-    uint32_t type_id;
-    
-    // Number of entries in the table
-    size_t entry_count;
-    
-    // Pointer to the configuration table about configurations of different
-    // value instances (i.e. a bit field indicating which kind of resources 
-    // are available)
-    uint32_t *config_table;
-    
-    // Type values of different configurations
-    std::vector<Type> type_list;
-    
-    /*
-     * Constructor
-     */
-    TypeSpec() :
-      header_p{nullptr},
-      package_p{nullptr},
-      entry_count{0UL},
-      config_table{nullptr},
-      type_list{}
-    {}
-  };
-  
-  /*
-   * class Package - Represents internals of a package
-   */
-  class Package {
-   public: 
-    // Pointer to the package header
-    PackageHeader *header_p;
-    
-    // These two are used to store headers
-    StringPoolHeader *type_string_pool_header_p;
-    StringPoolHeader *key_string_pool_header_p;
-    
-    // Two string pools indicated in the header
-    StringPool type_string_pool;
-    StringPool key_string_pool;
-    
-    // A list of type spec objects
-    std::vector<TypeSpec> type_spec_list;
-      
-    /*
-     * GetTypeCount() - Returns the number of types defined as resources
-     *
-     * Since the number of strings in the string pool defines all types
-     * we could treat this as the number of types
-     */
-    size_t GetTypeCount() const {
-      return type_string_pool.string_count;
-    }
-  };
-  
-  /*
    * class ResourceId - Resource identifier in 32-bit field
    */
   union ResourceId {
@@ -1424,6 +1115,343 @@ class ResourceTable : public ResourceBase {
       return flags & Flags::PUBLIC; 
     }
   } BYTE_ALIGNED;
+  
+  /*
+   * class Type - Represents a certain type of resource and all its contents
+   */
+  class Type {
+   private: 
+    // This is the number of bytes we use to initialize the buffer
+    static constexpr size_t INIT_BUFFER_LENGTH = 16UL;
+   public:
+    // Original pointer to the header
+    TypeHeader *header_p;
+    
+    // A pointer to the spec object (not the header!)
+    TypeSpec *type_spec_p;
+     
+    // This stores readable names of the type
+    // Note that we need to specify a length for buffer objects because by
+    // default the buffer uses 64 KB internal storage on initialization
+    // Note that this name does not have any type information, so when
+    // use this to create directory we need to prepend the directory name
+    Buffer readable_name;
+    
+    // This is the name of the base type, i.e. attr without any postfix
+    Buffer base_type_name;
+    
+    // Number of entries in this type table
+    size_t entry_count;
+    
+    // This points to the offset table
+    uint32_t *offset_table;
+    
+    // Points to the resource entry indexed by the offset table
+    unsigned char *data_p;
+    
+    /*
+     * Constructor
+     */
+    Type() :
+      header_p{nullptr},
+      type_spec_p{nullptr},
+      readable_name{INIT_BUFFER_LENGTH},
+      base_type_name{INIT_BUFFER_LENGTH},
+      entry_count{0UL},
+      offset_table{nullptr},
+      data_p{nullptr}
+    {}
+    
+    /*
+     * WriteXml() - Writes an XML file that represents the structure of the
+     *              current type
+     *
+     * The XML file is written according to the type of the resource. We
+     * hardcode the format for each type and its identifier, e.g. attr, string,
+     * drawable, etc.
+     */
+    void WriteXml() {
+      if(base_type_name == "attr") {
+        WriteAttrXml("attrs.xml");
+      } else {
+#ifndef NDEBUG
+        dbg_printf("Unknown attribute name: ");
+        base_type_name.WriteToFile(stderr);
+        fprintf(stderr, "\n");
+#endif
+
+        ReportError(UNKNOWN_TYPE_TO_WRITE_XML); 
+      }
+      
+      return;
+    }
+    
+    static constexpr const char *RES_PATH = "res";
+    static constexpr const char *VALUE_PATH_PREFIX = "values";
+    static constexpr const char *XML_SUFFIX = ".xml";
+    
+    /*
+     * SwitchToValuesDir() - Switch to the values directory and opens the 
+     *                       file for current base type
+     *
+     * This function takes care of possible postfix of "values"; The CWD
+     * is not changed after returning. If file open or directory operations
+     * returns error then exception is thrown
+     */
+    FILE *SwitchToValuesDir(const char *file_name) {
+      // Save current directory first to get back after we have finished this 
+      const char *cwd = FileUtility::GetCwd();
+      
+      // Enters 'res' first
+      FileUtility::CreateOrEnterDir(RES_PATH);
+      
+      // So the total length we need is "values-" + length of the readable name
+      // and if readable name is empty just omit the dash after "values"
+      // so need 1 more bytes for '\0' and 1 byte for the possible '-'
+      size_t value_path_length = strlen(VALUE_PATH_PREFIX) + \
+                                 readable_name.GetLength() + \
+                                 2;
+      
+      Buffer value_path{value_path_length};
+      value_path.Append("values");
+      // If there is a special name then append them also after the dash
+      if(readable_name.GetLength() != 0UL) {
+        value_path.Append('-');
+        value_path.Append(readable_name); 
+      }
+      
+      // Make it a valid C string
+      value_path.Append('\0');
+      
+      // And then enters the dir or creates it if first time
+      FileUtility::CreateOrEnterDir( \
+        static_cast<const char *>(value_path.GetData()));
+
+      FILE *fp = FileUtility::OpenFile(file_name, "w");
+      
+      // Frees current directory after switching back
+      FileUtility::EnterDir(cwd);
+      delete[] cwd;
+      
+      return fp;
+    }
+    
+    /*
+     * PrintAttrFormat() - Prints the format of attributes
+     */
+    void PrintAttrFormat(Buffer *buffer_p, uint32_t format) {
+      if(format & ResourceEntryField::TYPE_REFERENCE) {
+        buffer_p->Append("reference | ");
+      }
+      
+      if(format & ResourceEntryField::TYPE_STRING) {
+        buffer_p->Append("string | ");
+      }
+      
+      if(format & ResourceEntryField::TYPE_INTEGER) {
+        buffer_p->Append("integer | ");
+      }
+      
+      if(format & ResourceEntryField::TYPE_BOOLEAN) {
+        buffer_p->Append("boolean | ");
+      }
+      
+      if(format & ResourceEntryField::TYPE_COLOR) {
+        buffer_p->Append("color | ");
+      }
+      
+      if(format & ResourceEntryField::TYPE_FLOAT) {
+        buffer_p->Append("float | ");
+      }
+      
+      if(format & ResourceEntryField::TYPE_DIMENSION) {
+        buffer_p->Append("dimension | ");
+      }
+      
+      if(format & ResourceEntryField::TYPE_FRACTION) {
+        buffer_p->Append("fraction | ");
+      }
+      
+      buffer_p->Rewind(3);
+      
+      return;
+    }
+    
+    /*
+     * PrintAttrEnumFlags() - Prints nested attr types, i.e. enum or flags
+     */
+    void PrintAttrEnumFlags(Buffer *buffer_p, 
+                            uint32_t format,
+                            ResourceEntryField *field_p,
+                            uint32_t entry_count) {
+      // Make sure it is enum or flag type
+      assert((format & \
+              (ResourceEntryField::TYPE_ENUM | \
+               ResourceEntryField::TYPE_FLAGS)) != 0x00000000);
+      
+      return;
+    }
+    
+    /*
+     * WriteAttrXml() - Treat this as an attribute type resource and write XML
+     *
+     * We try to create and enter the directory res/values-???/ where ??? is the
+     * type information, and then create an XML file named "attrs.xml"
+     *
+     * Note that this function takes the file name tobe written since the file
+     * name is different from what is recorded in the type string pool
+     */
+    void WriteAttrXml(const char *file_name) {
+      FILE *fp = SwitchToValuesDir(file_name);
+      
+      FileUtility::WriteString(fp, XML_HEADER_LINE);
+      
+      // We re-use this buffer for each entry and rewind it to 
+      // the beginning everytime
+      Buffer buffer;
+      
+      // Then loop through all attributes and print them to the file 
+      for(size_t i = 0;i < entry_count;i++) {
+        uint32_t offset = offset_table[i];
+        ResourceEntry *entry_p = reinterpret_cast<ResourceEntry *>( \
+         data_p + offset);
+        
+        // Attributes must be complex because we want to know its format
+        if(entry_p->IsComplex() == false) {
+          ReportError(INVALID_ATTR_ENTRY, "Attribute entry must be complex"); 
+        } else if(entry_p->entry_count == 0) {
+          ReportError(INVALID_ATTR_ENTRY, 
+                      "Attribute entry must have at least 1 field"); 
+        } else if(entry_p->parent_id.data != 0x00000000) {
+          ReportError(INVALID_ATTR_ENTRY, 
+                      "Attribute parent ID must be 0"); 
+        }
+        
+        Package *package_p = type_spec_p->package_p;
+        
+        // First print name:
+        buffer.Append("<attr name=\"");
+        package_p->key_string_pool.AppendToBuffer(entry_p->key, 
+                                                  &buffer);
+        buffer.Append('\"');
+        
+        // This points to the only field
+        ResourceEntryField *field_p = entry_p->field_data; 
+        // This defines the format of the following data, so must appear here
+        assert(field_p->name.data == 0x01000000);
+        
+        // This is a bit mask that specifies the format of data allowed
+        uint32_t format_mask = field_p->value.data;
+        
+        // Common case: Just one attribute, print format
+        if(entry_p->entry_count == 1) {
+          buffer.Append(" format=\"");
+          
+          // Must have at least type specified here
+          assert((format_mask & ResourceEntryField::TYPE_ANY) != 0x00000000);
+          
+          PrintAttrFormat(&buffer, format_mask);
+          
+          buffer.Append("\" />\n");
+          
+          // Terminate this string
+          buffer.Append('\0');
+          // Write with identation level = 1
+          FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+          
+          buffer.Reset();
+        } else {
+          // Close the current line and make it to the file
+          buffer.Append(">\n");
+          buffer.Append('\0');
+          FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+          buffer.Reset();
+          
+          // It is an array, so need to pass the starting element and 
+          // entry count
+          PrintAttrEnumFlags(&buffer, 
+                             format_mask, 
+                             field_p + 1, 
+                             entry_p->entry_count - 1);
+        }
+      } // loop through all entries
+      
+      FileUtility::WriteString(fp, RESOURCE_END_TAG);
+      FileUtility::CloseFile(fp);
+      
+      return;
+    }
+  };
+  
+  class Package;
+  
+  /*
+   * class TypeSpec - General type specification on configurations
+   */
+  class TypeSpec {
+   public: 
+    // This points to the type spec header
+    TypeSpecHeader *header_p;
+    
+    // This points to the containing package instance (not the package header)
+    Package *package_p;
+    
+    // Type ID - begins at 1, and 0 means invalid (so whenever we use this
+    // to probe the string table we need to decrease it by 1)
+    uint32_t type_id;
+    
+    // Number of entries in the table
+    size_t entry_count;
+    
+    // Pointer to the configuration table about configurations of different
+    // value instances (i.e. a bit field indicating which kind of resources 
+    // are available)
+    uint32_t *config_table;
+    
+    // Type values of different configurations
+    std::vector<Type> type_list;
+    
+    /*
+     * Constructor
+     */
+    TypeSpec() :
+      header_p{nullptr},
+      package_p{nullptr},
+      entry_count{0UL},
+      config_table{nullptr},
+      type_list{}
+    {}
+  };
+  
+  /*
+   * class Package - Represents internals of a package
+   */
+  class Package {
+   public: 
+    // Pointer to the package header
+    PackageHeader *header_p;
+    
+    // These two are used to store headers
+    StringPoolHeader *type_string_pool_header_p;
+    StringPoolHeader *key_string_pool_header_p;
+    
+    // Two string pools indicated in the header
+    StringPool type_string_pool;
+    StringPool key_string_pool;
+    
+    // A list of type spec objects
+    std::vector<TypeSpec> type_spec_list;
+      
+    /*
+     * GetTypeCount() - Returns the number of types defined as resources
+     *
+     * Since the number of strings in the string pool defines all types
+     * we could treat this as the number of types
+     */
+    size_t GetTypeCount() const {
+      return type_string_pool.string_count;
+    }
+  };
 
  // Data members  
  private:
