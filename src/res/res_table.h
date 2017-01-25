@@ -988,7 +988,7 @@ class ResourceTable : public ResourceBase {
      */
     void WriteXml() {
       if(base_type_name == "attr") {
-        WriteAttrXml();
+        WriteAttrXml("attrs.xml");
       } else {
 #ifndef NDEBUG
         dbg_printf("Unknown attribute name: ");
@@ -1004,6 +1004,7 @@ class ResourceTable : public ResourceBase {
     
     static constexpr const char *RES_PATH = "res";
     static constexpr const char *VALUE_PATH_PREFIX = "values";
+    static constexpr const char *XML_SUFFIX = ".xml";
     
     /*
      * SwitchToValuesDir() - Switch to the values directory and opens the 
@@ -1013,7 +1014,7 @@ class ResourceTable : public ResourceBase {
      * is not changed after returning. If file open or directory operations
      * returns error then exception is thrown
      */
-    FILE *SwitchToValuesDir() {
+    FILE *SwitchToValuesDir(const char *file_name) {
       // Save current directory first to get back after we have finished this 
       const char *cwd = FileUtility::GetCwd();
       
@@ -1041,13 +1042,8 @@ class ResourceTable : public ResourceBase {
       // And then enters the dir or creates it if first time
       FileUtility::CreateOrEnterDir( \
         static_cast<const char *>(value_path.GetData()));
-      
-      // Make it temporarily a C string - we would rewing by 1 byte after this
-      base_type_name.Append('\0');
-      FILE *fp = FileUtility::OpenFile( \
-        static_cast<const char *>(base_type_name.GetData()), 
-        "w");
-      base_type_name.Rewind(1UL);
+
+      FILE *fp = FileUtility::OpenFile(file_name, "w");
       
       // Frees current directory after switching back
       FileUtility::EnterDir(cwd);
@@ -1061,9 +1057,12 @@ class ResourceTable : public ResourceBase {
      *
      * We try to create and enter the directory res/values-???/ where ??? is the
      * type information, and then create an XML file named "attrs.xml"
+     *
+     * Note that this function takes the file name tobe written since the file
+     * name is different from what is recorded in the type string pool
      */
-    void WriteAttrXml() {
-      FILE *fp = SwitchToValuesDir();
+    void WriteAttrXml(const char *file_name) {
+      FILE *fp = SwitchToValuesDir(file_name);
       
       ///
       

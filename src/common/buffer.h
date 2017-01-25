@@ -76,8 +76,20 @@ class Buffer {
     Buffer{DEFAULT_SIZE}
   {}
   
-  // Deleted functions to avoid copy construction and assignment
-  Buffer(const Buffer &) = delete;
+  /*
+   * Copy constuctor - Allocates new storage
+   */
+  Buffer(const Buffer &other) :
+    data_p{new unsigned char[other.length]},
+    length{other.length},
+    current_length{other.current_length} {
+    // Copy all valid data into this buffer
+    memcpy(data_p, other.GetData(), current_length);  
+    
+    return;
+  }
+  
+  // Deleted functions to avoid assignment
   Buffer &operator=(const Buffer &) = delete;
   Buffer &operator=(Buffer &&) = delete;
   
