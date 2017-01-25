@@ -89,6 +89,7 @@ enum ErrorCode : uint64_t {
   INVALID_UTF8_CONTINUIATION_BYTE,
   BASE_CLASS_NOT_IMPLEMENTED,
   INVALID_TYPE_ID,
+  UNKNOWN_TYPE_TO_WRITE_XML,
 };
 
 // Error string table

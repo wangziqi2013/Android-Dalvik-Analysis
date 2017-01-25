@@ -210,6 +210,25 @@ class Buffer {
   }
   
   /*
+   * Append() - Appends the content of another buffer
+   */
+  inline void Append(const Buffer &other) {
+    Append(other.GetData(), other.GetLength());
+  }
+  
+  /*
+   * operator== - Compres with raw C string; must be a full match for true
+   *
+   * This function compares the C string with the current content in
+   * the buffer. We compare using strncmp() which means at most the first
+   * n characters will be compared (could be less if s is less than n bytes).
+   */
+  bool operator==(const char *s) const {
+    return strlen(s) == current_length && \
+           strncmp(s, reinterpret_cast<char *>(data_p), current_length) == 0;
+  }
+  
+  /*
    * WriteToFile() - Flushes all contents to a file and clear buffer
    *
    * This function will flush the buffer, so it is relatively slow
