@@ -1407,9 +1407,16 @@ class ResourceTable : public ResourceBase {
     type_spec_p->entry_count = type_spec_header_p->entry_count;
     type_spec_p->config_table = type_spec_header_p->data;
     
-    dbg_printf("    Type id = %u; entry_count = %u\n", 
+#ifndef NDEBUG
+    dbg_printf("    Type id = %u; entry_count = %u (type name = ", 
                static_cast<uint32_t>(type_spec_header_p->id),
                static_cast<uint32_t>(type_spec_header_p->entry_count));
+
+    Buffer buffer{128};
+    package_p->type_string_pool.AppendToBuffer(type_id - 1, &buffer);
+    buffer.Append(")\n");
+    buffer.WriteToFile(stderr);
+#endif
 
     return type_id;
   }
@@ -1487,9 +1494,9 @@ class ResourceTable : public ResourceBase {
 
           // If the type ID is not attr then the field name must have
           // a ATTR type ID
-          if(type_p->type_spec_p->type_id != 0x01) {
-            assert(field_p->name.type_id == 0x01);
-          }
+          //if(type_p->type_spec_p->type_id != 0x01) {
+          //  assert(field_p->name.type_id == 0x01);
+          //}
         } // Loop through entry fields
       } // If is complex type
 	  } // for resource entry for the current type
