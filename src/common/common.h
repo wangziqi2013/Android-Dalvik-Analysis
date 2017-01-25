@@ -90,6 +90,8 @@ enum ErrorCode : uint64_t {
   BASE_CLASS_NOT_IMPLEMENTED,
   INVALID_TYPE_ID,
   UNKNOWN_TYPE_TO_WRITE_XML,
+  
+  ERROR_CLOSE_FILE = 35,
 };
 
 // Error string table
@@ -109,6 +111,32 @@ class FileUtility {
  public:
   
   /*
+   * OpenFile() - Opens a file using the given mode
+   *
+   * This function is simply a wrapper with error reporting
+   */
+  inline static FILE *OpenFile(const char *file_name, const char *mode) {
+    FILE *fp = fopen(file_name, mode);
+    if(fp == nullptr) {
+      ReportError(ERROR_OPEN_FILE, file_name);
+    }
+    
+    return fp;
+  }
+  
+  /*
+   * CloseFile() - Closes an opened file and reports error if necessary
+   */
+  inline static void CloseFile(FILE *fp) {
+    int ret = fclose(fp);
+    if(ret != 0) {
+      ReportError(ERROR_CLOSE_FILE); 
+    }
+    
+    return;
+  }
+  
+  /*
    * LoadFile() - Loads a file into memory
    *
    * This function optionally returns the file length through the second 
@@ -116,10 +144,7 @@ class FileUtility {
    */
   static unsigned char *LoadFile(const char *file_name, 
                                  size_t *file_length_p=nullptr) {
-    FILE *fp = fopen(file_name, "rb");
-    if(fp == nullptr) {
-      ReportError(ERROR_OPEN_FILE, file_name);
-    }
+    FILE *fp = OpenFile(file_name, "rb");
     
     // Get file length and then assign it back to the argument 
     // if it is not nullptr
@@ -138,8 +163,7 @@ class FileUtility {
       ReportError(ERROR_READ_FILE, size_read);
     }
     
-    int close_ret = fclose(fp);
-    assert(close_ret == 0);
+    CloseFile(fp);
     
     return data_p;
   }

@@ -949,7 +949,12 @@ class ResourceTable : public ResourceBase {
     // This stores readable names of the type
     // Note that we need to specify a length for buffer objects because by
     // default the buffer uses 64 KB internal storage on initialization
+    // Note that this name does not have any type information, so when
+    // use this to create directory we need to prepend the directory name
     Buffer readable_name;
+    
+    // This is the name of the base type, i.e. attr without any postfix
+    Buffer base_type_name;
     
     // Number of entries in this type table
     size_t entry_count;
@@ -967,10 +972,105 @@ class ResourceTable : public ResourceBase {
       header_p{nullptr},
       type_spec_p{nullptr},
       readable_name{INIT_BUFFER_LENGTH},
+      base_type_name{INIT_BUFFER_LENGTH},
       entry_count{0UL},
       offset_table{nullptr},
       data_p{nullptr}
     {}
+    
+    /*
+     * WriteXml() - Writes an XML file that represents the structure of the
+     *              current type
+     *
+     * The XML file is written according to the type of the resource. We
+     * hardcode the format for each type and its identifier, e.g. attr, string,
+     * drawable, etc.
+     */
+    void WriteXml() {
+      if(base_type_name == "attr") {
+        WriteAttrXml();
+      } else {
+#ifndef NDEBUG
+        dbg_printf("Unknown attribute name: ");
+        base_type_name.WriteToFile(stderr);
+        fprintf(stderr, "\n");
+#endif
+
+        ReportError(UNKNOWN_TYPE_TO_WRITE_XML); 
+      }
+      
+      return;
+    }
+    
+    static constexpr const char *RES_PATH = "res";
+    static constexpr const char *VALUE_PATH_PREFIX = "values";
+    
+    /*
+     * SwitchToValuesDir() - Switch to the values directory and opens the 
+     *                       file for current base type
+     *
+     * This function takes care of possible postfix of "values"; The CWD
+     * is not changed after returning. If file open or directory operations
+     * returns error then exception is thrown
+     */
+    FILE *SwitchToValuesDir() {
+      // Save current directory first to get back after we have finished this 
+      const char *cwd = FileUtility::GetCwd();
+      
+      // Enters 'res' first
+      FileUtility::CreateOrEnterDir(RES_PATH);
+      
+      // So the total length we need is "values-" + length of the readable name
+      // and if readable name is empty just omit the dash after "values"
+      // so need 1 more bytes for '\0' and 1 byte for the possible '-'
+      size_t value_path_length = strlen(VALUE_PATH_PREFIX) + \
+                                 readable_name.GetLength() + \
+                                 2;
+      
+      Buffer value_path{value_path_length};
+      value_path.Append("values");
+      // If there is a special name then append them also after the dash
+      if(readable_name.GetLength() != 0UL) {
+        value_path.Append('-');
+        value_path.Append(readable_name); 
+      }
+      
+      // Make it a valid C string
+      value_path.Append('\0');
+      
+      // And then enters the dir or creates it if first time
+      FileUtility::CreateOrEnterDir( \
+        static_cast<const char *>(value_path.GetData()));
+      
+      // Make it temporarily a C string - we would rewing by 1 byte after this
+      base_type_name.Append('\0');
+      FILE *fp = FileUtility::OpenFile( \
+        static_cast<const char *>(base_type_name.GetData()), 
+        "w");
+      base_type_name.Rewind(1UL);
+      
+      // Frees current directory after switching back
+      FileUtility::EnterDir(cwd);
+      delete[] cwd;
+      
+      return fp;
+    }
+    
+    /*
+     * WriteAttrXml() - Treat this as an attribute type resource and write XML
+     *
+     * We try to create and enter the directory res/values-???/ where ??? is the
+     * type information, and then create an XML file named "attrs.xml"
+     */
+    void WriteAttrXml() {
+      FILE *fp = SwitchToValuesDir();
+      
+      ///
+      
+      FileUtility::CloseFile(fp);
+      
+      return;
+    }
   };
   
   class Package;
@@ -1503,6 +1603,15 @@ class ResourceTable : public ResourceBase {
 
     return;
   }
+  
+  /*
+   * DebugWriteTypeXml() - Writes a XML file for a given type
+   */
+  void DebugWriteTypeXml(Type *type_p) {
+    type_p->WriteXml();
+    
+    return;
+  }
 
   /*
    * ParseTypeHeader() - Parses type header
@@ -1526,6 +1635,9 @@ class ResourceTable : public ResourceBase {
     type_p->header_p = type_header_p;
     type_p->type_spec_p = type_spec_p;
     type_header_p->config.GetName(&type_p->readable_name);
+    // Also write the base type name into the buffer
+    package_p->type_string_pool.AppendToBuffer(type_spec_p->type_id - 1, 
+                                               &type_p->base_type_name);
     type_p->entry_count = type_header_p->entry_count;
     
     // The offset table is just located after the header
@@ -1553,6 +1665,10 @@ class ResourceTable : public ResourceBase {
     dbg_printf("        Entry count = %u\n", type_header_p->entry_count);
     
     DebugPrintAllTypeEntryNames(package_p, type_p);
+#endif
+
+#ifndef NDEBUG    
+    DebugWriteTypeXml(type_p);
 #endif
     
     // The ID must match

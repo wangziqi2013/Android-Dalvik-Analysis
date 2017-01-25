@@ -53,6 +53,9 @@ const char *error_str_table[] = {
   "Base class function not implemented (internal error)\n",
   "Invalid type ID: 0x%X\n",
   "Unknown resource type for writing the XML file\n",
+  
+  // 35
+  "Error closing the file\n",
 };
 
 /*

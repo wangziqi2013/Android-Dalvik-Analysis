@@ -97,15 +97,24 @@ class ResourceBase {
     // Number of strings stored in the pool
     size_t string_count;
     
+    // Number of styles in the pool
+    size_t style_count;
+    
     // The pointer to the array that stores offset of each string
     uint32_t *string_index_p;
+    
+    // Points to the starting of style uint32_t offset table
+    uint32_t *style_index_p;
     
     // The pointer to the table that strings are stored
     // Begin offset of each string
     unsigned char *string_start;
     
+    // Points to the style content start
+    unsigned char *style_start;
+    
     // Whether the string is represented in UTF-format or not
-    // UTF-8 string has a one byte repfix denoting the length. However
+    // UTF-8 string has a one byte prefix denoting the length. However
     // in this format there are two such bytes with replicated values
     // (more precisely they are UTF-8 and UTF-16 length respectively)
     bool is_utf8;
@@ -175,7 +184,11 @@ class ResourceBase {
   };
   
   // This is used to indicate the string is invalid (i.e. does not exist)
-  constexpr static uint32_t INVALID_STRING = 0xFFFFFFFF;
+  static constexpr uint32_t INVALID_STRING = 0xFFFFFFFF;
+  
+  // This is the first line of any XML file we are outputting
+  static constexpr char XML_HEADER_LINE[] = \
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
   
   /*
    * class ResourceValue - Typed representation of resource values
@@ -325,12 +338,22 @@ class ResourceBase {
       reinterpret_cast<uint32_t *>(
         TypeUtility::Advance(header_p, header_p->header_length));
     
+    // The style index table is just located after the string index table
+    string_pool_p->style_index_p = \
+      string_pool_p->string_index_p + string_pool_header_p->string_count;
+    
     // This is a relative offset to the first byte of the header
     string_pool_p->string_start = \
       reinterpret_cast<unsigned char *>(
         TypeUtility::Advance(header_p, string_pool_header_p->string_offset));
+    
+    // Also get style data region's pointer    
+    string_pool_p->style_start = \
+      reinterpret_cast<unsigned char *>(
+        TypeUtility::Advance(header_p, string_pool_header_p->style_offset));
         
     string_pool_p->string_count = string_pool_header_p->string_count;
+    string_pool_p->style_count = string_pool_header_p->style_count;
     
     // If it is UTF-8 then each ASCII is represented using only 1 byte
     string_pool_p->is_utf8 = \
@@ -339,9 +362,6 @@ class ResourceBase {
     dbg_printf("    Finished parsing string pool of %u strings and %u styles\n", 
                string_pool_header_p->string_count,
                string_pool_header_p->style_count);
-    
-    assert(string_pool_header_p->style_count == 0 && \
-           "This is a temporary measure");
     
     return;                                  
   }
