@@ -187,8 +187,8 @@ class ResourceBase {
   static constexpr uint32_t INVALID_STRING = 0xFFFFFFFF;
   
   // This is the first line of any XML file we are outputting
-  static constexpr char XML_HEADER_LINE[] = \
-    "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
+  static const char XML_HEADER_LINE[];
+  static const char RESOURCE_END_TAG[];
   
   /*
    * class ResourceValue - Typed representation of resource values

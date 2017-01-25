@@ -1064,8 +1064,11 @@ class ResourceTable : public ResourceBase {
     void WriteAttrXml(const char *file_name) {
       FILE *fp = SwitchToValuesDir(file_name);
       
-      ///
+      FileUtility::WriteString(fp, XML_HEADER_LINE);
       
+      // Then loop through all attributes and print them to the file 
+      
+      FileUtility::WriteString(fp, RESOURCE_END_TAG);
       FileUtility::CloseFile(fp);
       
       return;

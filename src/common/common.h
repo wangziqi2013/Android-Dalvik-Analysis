@@ -137,6 +137,36 @@ class FileUtility {
   }
   
   /*
+   * WriteString() - Writes the content of the string to a file
+   *
+   * Thie function does not append new line after the string; This function
+   * also has the optional argument of setting the identation of the line
+   * which will be printed as space characters before the actual content of the
+   * string
+   */
+  static void WriteString(FILE *fp, 
+                          const char *s, 
+                          int ident=0, 
+                          int ident_length=4) {    
+    int ret;
+    if(ident != 0) {
+      // This prints space characters of a given length
+      ret = fprintf(fp, "%*c", ident * ident_length, ' ');
+      if(ret < 0) {
+        ReportError(ERROR_WRITE_FILE, "[Unknown]"); 
+      }
+    }
+                                 
+    // Use formatted print to save a few function calls
+    ret = fprintf(fp, "%s", s);
+    if(ret < 0) {
+      ReportError(ERROR_WRITE_FILE, "[Unknown]"); 
+    }
+    
+    return; 
+  }
+  
+  /*
    * LoadFile() - Loads a file into memory
    *
    * This function optionally returns the file length through the second 
