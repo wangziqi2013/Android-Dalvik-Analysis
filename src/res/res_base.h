@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "utf.h"
+#include "res_value.h"
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 
@@ -189,72 +190,6 @@ class ResourceBase {
   // This is the first line of any XML file we are outputting
   static const char XML_HEADER_LINE[];
   static const char RESOURCE_END_TAG[];
-  
-  /*
-   * class ResourceValue - Typed representation of resource values
-   */
-  class ResourceValue {
-   public:
-    // The length of this struct
-    uint16_t length;
-    
-    // It is an empty file and should always be 0
-    uint8_t zero;
-    
-    /*
-     * enum class DataType - Denotes the type of the data contained in this 
-     *                       class instance
-     */
-    enum class DataType : uint8_t {
-      // The 'data' is either 0 or 1, specifying this resource is either
-      // undefined or empty, respectively.
-      NULL_TYPE = 0x00,
-      // The 'data' holds a ResTable_ref, a reference to another resource
-      // table entry.
-      REFERENCE = 0x01,
-      // The 'data' holds an attribute resource identifier.
-      ATTRIBUTE = 0x02,
-      // The 'data' holds an index into the containing resource table's
-      // global value string pool.
-      STRING = 0x03,
-      // The 'data' holds a single-precision floating point number.
-      FLOAT = 0x04,
-      // The 'data' holds a complex number encoding a dimension value,
-      // such as "100in".
-      DIMENSION = 0x05,
-      // The 'data' holds a complex number encoding a fraction of a
-      // container.
-      FRACTION = 0x06,
-      // The 'data' holds a dynamic ResTable_ref, which needs to be
-      // resolved before it can be used like a TYPE_REFERENCE.
-      DYNAMIC_REFERENCE = 0x07,
-      // The 'data' holds an attribute resource identifier, which needs to be resolved
-      // before it can be used like a TYPE_ATTRIBUTE.
-      DYNAMIC_ATTRIBUTE = 0x08,
-
-      // The 'data' is a raw integer value of the form n..n.
-      INT_DEC = 0x10,
-      // The 'data' is a raw integer value of the form 0xn..n.
-      INT_HEX = 0x11,
-      // The 'data' is either 0 or 1, for input "false" or "true" respectively.
-      INT_BOOLEAN = 0x12,
-
-      // The 'data' is a raw integer value of the form #aarrggbb.
-      INT_COLOR_ARGB8 = 0x1c,
-      // The 'data' is a raw integer value of the form #rrggbb.
-      INT_COLOR_RGB8 = 0x1d,
-      // The 'data' is a raw integer value of the form #argb.
-      INT_COLOR_ARGB4 = 0x1e,
-      // The 'data' is a raw integer value of the form #rgb.
-      INT_COLOR_RGB4 = 0x1f,
-    };
-    
-    // This is an enum type
-    DataType type;
-    
-    // This holds actual data
-    uint32_t data;
-  } BYTE_ALIGNED;
   
   /*
    * class Attribute - Represents attribute structure

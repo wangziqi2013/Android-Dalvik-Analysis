@@ -19,6 +19,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
 
 #define DEBUG_PRINT
 
@@ -226,7 +228,7 @@ class FileUtility {
                      MAP_PRIVATE, 
                      fd, 
                      0);
-    if(mmappedData == MAP_FAILED) {
+    if(ptr == MAP_FAILED) {
       ReportError(ERROR_MAP_FILE, file_name); 
     }
     
@@ -250,7 +252,7 @@ class FileUtility {
     struct stat st;
     
     // Get the file size and return
-    stat(filename, &st);
+    stat(file_name, &st);
     return static_cast<size_t>(st.st_size);
   }
    
