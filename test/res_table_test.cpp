@@ -19,9 +19,11 @@ void TestResourceTableBasic(const char *file_name) {
   dbg_printf("File name: %s\n", file_name);
   
   size_t length;
-  unsigned char *data = FileUtility::LoadFile(file_name, &length);
+  unsigned char *data = FileUtility::MapFileReadOnly(file_name, &length);
   
-  ResourceTable table{data, length, true};
+  ResourceTable table{data, length, false};
+  
+  FileUtility::UnmapFile(data, length); 
   
   return;
 }

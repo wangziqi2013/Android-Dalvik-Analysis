@@ -249,7 +249,7 @@ class FileUtility {
    * This function requires the length of the file as an extra parameter since
    * munmap() requires the length to free the virtual address
    */
-  void UnmapFile(void *ptr, size_t length) {
+  static void UnmapFile(void *ptr, size_t length) {
     int ret = munmap(ptr, length);
     if(ret == -1) {
       ReportError(ERROR_UNMAP_FILE); 
