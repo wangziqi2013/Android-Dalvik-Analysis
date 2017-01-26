@@ -44,7 +44,7 @@ const char *error_str_table[] = {
   "Corrupt resource map: inconsistent header fields\n",
   "URI not found - no XML namespace available\n",
   "Unexpected length of struct ResourceValue: %u\n",
-  "Unsupported resource value type: %u (data: %X)\n",
+  "Unsupported resource value type: 0x%.4X (data: 0x%X)\n",
   "Illegal value for boolean type: %u\n",
   
   // 30
@@ -59,6 +59,7 @@ const char *error_str_table[] = {
   "Invalid type attr entry: %s\n",
   "Error mapping file into memory: %s\n",
   "Error unmapping file from virtual memory\n",
+  "Unknown value for type NULL_TYPE: %u\n",
 };
 
 /*

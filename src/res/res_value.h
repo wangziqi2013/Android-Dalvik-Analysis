@@ -73,6 +73,42 @@ class ResourceValue {
   
   // This holds actual data
   uint32_t data;
+  
+  // Possible data values for TYPE_NULL.
+  enum {
+    // The value is not defined.
+    DATA_NULL_UNDEFINED = 0,
+    // The value is explicitly defined as empty.
+    DATA_NULL_EMPTY = 1
+  };
+  
+  /*
+   * AppendToBuffer() - Prints the content in the corresponding format and 
+   *                    append it to the buffer
+   */
+  void AppendToBuffer(Buffer *buffer_p) {
+    switch(type) {
+      case DataType::NULL_TYPE: {
+        if(data == DATA_NULL_UNDEFINED) {
+          buffer_p->Append("undefined"); 
+        } else if(data == DATA_NULL_EMPTY) {
+          buffer_p->Append("null"); 
+        } else {
+          ReportError(UNKNOWN_VALUE_TYPE_NULL, data);
+        }
+        
+        break;
+      } // case NULL_TYPE
+      default: {
+        ReportError(UNSUPPORTED_RESOURCE_VALUE_TYPE, 
+                    static_cast<uint32_t>(type),
+                    static_cast<uint32_t>(data));
+        break;
+      } // default
+    } // switch type
+    
+    return;
+  }
 } BYTE_ALIGNED;
 
 } // namespace android_dalvik_analysis

@@ -97,6 +97,7 @@ enum ErrorCode : uint64_t {
   INVALID_ATTR_ENTRY,
   ERROR_MAP_FILE,
   ERROR_UNMAP_FILE,
+  UNKNOWN_VALUE_TYPE_NULL,
 };
 
 // Error string table
