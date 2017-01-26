@@ -317,6 +317,27 @@ class ResourceBase {
     
     return;
   }
+  
+  /*
+   * AppendResourceValueToBuffer() - This appends the given resource value to
+   *                                 a buffer
+   *
+   * This function is a wrapper over ResourceValue's AppendToBuffer() because
+   * the string type should be handled outside of the class
+   */
+  void AppendResourceValueToBuffer(ResourceValue *value_p, Buffer *buffer_p) {
+    uint8_t type = value_p->type;
+    
+    // If it is string type then just grab the string from the current
+    // global string pool
+    if(type == ResourceValue::DataType::STRING) {
+      string_pool.AppendToBuffer(value_p->data, buffer_p);
+    } else {
+      value_p->AppendToBuffer(buffer_p); 
+    }
+    
+    return;
+  }
  
  public:
   
