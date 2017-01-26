@@ -65,6 +65,8 @@ const char *error_str_table[] = {
   "Unknown resource value of boolean type: 0x%X\n",
   "Package ID is zero - non-base package not supported\n",
   "Package ID not found in the current resource table; RES ID: 0x%08X\n",
+  "Unknown unit for dimension: 0x%X\n",
+  "Unknown unit for fraction: 0x%X\n",
 };
 
 /*

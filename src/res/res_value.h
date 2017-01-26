@@ -14,6 +14,50 @@ namespace android_dalvik_analysis {
  */
 class ResourceValue {
  public:
+  // Where the unit type information is.  This gives us 16 possible
+  // types, as defined below.
+  static constexpr uint32_t COMPLEX_UNIT_SHIFT = 0;
+  static constexpr uint32_t COMPLEX_UNIT_MASK = 0xf;
+
+  // TYPE_DIMENSION: Value is raw pixels.
+  static constexpr uint32_t COMPLEX_UNIT_PX = 0;
+  // TYPE_DIMENSION: Value is Device Independent Pixels.
+  static constexpr uint32_t COMPLEX_UNIT_DIP = 1;
+  // TYPE_DIMENSION: Value is a Scaled device independent Pixels.
+  static constexpr uint32_t COMPLEX_UNIT_SP = 2;
+  // TYPE_DIMENSION: Value is in points.
+  static constexpr uint32_t COMPLEX_UNIT_PT = 3;
+  // TYPE_DIMENSION: Value is in inches.
+  static constexpr uint32_t COMPLEX_UNIT_IN = 4;
+  // TYPE_DIMENSION: Value is in millimeters.
+  static constexpr uint32_t COMPLEX_UNIT_MM = 5;
+
+  // TYPE_FRACTION: A basic fraction of the overall size.
+  static constexpr uint32_t COMPLEX_UNIT_FRACTION = 0;
+  // TYPE_FRACTION: A fraction of the parent size.
+  static constexpr uint32_t COMPLEX_UNIT_FRACTION_PARENT = 1;
+
+  // Where the radix information is, telling where the decimal place
+  // appears in the mantissa.  This give us 4 possible fixed point
+  // representations as defined below.
+  static constexpr uint32_t COMPLEX_RADIX_SHIFT = 4;
+  static constexpr uint32_t COMPLEX_RADIX_MASK = 0x3;
+
+  // The mantissa is an integral number -- i.e., 0xnnnnnn.0
+  static constexpr uint32_t COMPLEX_RADIX_23p0 = 0;
+  // The mantissa magnitude is 16 bits -- i.e, 0xnnnn.nn
+  static constexpr uint32_t COMPLEX_RADIX_16p7 = 1;
+  // The mantissa magnitude is 8 bits -- i.e, 0xnn.nnnn
+  static constexpr uint32_t COMPLEX_RADIX_8p15 = 2;
+  // The mantissa magnitude is 0 bits -- i.e, 0x0.nnnnnn
+  static constexpr uint32_t COMPLEX_RADIX_0p23 = 3;
+
+  // Where the actual value is.  This gives us 23 bits of
+  // precision.  The top bit is the sign.
+  static constexpr uint32_t COMPLEX_MANTISSA_SHIFT = 8;
+  static constexpr uint32_t COMPLEX_MANTISSA_MASK = 0xffffff;
+  
+ public:
   // The length of this struct
   uint16_t length;
   
@@ -174,6 +218,12 @@ class ResourceValue {
         
         break; 
       } // ARGB4
+      case DataType::DIMENSION: 
+      case DataType::FRACTION: 
+        // Logic is a little bit complicated so write another function 
+        // to handle it
+        AppendComplexValueToBuffer(buffer_p);  
+        break; 
       default: {
         ReportError(UNSUPPORTED_RESOURCE_VALUE_TYPE, 
                     static_cast<uint32_t>(type),
@@ -183,6 +233,64 @@ class ResourceValue {
     } // switch type
     
     return;
+  }
+  
+ private: 
+  
+  /*
+   * AppendComplexValueToBuffer() - Called for dimention or fraction value
+   */
+  inline void AppendComplexValueToBuffer(Buffer *buffer_p) {
+    assert(type == DataType::DIMENSION || type == DataType::FRACTION);
+    
+    // First step is to extract the actual numeric part
+    // and then print it
+    
+    // The following was copied from Android run time code with modification:
+    // https://github.com/android/platform_frameworks_base/blob/master/libs/androidfw/ResourceTypes.cpp
+    
+    // These two could be folded by the compiler
+    static const float MANTISSA_MULT = \
+      1.0f / (1 << COMPLEX_MANTISSA_SHIFT);
+    static const float RADIX_MULTS[] = {
+      1.0f * MANTISSA_MULT, 1.0f / (1 << 7) * MANTISSA_MULT,
+      1.0f / (1 << 15) * MANTISSA_MULT, 1.0f / (1 << 23) * MANTISSA_MULT,
+    };
+
+    float value = (data & (COMPLEX_MANTISSA_MASK << \
+                   COMPLEX_MANTISSA_SHIFT)) * \
+                  RADIX_MULTS[(data >> COMPLEX_RADIX_SHIFT) & \
+                              COMPLEX_RADIX_MASK];
+    
+    buffer_p->Printf("%f", value);
+    
+    // Then extract the unit and print it
+    
+    // Extract the unit
+    uint32_t unit = (data >> COMPLEX_UNIT_SHIFT) & COMPLEX_UNIT_MASK;
+    if(type == DataType::DIMENSION) {
+      switch(unit) {
+        case COMPLEX_UNIT_PX: buffer_p->Append("px"); break;
+        case COMPLEX_UNIT_DIP: buffer_p->Append("dp"); break;
+        case COMPLEX_UNIT_SP: buffer_p->Append("sp"); break;
+        case COMPLEX_UNIT_PT: buffer_p->Append("pt"); break;
+        case COMPLEX_UNIT_IN: buffer_p->Append("in"); break;
+        case COMPLEX_UNIT_MM: buffer_p->Append("mm"); break;
+        default: {
+          ReportError(UNKNOWN_DIMENSION_UNIT, unit);
+        } // default
+      } // switch
+    } else {
+      switch(unit) {
+        case COMPLEX_UNIT_FRACTION: buffer_p->Append("%%"); break;
+        case COMPLEX_UNIT_FRACTION_PARENT: buffer_p->Append("%%p"); break;
+        default: {
+          ReportError(UNKNOWN_FRACTION_UNIT, unit);
+        } // default
+      } // switch
+    } // if dimension or fraction
+    
+    return; 
   }
 } BYTE_ALIGNED;
 
