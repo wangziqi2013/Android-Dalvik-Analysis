@@ -60,6 +60,9 @@ const char *error_str_table[] = {
   "Error mapping file into memory: %s\n",
   "Error unmapping file from virtual memory\n",
   "Unknown value for type NULL_TYPE: %u\n",
+  
+  // 40
+  "Unknown resource value of boolean type: 0x%X\n",
 };
 
 /*

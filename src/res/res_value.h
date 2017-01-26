@@ -85,6 +85,10 @@ class ResourceValue {
   /*
    * AppendToBuffer() - Prints the content in the corresponding format and 
    *                    append it to the buffer
+   *
+   * Note that this function only processes simple values that do not require
+   * extra reference. For resource values that need external reference, e.g.
+   * string and reference, processing should be done outside of this function!
    */
   void AppendToBuffer(Buffer *buffer_p) {
     switch(type) {
@@ -99,6 +103,79 @@ class ResourceValue {
         
         break;
       } // case NULL_TYPE
+      case DataType::STRING: {
+        // Because it takes an external reference and we could not process it
+        // without knowing all the stuff
+        assert(false && "Please process STRING type outside this function");
+        
+        break;
+      } // case STRING
+      case DataType::FLOAT: {
+        // Must cast it as a float pointer and then push the float through
+        // the pointer
+        // Could not use static_cast because that will invoke FPU to convert
+        // it to a logical float value from a logical integer value
+        buffer_p->Printf("%f", *reinterpret_cast<float *>(&data));
+        
+        break;
+      } // case FLOAT
+      case DataType::INT_DEC: {
+        buffer_p->Printf("%d", static_cast<int32_t>(data));
+        
+        break; 
+      } // case DEC
+      case DataType::INT_HEX: {
+        buffer_p->Printf("0x%X", data);
+        
+        break; 
+      } // case HEX
+      case DataType::INT_BOOLEAN: {
+        if(data == 0x00000000) {
+          buffer_p->Append("false"); 
+        } else if(data == 0xFFFFFFFF) {
+          buffer_p->Append("true"); 
+        } else {
+          ReportError(UNKNOWN_BOOLEAN_VALUE, data); 
+        }
+        
+        break; 
+      } // case BOOLEAN
+      case DataType::INT_COLOR_ARGB8: {
+        buffer_p->Append('#');
+        // #AARRGGBB since Android uses small endian to represent
+        // the ARGB seheme we could directly print them as HEX number
+        buffer_p->Append("%08X", data);
+        
+        break; 
+      } // ARGB8
+      case DataType::INT_COLOR_RGB8: {
+        buffer_p->Append('#');
+        // Just ignore the high bits and prints low 24 bit (6 hex digits)
+        buffer_p->Append("%06X", data & 0x00FFFFFF);
+        
+        break; 
+      } // RGB8
+      case DataType::INT_COLOR_ARGB4: {
+        buffer_p->Append('#');
+        
+        // Print 
+        buffer_p->Append("%01X", (data >> 12) & 0x0000000F);
+        buffer_p->Append("%01X", (data >> 8) & 0x0000000F);
+        buffer_p->Append("%01X", (data >> 4) & 0x0000000F);
+        buffer_p->Append("%01X", (data >> 0) & 0x0000000F);
+        
+        break; 
+      } // ARGB4
+      case DataType::INT_COLOR_RGB4: {
+        buffer_p->Append('#');
+        
+        // Print lowest 3 bytes
+        buffer_p->Append("%01X", (data >> 8) & 0x0000000F);
+        buffer_p->Append("%01X", (data >> 4) & 0x0000000F);
+        buffer_p->Append("%01X", (data >> 0) & 0x0000000F);
+        
+        break; 
+      } // ARGB4
       default: {
         ReportError(UNSUPPORTED_RESOURCE_VALUE_TYPE, 
                     static_cast<uint32_t>(type),

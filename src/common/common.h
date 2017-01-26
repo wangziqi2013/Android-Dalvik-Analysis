@@ -98,6 +98,8 @@ enum ErrorCode : uint64_t {
   ERROR_MAP_FILE,
   ERROR_UNMAP_FILE,
   UNKNOWN_VALUE_TYPE_NULL,
+  
+  UNKNOWN_BOOLEAN_VALUE = 40,
 };
 
 // Error string table
