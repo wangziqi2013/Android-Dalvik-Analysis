@@ -15,6 +15,7 @@
 #include <cstdint> 
 #include <cstring>
 #include <cstdarg>
+#include <unordered_map>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -100,6 +101,8 @@ enum ErrorCode : uint64_t {
   UNKNOWN_VALUE_TYPE_NULL,
   
   UNKNOWN_BOOLEAN_VALUE = 40,
+  ONLY_SUPPORT_BASE_PACKAGE,
+  PACKAGE_ID_NOT_FOUND,
 };
 
 // Error string table

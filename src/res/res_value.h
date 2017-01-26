@@ -141,17 +141,15 @@ class ResourceValue {
         break; 
       } // case BOOLEAN
       case DataType::INT_COLOR_ARGB8: {
-        buffer_p->Append('#');
         // #AARRGGBB since Android uses small endian to represent
         // the ARGB seheme we could directly print them as HEX number
-        buffer_p->Append("%08X", data);
+        buffer_p->Append("#%08X", data);
         
         break; 
       } // ARGB8
       case DataType::INT_COLOR_RGB8: {
-        buffer_p->Append('#');
         // Just ignore the high bits and prints low 24 bit (6 hex digits)
-        buffer_p->Append("%06X", data & 0x00FFFFFF);
+        buffer_p->Append("#%06X", data & 0x00FFFFFF);
         
         break; 
       } // RGB8

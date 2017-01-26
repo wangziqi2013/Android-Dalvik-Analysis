@@ -326,7 +326,7 @@ class ResourceBase {
    * the string type should be handled outside of the class
    */
   void AppendResourceValueToBuffer(ResourceValue *value_p, Buffer *buffer_p) {
-    uint8_t type = value_p->type;
+    ResourceValue::DataType type = value_p->type;
     
     // If it is string type then just grab the string from the current
     // global string pool

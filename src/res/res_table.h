@@ -1241,38 +1241,38 @@ class ResourceTable : public ResourceBase {
      */
     void PrintAttrFormat(Buffer *buffer_p, uint32_t format) {
       if(format & ResourceEntryField::TYPE_REFERENCE) {
-        buffer_p->Append("reference | ");
+        buffer_p->Append("reference|");
       }
       
       if(format & ResourceEntryField::TYPE_STRING) {
-        buffer_p->Append("string | ");
+        buffer_p->Append("string|");
       }
       
       if(format & ResourceEntryField::TYPE_INTEGER) {
-        buffer_p->Append("integer | ");
+        buffer_p->Append("integer|");
       }
       
       if(format & ResourceEntryField::TYPE_BOOLEAN) {
-        buffer_p->Append("boolean | ");
+        buffer_p->Append("boolean|");
       }
       
       if(format & ResourceEntryField::TYPE_COLOR) {
-        buffer_p->Append("color | ");
+        buffer_p->Append("color|");
       }
       
       if(format & ResourceEntryField::TYPE_FLOAT) {
-        buffer_p->Append("float | ");
+        buffer_p->Append("float|");
       }
       
       if(format & ResourceEntryField::TYPE_DIMENSION) {
-        buffer_p->Append("dimension | ");
+        buffer_p->Append("dimension|");
       }
       
       if(format & ResourceEntryField::TYPE_FRACTION) {
-        buffer_p->Append("fraction | ");
+        buffer_p->Append("fraction|");
       }
       
-      buffer_p->Rewind(3);
+      buffer_p->Rewind(1);
       
       return;
     }
@@ -1280,7 +1280,8 @@ class ResourceTable : public ResourceBase {
     /*
      * PrintAttrEnumFlags() - Prints nested attr types, i.e. enum or flags
      */
-    void PrintAttrEnumFlags(Buffer *buffer_p, 
+    void PrintAttrEnumFlags(FILE *fp,
+                            Buffer *buffer_p, 
                             uint32_t format,
                             ResourceEntryField *field_p,
                             uint32_t entry_count) {
@@ -1288,6 +1289,14 @@ class ResourceTable : public ResourceBase {
       assert((format & \
               (ResourceEntryField::TYPE_ENUM | \
                ResourceEntryField::TYPE_FLAGS)) != 0x00000000);
+               
+      if((format & ResourceEntryField::TYPE_ENUM) != 0x00000000) {
+        // If it is a type enum then print it at the 2nd ident level
+        FileUtility::WriteString(fp, "<enum name=\"", 2);
+        
+      } else {
+        // If it is a type flag
+      }
       
       return;
     }
@@ -1369,10 +1378,14 @@ class ResourceTable : public ResourceBase {
           
           // It is an array, so need to pass the starting element and 
           // entry count
-          PrintAttrEnumFlags(&buffer, 
+          PrintAttrEnumFlags(fp,
+                             &buffer, 
                              format_mask, 
                              field_p + 1, 
                              entry_p->entry_count - 1);
+                             
+          FileUtility::WriteString(fp, "</attr>\n", 1);
+          buffer.Reset();
         }
       } // loop through all entries
       
@@ -1457,6 +1470,12 @@ class ResourceTable : public ResourceBase {
  private:
   TableHeader *table_header_p;
   
+  // This is a mapping between package ID and the package pointer stored
+  // also inside this class. We have two access methods for packages: 
+  // either through this mapping using the package ID or through the 
+  // array of package objects
+  std::unordered_map<uint8_t, Package *> package_map;
+  
   // A list of packages
   // We do reserve space for this vector such that only 1 malloc() is done
   std::vector<Package> package_list;
@@ -1493,6 +1512,35 @@ class ResourceTable : public ResourceBase {
    */
   ~ResourceTable() {
     return; 
+  }
+  
+  /*
+   * PrintResourceKey() - Prints the resource key to a buffer object
+   *
+   * Since each resource has a unique resource identifier we could locate them
+   * using the identifier and print its name. Whether or not the resource
+   * is a complex one does not matter since each resource has a name in
+   * the key string pool
+   */
+  void PrintResourceKey(Buffer *buffer_p, ResourceId id) {
+    uint8_t package_id = id.package_id;
+    uint8_t type_id = id.type_id;
+    uint16_t entry_id = id.entry_id;
+    
+    auto it = package_map.find(package_id);
+    if(it == package_map.end()) {
+      ReportError(PACKAGE_ID_NOT_FOUND, id.data); 
+    }
+    
+    // This is the package pointer found
+    Package *package_p = it->second;
+    
+    // Then verify whether the type ID is correct
+    if(package_p->GetTypeCount() <= type_id) {
+      ReportError(INVALID_TYPE_ID, static_cast<uint32_t>(type_id));
+    }
+    
+    //TypeSpec
   }
   
   /*
@@ -1639,6 +1687,14 @@ class ResourceTable : public ResourceBase {
     
     // Initialize members inside the package object
     InitPackage(package_p, package_header_p);
+    
+    // Also put the package object into the vector (we do not support
+    // non-base packages)
+    if(package_p->header_p->id == 0x00000000) {
+      ReportError(ONLY_SUPPORT_BASE_PACKAGE);  
+    }
+    
+    package_map[static_cast<uint8_t>(package_p->header_p->id)] = package_p;
     
 #ifndef NDEBUG
     DebugPrintPackageTypeString(package_p);
