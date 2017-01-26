@@ -96,6 +96,7 @@ enum ErrorCode : uint64_t {
   ERROR_CLOSE_FILE = 35,
   INVALID_ATTR_ENTRY,
   ERROR_MAP_FILE,
+  ERROR_UNMAP_FILE,
 };
 
 // Error string table
@@ -240,6 +241,21 @@ class FileUtility {
     }
     
     return reinterpret_cast<unsigned char *>(ptr);
+  }
+  
+  /*
+   * UnmapFile() - Unmaps a mapped file
+   *
+   * This function requires the length of the file as an extra parameter since
+   * munmap() requires the length to free the virtual address
+   */
+  void UnmapFile(void *ptr, size_t length) {
+    int ret = munmap(ptr, length);
+    if(ret == -1) {
+      ReportError(ERROR_UNMAP_FILE); 
+    }
+    
+    return;
   }
   
   /*

@@ -58,6 +58,7 @@ const char *error_str_table[] = {
   "Error closing the file\n",
   "Invalid type attr entry: %s\n",
   "Error mapping file into memory: %s\n",
+  "Error unmapping file from virtual memory\n",
 };
 
 /*
