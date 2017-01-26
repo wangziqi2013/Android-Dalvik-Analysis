@@ -43,7 +43,7 @@ $(BUILD)/xml.o: $(SRC)/res/xml.cpp $(SRC)/res/xml.h $(SRC)/res/res_base.h
 $(BUILD)/res_table.o: $(SRC)/res/res_table.cpp $(SRC)/res/res_table.h $(SRC)/res/res_base.h
 	g++ -c $(CXX_FLAG) $(SRC)/res/res_table.cpp -o $(BUILD)/res_table.o
 
-$(BUILD)/res_base.o: $(SRC)/res/res_base.cpp $(SRC)/res/res_base.h
+$(BUILD)/res_base.o: $(SRC)/res/res_base.cpp $(SRC)/res/res_base.h $(SRC)/res/res_value.h
 	g++ -c $(CXX_FLAG) $(SRC)/res/res_base.cpp -o $(BUILD)/res_base.o
 
 prepare:
