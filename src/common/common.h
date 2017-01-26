@@ -93,6 +93,7 @@ enum ErrorCode : uint64_t {
   
   ERROR_CLOSE_FILE = 35,
   INVALID_ATTR_ENTRY,
+  ERROR_MAP_FILE,
 };
 
 // Error string table
@@ -197,6 +198,60 @@ class FileUtility {
     CloseFile(fp);
     
     return data_p;
+  }
+  
+  /*
+   * MapFileReadOnly() - Maps a file into memory using mmap()
+   *
+   * This function does not require a full load of the file content; instead
+   * the file is mapped into vitual address and loaded on demand
+   */
+  static unsigned char *MapFileReadOnly(const char *file_name, 
+                                        size_t *file_length_p=nullptr) {
+    // Use stat() to retrieve file length
+    size_t length = GetFileLength(file_name);
+    if(file_length_p != nullptr) {
+      *file_length_p = length; 
+    }
+  
+    int fd = open(file_name, O_RDONLY, 0);
+    if(fd == -1) {
+      ReportError(ERROR_OPEN_FILE, file_name); 
+    }
+    
+    // Map the file into private memory area
+    void *ptr = mmap(NULL, 
+                     length, 
+                     PROT_READ, 
+                     MAP_PRIVATE, 
+                     fd, 
+                     0);
+    if(mmappedData == MAP_FAILED) {
+      ReportError(ERROR_MAP_FILE, file_name); 
+    }
+    
+    // It is safe to close the file after mapping because mmap() adds
+    // an extra reference to the file
+    int ret = close(fd);
+    if(ret == -1) {
+      ReportError(ERROR_CLOSE_FILE); 
+    }
+    
+    return reinterpret_cast<unsigned char *>(ptr);
+  }
+  
+  /*
+   * GetFileLength() - Returns the length of the file
+   *
+   * This function does not open the file. Instead it uses stat() system
+   * call to to retrieve basic information of the file
+   */
+  static size_t GetFileLength(const char *file_name) {
+    struct stat st;
+    
+    // Get the file size and return
+    stat(filename, &st);
+    return static_cast<size_t>(st.st_size);
   }
    
   /*
