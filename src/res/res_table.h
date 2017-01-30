@@ -1322,7 +1322,7 @@ class ResourceTable : public ResourceBase {
         // If it is a type enum then print it at the 2nd ident level
         FileUtility::WriteString(fp, "<enum name=\"", 2);
         
-        ResourceEntry *entry_p = GetResourceEntry();
+        //ResourceEntry *entry_p = GetResourceEntry();
       } else {
         // If it is a type flag
       }
@@ -1586,7 +1586,7 @@ class ResourceTable : public ResourceBase {
     
     auto it = package_map.find(package_id);
     if(it == package_map.end()) {
-      ReportError(PACKAGE_ID_NOT_FOUND, id.data); 
+      ReportError(PACKAGE_ID_NOT_FOUND, static_cast<uint32_t>(package_id)); 
     }
     
     // This is the package pointer found
@@ -1799,6 +1799,10 @@ class ResourceTable : public ResourceBase {
     }
     
     package_map[static_cast<uint8_t>(package_p->header_p->id)] = package_p;
+    
+    // Also register the package within package group global object
+    // using the package ID as well as the resource table instance
+    package_group.RegisterPackage(package_header_p->id, this);
     
 #ifndef NDEBUG
     DebugPrintPackageTypeString(package_p);

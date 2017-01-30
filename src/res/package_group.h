@@ -48,6 +48,21 @@ class PackageGroup {
     
     return;
   }
+  
+  /*
+   * GetResourceTable() - Given a package group, return the resource table
+   *                      that contains the package group
+   *
+   * If resource table is not found just report error
+   */
+  ResourceTable *GetResourceTable(uint8_t package_id) {
+    auto it = package_map.find(package_id);
+    if(it == package_map.end()) {
+      ReportError(PACKAGE_ID_NOT_FOUND, static_cast<uint32_t>(package_id)); 
+    }
+    
+    return it->second;
+  }
 };
 
 // This is the global object
