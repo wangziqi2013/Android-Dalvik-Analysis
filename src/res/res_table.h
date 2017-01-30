@@ -1950,7 +1950,7 @@ class ResourceTable : public ResourceBase {
 #endif
 
 #ifndef NDEBUG    
-    //DebugWriteTypeXml(type_p);
+    DebugWriteTypeXml(type_p);
 #endif
     
     // The ID must match

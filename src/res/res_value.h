@@ -187,13 +187,13 @@ class ResourceValue {
       case DataType::INT_COLOR_ARGB8: {
         // #AARRGGBB since Android uses small endian to represent
         // the ARGB seheme we could directly print them as HEX number
-        buffer_p->Append("#%08X", data);
+        buffer_p->Printf("#%08X", data);
         
         break; 
       } // ARGB8
       case DataType::INT_COLOR_RGB8: {
         // Just ignore the high bits and prints low 24 bit (6 hex digits)
-        buffer_p->Append("#%06X", data & 0x00FFFFFF);
+        buffer_p->Printf("#%06X", data & 0x00FFFFFF);
         
         break; 
       } // RGB8
@@ -201,10 +201,10 @@ class ResourceValue {
         buffer_p->Append('#');
         
         // Print 
-        buffer_p->Append("%01X", (data >> 12) & 0x0000000F);
-        buffer_p->Append("%01X", (data >> 8) & 0x0000000F);
-        buffer_p->Append("%01X", (data >> 4) & 0x0000000F);
-        buffer_p->Append("%01X", (data >> 0) & 0x0000000F);
+        buffer_p->Printf("%01X", (data >> 12) & 0x0000000F);
+        buffer_p->Printf("%01X", (data >> 8) & 0x0000000F);
+        buffer_p->Printf("%01X", (data >> 4) & 0x0000000F);
+        buffer_p->Printf("%01X", (data >> 0) & 0x0000000F);
         
         break; 
       } // ARGB4
@@ -212,9 +212,9 @@ class ResourceValue {
         buffer_p->Append('#');
         
         // Print lowest 3 bytes
-        buffer_p->Append("%01X", (data >> 8) & 0x0000000F);
-        buffer_p->Append("%01X", (data >> 4) & 0x0000000F);
-        buffer_p->Append("%01X", (data >> 0) & 0x0000000F);
+        buffer_p->Printf("%01X", (data >> 8) & 0x0000000F);
+        buffer_p->Printf("%01X", (data >> 4) & 0x0000000F);
+        buffer_p->Printf("%01X", (data >> 0) & 0x0000000F);
         
         break; 
       } // ARGB4
