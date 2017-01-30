@@ -1182,6 +1182,17 @@ class ResourceTable : public ResourceBase {
     }
     
     /*
+     * GetEntryPtr() - Given the entry ID, return a pointer to the entry
+     */
+    ResourceEntry *GetEntryPtr(size_t entry_id) {
+      assert(IsEntryValue(entry_id) == true);
+      
+      // Lookup the offset and get the pointer to it
+      return reinterpret_cast<ResourceEntry *>(data_p + 
+                                               offset_table[entry_id]);
+    }
+    
+    /*
      * WriteXml() - Writes an XML file that represents the structure of the
      *              current type
      *
@@ -1453,6 +1464,49 @@ class ResourceTable : public ResourceBase {
       config_table{nullptr},
       type_list{}
     {}
+    
+    /*
+     * GetEntryPtr() - Returns the pointer to ResourceEntry given an index of
+     *                 the type configuration and the entry ID
+     *
+     * Note that since we do not know the correct config, it must be detected
+     * outside this function
+     */
+    ResourceEntry *GetEntryPtr(size_t type_config_index,
+                               size_t entry_id) {
+      // The config ID must be correct - this is enforced outside this
+      // function
+      assert(type_config_id < type_list.size());
+                                 
+      Type *type_p = &type_spec_p->type_list[type_config_index];
+      
+      // Only proceed if the current type config is the same
+      if(type_p->IsEntryIdValid(entry_id) == false) {
+        ReportError(INVALID_ENTRY_ID, static_cast<uint32_t>(entry_id)); 
+      }
+      
+      // Return the pointer to ResourceEntry
+      return type_p->GetEntryPtr(entry_id);
+    }
+    
+    static constexpr CONFIG_INDEX_NOT_FOUND = 0xFFFFFFFF;
+    
+    /*
+     * GetConfigIndex() - Given a configuration, returns its index
+     *
+     * This function loops through all available type objects and matches 
+     * the type config object. If the object is not found, a default value
+     * 0xFFFFFFFF is returned
+     */
+    size_t GetConfigIndex(const TypeConfig &type_config) const {
+      for(size_i i = 0;i < type_list.size();i++) {
+        if(type_config == type_list[i].type_config) {
+          return i;
+        }
+      }
+      
+      return CONFIG_INDEX_NOT_FOUND;
+    }
   };
   
   /*
@@ -1534,12 +1588,11 @@ class ResourceTable : public ResourceBase {
   }
   
   /*
-   * PrintResourceKey() - Prints the resource key to a buffer object
+   * GetResourceEntry() - Returns the resource entry pointer given an ID
    *
    * Since each resource has a unique resource identifier we could locate them
    * using the identifier and print its name. Whether or not the resource
-   * is a complex one does not matter since each resource has a name in
-   * the key string pool
+   * is a complex one does not matter since we return ResourceEntry pointer
    *
    * In the case that there are multiple resource types for different 
    * configurations, we need a type config object to match all possible
@@ -1550,9 +1603,8 @@ class ResourceTable : public ResourceBase {
    * the package ID is not in the current resource table then we need to
    * check external packages
    */
-  void PrintResourceKey(Buffer *buffer_p, 
-                        ResourceId id, 
-                        const TypeConfig &type_config) {
+  ResourceEntry *GetResourceEntry(ResourceId id, 
+                                  const TypeConfig &type_config) {
     uint8_t package_id = id.package_id;
     uint8_t type_id = id.type_id;
     uint16_t entry_id = id.entry_id;
@@ -1573,16 +1625,17 @@ class ResourceTable : public ResourceBase {
     // This is a pointer to the type spec header
     TypeSpec *type_spec_p = package_p->type_spec_list[type_id];
     for(size_t i = 0;i < type_spec_p->type_list.size();i++) {
-      Type *type_p = &type_spec_p->type_list[i];
       
-      if(type_config == type_p->header_p->config) {
-        if(entry_id >= type_p->entry_count) {
-          ReportError(INVALID_ENTRY_ID, static_cast<uint32_t>(entry_id)); 
-        }
-        
-        if(type_p->offset_table[entry_id] == 0xFFFFFFFF) 
-      }
     }
+    
+    // Otherwise just default to use the first type
+    // If there is no type object in the type spec header then the type ID
+    // definitely has problem
+    if(type_spec_p->type_list.size() == 0UL) {
+      ReportError(INVALID_TYPE_ID, static_cast<uint32_t>(type_id));
+    }
+    
+    
   }
   
   /*
