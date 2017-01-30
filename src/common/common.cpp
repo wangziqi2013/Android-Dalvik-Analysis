@@ -51,7 +51,7 @@ const char *error_str_table[] = {
   "Unexpected start of resource table\n",
   "Unecpected UTF-8 continuiation byte at offset %ld", 
   "Base class function not implemented (internal error)\n",
-  "Invalid type ID: 0x%X\n",
+  "Invalid type ID: 0x%08X\n",
   "Unknown resource type for writing the XML file\n",
   
   // 35
@@ -67,6 +67,8 @@ const char *error_str_table[] = {
   "Package ID not found in the current resource table; RES ID: 0x%08X\n",
   "Unknown unit for dimension: 0x%X\n",
   "Unknown unit for fraction: 0x%X\n",
+  
+  "Invalid entry ID: 0x%08X\n"
 };
 
 /*

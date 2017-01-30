@@ -225,6 +225,8 @@ class ResourceValue {
         AppendComplexValueToBuffer(buffer_p);  
         break; 
       default: {
+        buffer_p->Append("[Unsupported]");
+        break;
         ReportError(UNSUPPORTED_RESOURCE_VALUE_TYPE, 
                     static_cast<uint32_t>(type),
                     static_cast<uint32_t>(data));

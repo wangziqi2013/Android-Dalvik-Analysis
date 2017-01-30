@@ -1123,6 +1123,10 @@ class ResourceTable : public ResourceBase {
    private: 
     // This is the number of bytes we use to initialize the buffer
     static constexpr size_t INIT_BUFFER_LENGTH = 16UL;
+    
+    // If the offset table entry has value like this then the entry does not exist
+    static constexpr ENTRY_NOT_PRESENT = 0xFFFFFFFF;
+    
    public:
     // Original pointer to the header
     TypeHeader *header_p;
@@ -1161,6 +1165,21 @@ class ResourceTable : public ResourceBase {
       offset_table{nullptr},
       data_p{nullptr}
     {}
+    
+    /*
+     * IsEntryValid() - Checks whether an entry ID is valid
+     *
+     * We do two checkings here: 
+     *   (1) Checks whether it is out of bound
+     *   (2) Checks whether it refers to an invalid (0xFFFFFFFF) entry
+     *
+     * If either is unsatisfied return false. The caller should either response
+     * or raise error
+     */
+    bool IsEntryIdValid(size_t entry_id) const {
+      return (entry_id < entry_count) && \
+             (offset_table[entry_id] != ENTRY_NOT_PRESENT);
+    }
     
     /*
      * WriteXml() - Writes an XML file that represents the structure of the
@@ -1521,8 +1540,19 @@ class ResourceTable : public ResourceBase {
    * using the identifier and print its name. Whether or not the resource
    * is a complex one does not matter since each resource has a name in
    * the key string pool
+   *
+   * In the case that there are multiple resource types for different 
+   * configurations, we need a type config object to match all possible
+   * configurations, and in the case none matches, just fall back to the
+   * default
+   *
+   * Note that this function only prints in the current resource table. If
+   * the package ID is not in the current resource table then we need to
+   * check external packages
    */
-  void PrintResourceKey(Buffer *buffer_p, ResourceId id) {
+  void PrintResourceKey(Buffer *buffer_p, 
+                        ResourceId id, 
+                        const TypeConfig &type_config) {
     uint8_t package_id = id.package_id;
     uint8_t type_id = id.type_id;
     uint16_t entry_id = id.entry_id;
@@ -1540,7 +1570,19 @@ class ResourceTable : public ResourceBase {
       ReportError(INVALID_TYPE_ID, static_cast<uint32_t>(type_id));
     }
     
-    //TypeSpec
+    // This is a pointer to the type spec header
+    TypeSpec *type_spec_p = package_p->type_spec_list[type_id];
+    for(size_t i = 0;i < type_spec_p->type_list.size();i++) {
+      Type *type_p = &type_spec_p->type_list[i];
+      
+      if(type_config == type_p->header_p->config) {
+        if(entry_id >= type_p->entry_count) {
+          ReportError(INVALID_ENTRY_ID, static_cast<uint32_t>(entry_id)); 
+        }
+        
+        if(type_p->offset_table[entry_id] == 0xFFFFFFFF) 
+      }
+    }
   }
   
   /*
@@ -1791,8 +1833,8 @@ class ResourceTable : public ResourceBase {
 	  for(size_t i = 0;i < type_p->entry_count;i++) {
 	    uint32_t offset = type_p->offset_table[i];
 
-      // Resource does not exist for current configuration
-      if(offset == 0xFFFFFFFF) {
+      // Resource entry does not exist for current configuration
+      if(offset == Type::ENTRY_NOT_PRESENT) {
         //dbg_printf("        [INVALID ENTRY]\n");
         continue;
       }

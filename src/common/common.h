@@ -105,6 +105,8 @@ enum ErrorCode : uint64_t {
   PACKAGE_ID_NOT_FOUND,
   UNKNOWN_DIMENSION_UNIT,
   UNKNOWN_FRACTION_UNIT,
+  
+  INVALID_ENTRY_ID = 45,
 };
 
 // Error string table
