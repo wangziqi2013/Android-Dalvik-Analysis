@@ -1847,20 +1847,40 @@ class ResourceTable : public ResourceBase {
         for(uint32_t j = 0;j < resource_entry_p->entry_count;j++) {
           // This is the current entry filed being processed
           ResourceEntryField *field_p = entry_field_p + j;
+          
+#ifndef NDEBUG          
           // Print out the 32 bit integer resource ID
           dbg_printf("            "
                      "entry name = 0x%.8X; type = 0x%.4X, data = 0x%.8X\n",
                      field_p->name.data,
                      static_cast<uint32_t>(field_p->value.type),
                      field_p->value.data);
-
+          
+          buffer.Reset();
+          AppendResourceValueToBuffer(&field_p->value, &buffer);
+          dbg_printf("                Printed value \"");
+          buffer.Append("\"\n");
+          buffer.WriteToFile(stderr);
+#endif          
+          
           // If the type ID is not attr then the field name must have
           // a ATTR type ID
           //if(type_p->type_spec_p->type_id != 0x01) {
           //  assert(field_p->name.type_id == 0x01);
           //}
         } // Loop through entry fields
-      } // If is complex type
+      } else {
+        dbg_printf("            "
+                   "entry type = 0x%.4X, data = 0x%.8X\n",
+                   static_cast<uint32_t>(resource_entry_p->value.type),
+                   resource_entry_p->value.data);
+        
+        buffer.Reset();
+        AppendResourceValueToBuffer(&resource_entry_p->value, &buffer);
+        dbg_printf("            Printed value \"");
+        buffer.Append("\"\n");
+        buffer.WriteToFile(stderr);
+      } // If is complex type then ... else ...
 	  } // for resource entry for the current type
 
     return;
@@ -1930,7 +1950,7 @@ class ResourceTable : public ResourceBase {
 #endif
 
 #ifndef NDEBUG    
-    DebugWriteTypeXml(type_p);
+    //DebugWriteTypeXml(type_p);
 #endif
     
     // The ID must match
