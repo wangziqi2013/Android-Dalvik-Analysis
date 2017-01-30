@@ -107,6 +107,7 @@ enum ErrorCode : uint64_t {
   UNKNOWN_FRACTION_UNIT,
   
   INVALID_ENTRY_ID = 45,
+  NO_TYPE_IN_TYPE_SPEC,
 };
 
 // Error string table

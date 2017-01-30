@@ -68,7 +68,8 @@ const char *error_str_table[] = {
   "Unknown unit for dimension: 0x%X\n",
   "Unknown unit for fraction: 0x%X\n",
   
-  "Invalid entry ID: 0x%08X\n"
+  "Invalid entry ID: 0x%08X\n",
+  "TypeSpec structure contains no Type object (RES ID: 0X%08X)\n"
 };
 
 /*

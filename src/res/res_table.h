@@ -1167,25 +1167,10 @@ class ResourceTable : public ResourceBase {
     {}
     
     /*
-     * IsEntryValid() - Checks whether an entry ID is valid
-     *
-     * We do two checkings here: 
-     *   (1) Checks whether it is out of bound
-     *   (2) Checks whether it refers to an invalid (0xFFFFFFFF) entry
-     *
-     * If either is unsatisfied return false. The caller should either response
-     * or raise error
-     */
-    bool IsEntryIdValid(size_t entry_id) const {
-      return (entry_id < entry_count) && \
-             (offset_table[entry_id] != ENTRY_NOT_PRESENT);
-    }
-    
-    /*
      * GetEntryPtr() - Given the entry ID, return a pointer to the entry
      */
     ResourceEntry *GetEntryPtr(size_t entry_id) {
-      assert(IsEntryValue(entry_id) == true);
+      assert(entry_id < entry_count);
       
       // Lookup the offset and get the pointer to it
       return reinterpret_cast<ResourceEntry *>(data_p + 
@@ -1465,30 +1450,6 @@ class ResourceTable : public ResourceBase {
       type_list{}
     {}
     
-    /*
-     * GetEntryPtr() - Returns the pointer to ResourceEntry given an index of
-     *                 the type configuration and the entry ID
-     *
-     * Note that since we do not know the correct config, it must be detected
-     * outside this function
-     */
-    ResourceEntry *GetEntryPtr(size_t type_config_index,
-                               size_t entry_id) {
-      // The config ID must be correct - this is enforced outside this
-      // function
-      assert(type_config_id < type_list.size());
-                                 
-      Type *type_p = &type_spec_p->type_list[type_config_index];
-      
-      // Only proceed if the current type config is the same
-      if(type_p->IsEntryIdValid(entry_id) == false) {
-        ReportError(INVALID_ENTRY_ID, static_cast<uint32_t>(entry_id)); 
-      }
-      
-      // Return the pointer to ResourceEntry
-      return type_p->GetEntryPtr(entry_id);
-    }
-    
     static constexpr CONFIG_INDEX_NOT_FOUND = 0xFFFFFFFF;
     
     /*
@@ -1624,18 +1585,49 @@ class ResourceTable : public ResourceBase {
     
     // This is a pointer to the type spec header
     TypeSpec *type_spec_p = package_p->type_spec_list[type_id];
-    for(size_t i = 0;i < type_spec_p->type_list.size();i++) {
+    
+    // Try to match the type config - if not found just use the default one
+    size_t config_index = type_spec_p->GetConfigIndex(type_config);
+    if(config_index == TypeSpec::CONFIG_INDEX_NOT_FOUND) {
+      dbg_printf("Type config index not found - using default index = 0\n");
       
+      config_index = 0UL; 
     }
     
-    // Otherwise just default to use the first type
-    // If there is no type object in the type spec header then the type ID
-    // definitely has problem
-    if(type_spec_p->type_list.size() == 0UL) {
-      ReportError(INVALID_TYPE_ID, static_cast<uint32_t>(type_id));
+    // The config index must be correct
+    assert(config_index < type_spec_p->type_list.size());
+    Type *type_p = type_spec_p->type_list[config_index];
+    
+    // If entry ID is out of bound then just report error
+    if(entry_id >= type_p->entry_count) {
+      ReportError(INVALID_ENTRY_ID, entry_id); 
+    } else if(type_p->offset_table[entry_id] == Type::ENTRY_NOT_PRESENT) {
+      // If the type config is matched but no entry exists for that config on
+      // that slot, then just use the default one either
+      config_index = 0UL;
+      
+      // If the type spec list has no element then we know the type spec
+      // has problem
+      if(type_spec_p->type_list.size() == 0UL) {
+        ReportError(NO_TYPE_IN_TYPE_SPEC, id.data);
+      }
+      
+      // Re-fetch the type object from the type list, and then retrieve the
+      // entry ID
+      // Since we are using default type config, the entry offset must not
+      // be 0xFFFFFFFF
+      // Also the entry ID must be inside the bound
+      type_p = type_spec_p->type_list[config_index];
+      if(entry_id >= type_p->entry_count || \
+         type_p->offset_table[entry_id] == Type::ENTRY_NOT_PRESENT) {
+        ReportError(INVALID_ENTRY_ID, entry_id);
+      }
     }
     
+    // After this we have fetched the correct type object pointer and know
+    // that the entry ID is valid
     
+    return type_p->GetEntryPtr(entry_id);
   }
   
   /*
