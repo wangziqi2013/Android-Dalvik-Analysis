@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "res_base.h"
+#include "package_group.h"
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 
@@ -92,6 +93,14 @@ class ResourceTable : public ResourceBase {
   class TypeConfig {
    public:
     uint32_t size;
+    
+    /*
+     * operator==() - Fast operator overloading for comparing two 
+     *                config objects
+     */
+    bool operator==(const TypeConfig &other) const {
+      return memcmp(this, &other, sizeof(TypeConfig)) == 0;
+    }
     
     // The following are copied and pasted from Android runtime code
     
@@ -1124,10 +1133,14 @@ class ResourceTable : public ResourceBase {
     // This is the number of bytes we use to initialize the buffer
     static constexpr size_t INIT_BUFFER_LENGTH = 16UL;
     
-    // If the offset table entry has value like this then the entry does not exist
-    static constexpr ENTRY_NOT_PRESENT = 0xFFFFFFFF;
-    
    public:
+    // If the offset table entry has value like this then the entry 
+    // does not exist
+    // Note that this is 32 bit
+    static constexpr uint32_t ENTRY_NOT_PRESENT = (uint32_t)-1;
+  
+   public: 
+     
     // Original pointer to the header
     TypeHeader *header_p;
     
@@ -1309,6 +1322,7 @@ class ResourceTable : public ResourceBase {
         // If it is a type enum then print it at the 2nd ident level
         FileUtility::WriteString(fp, "<enum name=\"", 2);
         
+        ResourceEntry *entry_p = GetResourceEntry();
       } else {
         // If it is a type flag
       }
@@ -1450,7 +1464,7 @@ class ResourceTable : public ResourceBase {
       type_list{}
     {}
     
-    static constexpr CONFIG_INDEX_NOT_FOUND = 0xFFFFFFFF;
+    static constexpr size_t CONFIG_INDEX_NOT_FOUND = (size_t)(-1);
     
     /*
      * GetConfigIndex() - Given a configuration, returns its index
@@ -1460,8 +1474,8 @@ class ResourceTable : public ResourceBase {
      * 0xFFFFFFFF is returned
      */
     size_t GetConfigIndex(const TypeConfig &type_config) const {
-      for(size_i i = 0;i < type_list.size();i++) {
-        if(type_config == type_list[i].type_config) {
+      for(size_t i = 0;i < type_list.size();i++) {
+        if(type_config == type_list[i].header_p->config) {
           return i;
         }
       }
@@ -1584,7 +1598,7 @@ class ResourceTable : public ResourceBase {
     }
     
     // This is a pointer to the type spec header
-    TypeSpec *type_spec_p = package_p->type_spec_list[type_id];
+    TypeSpec *type_spec_p = &package_p->type_spec_list[type_id];
     
     // Try to match the type config - if not found just use the default one
     size_t config_index = type_spec_p->GetConfigIndex(type_config);
@@ -1596,12 +1610,15 @@ class ResourceTable : public ResourceBase {
     
     // The config index must be correct
     assert(config_index < type_spec_p->type_list.size());
-    Type *type_p = type_spec_p->type_list[config_index];
+    Type *type_p = &type_spec_p->type_list[config_index];
     
     // If entry ID is out of bound then just report error
     if(entry_id >= type_p->entry_count) {
       ReportError(INVALID_ENTRY_ID, entry_id); 
     } else if(type_p->offset_table[entry_id] == Type::ENTRY_NOT_PRESENT) {
+      dbg_printf("Type config index found but entry is not present"
+                 " - using default index = 0\n");
+      
       // If the type config is matched but no entry exists for that config on
       // that slot, then just use the default one either
       config_index = 0UL;
@@ -1617,7 +1634,7 @@ class ResourceTable : public ResourceBase {
       // Since we are using default type config, the entry offset must not
       // be 0xFFFFFFFF
       // Also the entry ID must be inside the bound
-      type_p = type_spec_p->type_list[config_index];
+      type_p = &type_spec_p->type_list[config_index];
       if(entry_id >= type_p->entry_count || \
          type_p->offset_table[entry_id] == Type::ENTRY_NOT_PRESENT) {
         ReportError(INVALID_ENTRY_ID, entry_id);

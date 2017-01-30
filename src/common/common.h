@@ -108,6 +108,7 @@ enum ErrorCode : uint64_t {
   
   INVALID_ENTRY_ID = 45,
   NO_TYPE_IN_TYPE_SPEC,
+  PACKAGE_ALREADY_REGISTERED,
 };
 
 // Error string table

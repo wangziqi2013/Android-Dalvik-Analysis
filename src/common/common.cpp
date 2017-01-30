@@ -69,7 +69,8 @@ const char *error_str_table[] = {
   "Unknown unit for fraction: 0x%X\n",
   
   "Invalid entry ID: 0x%08X\n",
-  "TypeSpec structure contains no Type object (RES ID: 0X%08X)\n"
+  "TypeSpec structure contains no Type object (RES ID: 0X%08X)\n",
+  "Package (ID = 0x%02X) has already been registered\n",
 };
 
 /*
