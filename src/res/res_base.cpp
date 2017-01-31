@@ -8,7 +8,7 @@ namespace android_dalvik_analysis {
 const char ResourceBase::XML_HEADER_LINE[] = \
   "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n";
   
-const char ResourceBase::RESOURCE_END_TAG[] = "</resource>\n";
+const char ResourceBase::RESOURCE_END_TAG[] = "</resources>\n";
 
 } // namespace android_dalvik_analysis
 } // namespace wangziqi2013

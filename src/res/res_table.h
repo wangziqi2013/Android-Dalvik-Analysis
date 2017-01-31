@@ -1347,9 +1347,15 @@ class ResourceTable : public ResourceBase {
         buffer_p->Append('\0');
         
         FileUtility::WriteString(fp, buffer_p->GetCharData(), 2);
+        
+        field_p++;
+        
+        // Must do this for every iteration otherwise we repeat the 
+        // same content
+        buffer_p->Reset(); 
       }
       
-      buffer_p->Append('\0');
+      
       
       return;
     }
@@ -1609,7 +1615,7 @@ class ResourceTable : public ResourceBase {
     uint16_t entry_id = id.entry_id;
     
     uint8_t type_index = type_id - 1;
-    uint16_t entry_index = entry_id - 1;
+    uint16_t entry_index = entry_id;
     
     auto it = package_map.find(package_id);
     if(it == package_map.end()) {
@@ -2142,6 +2148,21 @@ class ResourceTable : public ResourceBase {
     } // switch type
     
     return ret_header_p;
+  }
+  
+  /*
+   * DebugWriteXml() - Writes XML into the corresponding file under /res folder
+   */
+  void DebugWriteXml() {
+    for(Package &package : package_list) {
+      for(TypeSpec &type_spec : package.type_spec_list) {
+        for(Type &type : type_spec.type_list) {
+          type.WriteXml(); 
+        }
+      }
+    }
+    
+    return;
   }
 };
 
