@@ -22,6 +22,7 @@ void TestResourceTableBasic(const char *file_name) {
   unsigned char *data = FileUtility::MapFileReadOnly(file_name, &length);
   
   ResourceTable table{data, length, false};
+  table.DebugWriteXml();
   
   FileUtility::UnmapFile(data, length); 
   

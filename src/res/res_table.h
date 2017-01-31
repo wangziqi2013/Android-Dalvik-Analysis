@@ -1317,15 +1317,39 @@ class ResourceTable : public ResourceBase {
       assert((format & \
               (ResourceEntryField::TYPE_ENUM | \
                ResourceEntryField::TYPE_FLAGS)) != 0x00000000);
-               
+      
+      // Need this to print the name of another entry
+      Package *package_p = type_spec_p->package_p;
+      
+      const char *tag = nullptr; 
+      
       if((format & ResourceEntryField::TYPE_ENUM) != 0x00000000) {
-        // If it is a type enum then print it at the 2nd ident level
-        FileUtility::WriteString(fp, "<enum name=\"", 2);
-        
-        //ResourceEntry *entry_p = GetResourceEntry();
+        tag = "<enum name=\"";
       } else {
-        // If it is a type flag
+        tag = "<flag name=\"";
       }
+      
+      for(uint32_t i = 0;i < entry_count;i++) {
+        // If it is a type enum then print it at the 2nd ident level
+        buffer_p->Append(tag);
+        
+        ResourceTable *table_p = \
+          package_group.GetResourceTable(field_p->name.package_id);
+        ResourceEntry *entry_p = \
+          table_p->GetResourceEntry(field_p->name, header_p->config);
+          
+        package_p->key_string_pool.AppendToBuffer(entry_p->key, buffer_p);
+        
+        buffer_p->Append("\" value=\"");
+        
+        table_p->AppendResourceValueToBuffer(&field_p->value, buffer_p);
+        buffer_p->Append("\" />\n");
+        buffer_p->Append('\0');
+        
+        FileUtility::WriteString(fp, buffer_p->GetCharData(), 2);
+      }
+      
+      buffer_p->Append('\0');
       
       return;
     }
@@ -1412,7 +1436,7 @@ class ResourceTable : public ResourceBase {
                              format_mask, 
                              field_p + 1, 
                              entry_p->entry_count - 1);
-                             
+          
           FileUtility::WriteString(fp, "</attr>\n", 1);
           buffer.Reset();
         }
@@ -1584,6 +1608,9 @@ class ResourceTable : public ResourceBase {
     uint8_t type_id = id.type_id;
     uint16_t entry_id = id.entry_id;
     
+    uint8_t type_index = type_id - 1;
+    uint16_t entry_index = entry_id - 1;
+    
     auto it = package_map.find(package_id);
     if(it == package_map.end()) {
       ReportError(PACKAGE_ID_NOT_FOUND, static_cast<uint32_t>(package_id)); 
@@ -1593,12 +1620,12 @@ class ResourceTable : public ResourceBase {
     Package *package_p = it->second;
     
     // Then verify whether the type ID is correct
-    if(package_p->GetTypeCount() <= type_id) {
+    if(type_index >= package_p->GetTypeCount()) {
       ReportError(INVALID_TYPE_ID, static_cast<uint32_t>(type_id));
     }
     
     // This is a pointer to the type spec header
-    TypeSpec *type_spec_p = &package_p->type_spec_list[type_id];
+    TypeSpec *type_spec_p = &package_p->type_spec_list[type_index];
     
     // Try to match the type config - if not found just use the default one
     size_t config_index = type_spec_p->GetConfigIndex(type_config);
@@ -1613,9 +1640,9 @@ class ResourceTable : public ResourceBase {
     Type *type_p = &type_spec_p->type_list[config_index];
     
     // If entry ID is out of bound then just report error
-    if(entry_id >= type_p->entry_count) {
+    if(entry_index >= type_p->entry_count) {
       ReportError(INVALID_ENTRY_ID, entry_id); 
-    } else if(type_p->offset_table[entry_id] == Type::ENTRY_NOT_PRESENT) {
+    } else if(type_p->offset_table[entry_index] == Type::ENTRY_NOT_PRESENT) {
       dbg_printf("Type config index found but entry is not present"
                  " - using default index = 0\n");
       
@@ -1635,8 +1662,8 @@ class ResourceTable : public ResourceBase {
       // be 0xFFFFFFFF
       // Also the entry ID must be inside the bound
       type_p = &type_spec_p->type_list[config_index];
-      if(entry_id >= type_p->entry_count || \
-         type_p->offset_table[entry_id] == Type::ENTRY_NOT_PRESENT) {
+      if(entry_index >= type_p->entry_count || \
+         type_p->offset_table[entry_index] == Type::ENTRY_NOT_PRESENT) {
         ReportError(INVALID_ENTRY_ID, entry_id);
       }
     }
@@ -1644,7 +1671,7 @@ class ResourceTable : public ResourceBase {
     // After this we have fetched the correct type object pointer and know
     // that the entry ID is valid
     
-    return type_p->GetEntryPtr(entry_id);
+    return type_p->GetEntryPtr(entry_index);
   }
   
   /*
@@ -2055,10 +2082,6 @@ class ResourceTable : public ResourceBase {
     dbg_printf("        Entry count = %u\n", type_header_p->entry_count);
     
     DebugPrintAllTypeEntryNames(package_p, type_p);
-#endif
-
-#ifndef NDEBUG    
-    DebugWriteTypeXml(type_p);
 #endif
     
     // The ID must match
