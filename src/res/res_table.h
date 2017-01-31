@@ -942,56 +942,6 @@ class ResourceTable : public ResourceBase {
   class TypeSpec;
   
   /*
-   * class ResourceId - Resource identifier in 32-bit field
-   */
-  union ResourceId {
-    // The following two are used for array type resource's complex
-    // resource name
-    
-    // This indicates the resource ID represents an element inside an array
-    static constexpr uint32_t ARRAY_ELEMENT_FLAG = 0x02000000;
-    // This flags out the array notion and leaves out array index
-    static constexpr uint32_t ARRAY_INDEX_MASK = 0x00FFFFFF;
-    
-   public:
-    // The structural of resource ID is 0xpptteeee
-    // so we start declaring the entry ID at low address and then
-    // type ID and then package ID
-    struct {
-      uint16_t entry_id;
-      uint8_t type_id;
-      uint8_t package_id;
-    } BYTE_ALIGNED;
-    
-    // 32 bit identifier used as a whole
-    uint32_t data;
-    
-    /*
-     * IsArrayElement() - Whether this resource represents an array element
-     */
-    inline bool IsArrayElement() const {
-      return static_cast<bool>(data & 0x02000000);
-    }
-    
-    /*
-     * GetArrayIndex() - If the resource ID is of array type then return 
-     *                   its index
-     *
-     * If not array type then result is undefined and under debug mode assertion
-     * would fail
-     */
-    inline uint32_t GetArrayIndex() const {
-      assert(IsArrayElement() == true);
-      
-      return data & ARRAY_INDEX_MASK;
-    }
-  } BYTE_ALIGNED;
-  
-  // Make sure the size of the union is always correct
-  static_assert(sizeof(ResourceId) == sizeof(uint32_t), 
-                "Invalid size of resource ID");
-  
-  /*
    * class ResourceEntryField - If a resource entry is a complicated one then
    *                            this represents fields inside the resource entry
    */
