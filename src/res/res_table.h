@@ -1162,6 +1162,7 @@ class ResourceTable : public ResourceBase {
     Buffer readable_name;
     
     // This is the name of the base type, i.e. attr without any postfix
+    // This is also not a C string
     Buffer base_type_name;
     
     // Number of entries in this type table
@@ -1202,7 +1203,7 @@ class ResourceTable : public ResourceBase {
     inline bool IsEntryPresent(uint16_t entry_id) const {
       assert(entry_id < entry_count);
       
-      return offset_table[entry_id] != ENTRY_NOT_PRESENT;   
+      return offset_table[entry_id] != ENTRY_NOT_PRESENT;
     }
     
     /*
@@ -1497,7 +1498,7 @@ class ResourceTable : public ResourceBase {
       // We only print non-string entry
       size_t printable_entry_count = 0UL;
       
-      for(size_t i = 0;i < entry_count;i++) {        
+      for(size_t i = 0;i < entry_count;i++) {
         // Skip non-existing entries
         if(IsEntryPresent(i) == false) {
           continue; 
@@ -1517,10 +1518,16 @@ class ResourceTable : public ResourceBase {
       // If the entry has nothing to print just return without creating the
       // path
       if(printable_entry_count == 0UL) {
-        dbg_printf("Skip %s-%s because it has no non-string entry\n",
-                   base_type_name.GetCharData(),
-                   readable_name.GetCharData());
+#ifndef NDEBUG
+        dbg_printf("Skip resource type \"");
+        base_type_name.WriteToFile(stderr);
+        if(HasDefaultTypeConfig() == false) {
+          fputc('-', stderr);
+          readable_name.WriteToFile(stderr); 
+        }
         
+        fprintf(stderr, "\" because it has no non-string entry\n");
+#endif
         
         return; 
       }
