@@ -332,6 +332,15 @@ class ResourceBase {
     // global string pool
     if(type == ResourceValue::DataType::STRING) {
       string_pool.AppendToBuffer(value_p->data, buffer_p);
+    } else if(type == ResourceValue::DataType::REFERENCE) {
+      // Cast it to a resource ID and then use package ID to locate
+      // the package as well as the table
+      //ResourceId id;
+      //id.data = value_p->data;
+      
+      //ResourceTable *table_p = package_group.GetResourceTable(id.package_id);
+      
+      //table_p->
     } else {
       value_p->AppendToBuffer(buffer_p); 
     }

@@ -1832,9 +1832,9 @@ class ResourceTable : public ResourceBase {
    * function does not clear the buffer, so the buffer could contain some other
    * contents before calling this function
    */
-  void GetResourceIdString(ResourceId id, 
-                           Buffer *buffer_p, 
-                           const TypeConfig &type_config) {
+  static void GetResourceIdString(ResourceId id, 
+                                  Buffer *buffer_p, 
+                                  const TypeConfig &type_config) {
     // Use this to know which type instance is selected
     Type *type_p = nullptr;
     
@@ -1843,7 +1843,7 @@ class ResourceTable : public ResourceBase {
     ResourceEntry *entry_p = GetResourceEntry(id, type_config, &type_p);
     assert(type_p != nullptr);
     
-    buffer_p.Append('@');
+    buffer_p->Append('@');
     // Append the content of another buffer
     // Remember that the base type name is not a C-String
     buffer_p->Append(type_p->base_type_name);
@@ -1853,7 +1853,7 @@ class ResourceTable : public ResourceBase {
     Package *package_p = type_p->type_spec_p->package_p;
     
     // Append the name of the entry as the last component
-    pacakge_p->key_string_pool.AppendToBuffer(entry_p->key, buffer_p);
+    package_p->key_string_pool.AppendToBuffer(entry_p->key, buffer_p);
     
     return;
   }
@@ -1877,9 +1877,9 @@ class ResourceTable : public ResourceBase {
    * This function also accepts an optional type pointer for getting the actual
    * type instance being used.
    */
-  ResourceEntry *GetResourceEntry(ResourceId id, 
-                                  const TypeConfig &type_config,
-                                  Type **type_p_p = nullptr) {
+  static ResourceEntry *GetResourceEntry(ResourceId id, 
+                                         const TypeConfig &type_config,
+                                         Type **type_p_p = nullptr) {
     uint8_t package_id = id.package_id;
     uint8_t type_id = id.type_id;
     uint16_t entry_id = id.entry_id;
@@ -1887,8 +1887,10 @@ class ResourceTable : public ResourceBase {
     uint8_t type_index = type_id - 1;
     uint16_t entry_index = entry_id;
     
-    auto it = package_map.find(package_id);
-    if(it == package_map.end()) {
+    // Since this function is static we always use the global package group
+    ResourceTable *table_p = package_group.GetResourceTable(package_id);
+    auto it = table_p->package_map.find(package_id);
+    if(it == table_p->package_map.end()) {
       ReportError(PACKAGE_ID_NOT_FOUND, static_cast<uint32_t>(package_id)); 
     }
     
