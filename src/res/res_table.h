@@ -1232,10 +1232,16 @@ class ResourceTable : public ResourceBase {
         WriteDrawableXml("drawbles.xml");
       } else if(base_type_name == "layout") {
         // Decompile binary XML
-        WriteLayoutXml();
+        ProcessLayoutXml();
       } else if(base_type_name == "anim") {
         // Decompile binary XML
-        WriteAnimXml();
+        ProcessAnimXml();
+      } else if(base_type_name == "xml") {
+        // Decompile binary XML
+        ProcessXmlTypeXml();
+      } else if(base_type_name == "raw") {
+        // Decompile binary XML
+        ProcessRawType();
       } else {
 #ifndef NDEBUG
         dbg_printf("Unknown attribute name: ");
@@ -1603,7 +1609,7 @@ class ResourceTable : public ResourceBase {
      *                    but instead it decompiles the binary XML 
      *                    indicated inside resource entries
      */
-    void WriteLayoutXml() {
+    void ProcessLayoutXml() {
       // TO BE IMPLEMENTED
       return;
     }
@@ -1612,7 +1618,25 @@ class ResourceTable : public ResourceBase {
      * WriteAnimXml() - Decompile the animation XML file recorded inside 
      *                  the entries
      */
-    void WriteAnimXml() {
+    void ProcessAnimXml() {
+      // TO BE IMPLEMENTED
+      return;
+    }
+    
+    /*
+     * WriteXmlTypeXml() - Decompile the XML type XML file recorded inside 
+     *                     the entries
+     */
+    void ProcessXmlTypeXml() {
+      // TO BE IMPLEMENTED
+      return;
+    }
+    
+    /*
+     * ProcessRawType() - Decompile the raw type file recorded inside 
+     *                    the entries
+     */
+    void ProcessRawType() {
       // TO BE IMPLEMENTED
       return;
     }
