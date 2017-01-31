@@ -39,7 +39,7 @@ class PackageGroup {
     // whether the insertion really happened
     auto insert_ret = package_map.insert(std::make_pair(package_id, table_p));
     
-    map_lock.lock();
+    map_lock.unlock();
     
     if(insert_ret.second == false) {
       ReportError(PACKAGE_ALREADY_REGISTERED, 
@@ -56,10 +56,14 @@ class PackageGroup {
    * If resource table is not found just report error
    */
   ResourceTable *GetResourceTable(uint8_t package_id) {
+    map_lock.lock();
+    
     auto it = package_map.find(package_id);
     if(it == package_map.end()) {
       ReportError(PACKAGE_ID_NOT_FOUND, static_cast<uint32_t>(package_id)); 
     }
+    
+    map_lock.unlock();
     
     return it->second;
   }
