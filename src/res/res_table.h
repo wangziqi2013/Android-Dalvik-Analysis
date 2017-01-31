@@ -1201,6 +1201,8 @@ class ResourceTable : public ResourceBase {
     void WriteXml() {
       if(base_type_name == "attr") {
         WriteAttrXml("attrs.xml");
+      } else if(base_type_name == "drawable") {
+        WriteDrawableXml("drawbles.xml");
       } else {
 #ifndef NDEBUG
         dbg_printf("Unknown attribute name: ");
@@ -1217,6 +1219,8 @@ class ResourceTable : public ResourceBase {
     static constexpr const char *RES_PATH = "res";
     static constexpr const char *VALUE_PATH_PREFIX = "values";
     static constexpr const char *XML_SUFFIX = ".xml";
+    static constexpr const char *ENUM_TAG = "<enum name=\"";
+    static constexpr const char *FLAG_TAG = "<flag name=\"";
     
     /*
      * SwitchToValuesDir() - Switch to the values directory and opens the 
@@ -1265,7 +1269,7 @@ class ResourceTable : public ResourceBase {
     }
     
     /*
-     * PrintAttrFormat() - Prints the format of attributes
+     * PrintAttrFormat() - Prints the format of attributes into the buffer
      */
     void PrintAttrFormat(Buffer *buffer_p, uint32_t format) {
       if(format & ResourceEntryField::TYPE_REFERENCE) {
@@ -1306,9 +1310,10 @@ class ResourceTable : public ResourceBase {
     }
     
     /*
-     * PrintAttrEnumFlags() - Prints nested attr types, i.e. enum or flags
+     * WriteAttrEnumFlags() - Writes nested attr types, i.e. enum or flags
+     *                        to the file pointer
      */
-    void PrintAttrEnumFlags(FILE *fp,
+    void WriteAttrEnumFlags(FILE *fp,
                             Buffer *buffer_p, 
                             uint32_t format,
                             ResourceEntryField *field_p,
@@ -1324,9 +1329,9 @@ class ResourceTable : public ResourceBase {
       const char *tag = nullptr; 
       
       if((format & ResourceEntryField::TYPE_ENUM) != 0x00000000) {
-        tag = "<enum name=\"";
+        tag = ENUM_TAG;
       } else {
-        tag = "<flag name=\"";
+        tag = FLAG_TAG;
       }
       
       for(uint32_t i = 0;i < entry_count;i++) {
@@ -1354,8 +1359,6 @@ class ResourceTable : public ResourceBase {
         // same content
         buffer_p->Reset(); 
       }
-      
-      
       
       return;
     }
@@ -1437,7 +1440,7 @@ class ResourceTable : public ResourceBase {
           
           // It is an array, so need to pass the starting element and 
           // entry count
-          PrintAttrEnumFlags(fp,
+          WriteAttrEnumFlags(fp,
                              &buffer, 
                              format_mask, 
                              field_p + 1, 
@@ -1452,6 +1455,20 @@ class ResourceTable : public ResourceBase {
       FileUtility::CloseFile(fp);
       
       return;
+    }
+    
+    /*
+     * WriteDrawableXml() - Writes drawable as a XML file
+     *
+     * Note that not all drawables are written into the XML. In particular,
+     * we do not extract file name represented as strings into the XML
+     *
+     * A consequence of selected extraction is that we might directly
+     * jump the file and does not create the /values directory and the file
+     * if there is nothing to be printed for the current configuration
+     */
+    void WriteDrawableXml(const char *file_name) {
+      //for()
     }
   };
   
