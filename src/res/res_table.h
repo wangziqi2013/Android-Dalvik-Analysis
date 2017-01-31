@@ -1246,8 +1246,6 @@ class ResourceTable : public ResourceBase {
     static constexpr const char *RES_PATH = "res";
     static constexpr const char *VALUE_PATH_PREFIX = "values";
     static constexpr const char *XML_SUFFIX = ".xml";
-    static constexpr const char *ENUM_TAG = "<enum name=\"";
-    static constexpr const char *FLAG_TAG = "<flag name=\"";
     
     /*
      * SwitchToValuesDir() - Switch to the values directory and opens the 
@@ -1356,9 +1354,9 @@ class ResourceTable : public ResourceBase {
       const char *tag = nullptr; 
       
       if((format & ResourceEntryField::TYPE_ENUM) != 0x00000000) {
-        tag = ENUM_TAG;
+        tag = "<enum name=\"";
       } else {
-        tag = FLAG_TAG;
+        tag = "<flag name=\"";
       }
       
       for(uint32_t i = 0;i < entry_count;i++) {
@@ -1485,16 +1483,12 @@ class ResourceTable : public ResourceBase {
     }
     
     /*
-     * WriteDrawableXml() - Writes drawable as a XML file
+     * HasNonStringDrawableEntry() - Whether the current type object contains
+     *                               any non-string drawable entry
      *
-     * Note that not all drawables are written into the XML. In particular,
-     * we do not extract file name represented as strings into the XML
-     *
-     * A consequence of selected extraction is that we might directly
-     * jump the file and does not create the /values directory and the file
-     * if there is nothing to be printed for the current configuration
+     * If not return false and the caller should not create an XML file for it
      */
-    void WriteDrawableXml(const char *file_name) {
+    bool HasNonStringDrawableEntry() {
       // We only print non-string entry
       size_t printable_entry_count = 0UL;
       
@@ -1528,11 +1522,74 @@ class ResourceTable : public ResourceBase {
         
         fprintf(stderr, "\" because it has no non-string entry\n");
 #endif
-        
+        return false; 
+      }
+      
+      // There is something to print
+      return true;
+    }
+    
+    /*
+     * WriteDrawableXml() - Writes drawable as a XML file
+     *
+     * Note that not all drawables are written into the XML. In particular,
+     * we do not extract file name represented as strings into the XML
+     *
+     * A consequence of selected extraction is that we might directly
+     * jump the file and does not create the /values directory and the file
+     * if there is nothing to be printed for the current configuration
+     */
+    void WriteDrawableXml(const char *file_name) {
+      // If there is nothing to print just return without creating
+      // the path
+      if(HasNonStringDrawableEntry() == false) {
         return; 
       }
       
-      assert(false);
+      FILE *fp = SwitchToValuesDir(file_name);
+      
+      FileUtility::WriteString(fp, XML_HEADER_LINE);
+      Buffer buffer;
+      
+      // Need its string pool
+      Package *package_p = type_spec_p->package_p;
+      ResourceTable *table_p = package_p->table_p;
+      
+      // Basically the same for every resource type, just copied from 
+      // another function
+      for(size_t i = 0;i < entry_count;i++) {
+        if(IsEntryPresent(i) == false) {
+          continue; 
+        }
+        
+        ResourceEntry *entry_p = GetEntryPtr(i); 
+        
+        if(entry_p->IsComplex() == true) {
+          ReportError(INVALID_DRAWABLE_ENTRY, i);
+        } else if(entry_p->value.type == ResourceValue::DataType::STRING) {
+          continue;
+        }
+        
+        // After this point we know the entry is not string and is valid
+        
+        FileUtility::WriteString(fp, "<item type=\"drawable\" name=\"", 1);
+        
+        package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+        buffer.Append("\">");
+        
+        table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+        
+        buffer.Append("</item>\n");
+        buffer.WriteToFile(fp);
+        
+        // Clear all previous contents
+        buffer.Reset();
+      }
+      
+      FileUtility::WriteString(fp, RESOURCE_END_TAG);
+      FileUtility::CloseFile(fp);
+      
+      return;
     }
   };
   
@@ -1628,7 +1685,10 @@ class ResourceTable : public ResourceBase {
     
     // A list of type spec objects
     std::vector<TypeSpec> type_spec_list;
-      
+    
+    // This points to the resource table
+    ResourceTable *table_p;
+    
     /*
      * GetTypeCount() - Returns the number of types defined as resources
      *
@@ -1861,6 +1921,9 @@ class ResourceTable : public ResourceBase {
    */
   void InitPackage(Package *package_p, PackageHeader *package_header_p) {
     package_p->header_p = package_header_p;
+    
+    // Also assign the resource table's instance with the package
+    package_p->table_p = this;
     
     package_p->type_string_pool_header_p = \
       reinterpret_cast<StringPoolHeader *>( \
