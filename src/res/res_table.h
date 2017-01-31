@@ -1230,6 +1230,9 @@ class ResourceTable : public ResourceBase {
         WriteAttrXml("attrs.xml");
       } else if(base_type_name == "drawable") {
         WriteDrawableXml("drawbles.xml");
+      } else if(base_type_name == "layout") {
+        // Decompile binary XML
+        WriteLayoutXml();
       } else {
 #ifndef NDEBUG
         dbg_printf("Unknown attribute name: ");
@@ -1589,6 +1592,16 @@ class ResourceTable : public ResourceBase {
       FileUtility::WriteString(fp, RESOURCE_END_TAG);
       FileUtility::CloseFile(fp);
       
+      return;
+    }
+    
+    /*
+     * WriteLayoutXml() - This file does not write layouts.xml file
+     *                    but instead it decompiles the binary XML 
+     *                    indicated inside resource entries
+     */
+    void WriteLayoutXml() {
+      // TO BE IMPLEMENTED
       return;
     }
   };
