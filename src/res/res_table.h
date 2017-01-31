@@ -1233,6 +1233,9 @@ class ResourceTable : public ResourceBase {
       } else if(base_type_name == "layout") {
         // Decompile binary XML
         WriteLayoutXml();
+      } else if(base_type_name == "anim") {
+        // Decompile binary XML
+        WriteAnimXml();
       } else {
 #ifndef NDEBUG
         dbg_printf("Unknown attribute name: ");
@@ -1601,6 +1604,15 @@ class ResourceTable : public ResourceBase {
      *                    indicated inside resource entries
      */
     void WriteLayoutXml() {
+      // TO BE IMPLEMENTED
+      return;
+    }
+    
+    /*
+     * WriteAnimXml() - Decompile the animation XML file recorded inside 
+     *                  the entries
+     */
+    void WriteAnimXml() {
       // TO BE IMPLEMENTED
       return;
     }
