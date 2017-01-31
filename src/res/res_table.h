@@ -1137,7 +1137,7 @@ class ResourceTable : public ResourceBase {
     // If the offset table entry has value like this then the entry 
     // does not exist
     // Note that this is 32 bit
-    static constexpr uint32_t ENTRY_NOT_PRESENT = (uint32_t)-1;
+    static constexpr uint32_t ENTRY_NOT_PRESENT = 0xFFFFFFFF;
   
    public: 
      
@@ -1152,6 +1152,13 @@ class ResourceTable : public ResourceBase {
     // default the buffer uses 64 KB internal storage on initialization
     // Note that this name does not have any type information, so when
     // use this to create directory we need to prepend the directory name
+    //
+    // Note: This is not always a valid C-String. If there is no special
+    // configuration then it is empty buffer with length being 0
+    //
+    // Note 2: If this buffer is empty then it means this is the default
+    // type config. Sometimes if we could not find a specific type config
+    // we just resort to the default
     Buffer readable_name;
     
     // This is the name of the base type, i.e. attr without any postfix
@@ -1180,9 +1187,28 @@ class ResourceTable : public ResourceBase {
     {}
     
     /*
+     * HasDefaultTypeConfig() - Whether the type config of this type object
+     *                          is the default one
+     *
+     * We use the size of the readable name as an indicator
+     */
+    inline bool HasDefaultTypeConfig() const {
+      return readable_name.GetLength() == 0UL;
+    }
+    
+    /*
+     * IsEntryPresent() - Whether an entry is present or not
+     */
+    inline bool IsEntryPresent(uint16_t entry_id) const {
+      assert(entry_id < entry_count);
+      
+      return offset_table[entry_id] != ENTRY_NOT_PRESENT;   
+    }
+    
+    /*
      * GetEntryPtr() - Given the entry ID, return a pointer to the entry
      */
-    ResourceEntry *GetEntryPtr(size_t entry_id) {
+    inline ResourceEntry *GetEntryPtr(size_t entry_id) {
       assert(entry_id < entry_count);
       
       // Lookup the offset and get the pointer to it
@@ -1468,7 +1494,38 @@ class ResourceTable : public ResourceBase {
      * if there is nothing to be printed for the current configuration
      */
     void WriteDrawableXml(const char *file_name) {
-      //for()
+      // We only print non-string entry
+      size_t printable_entry_count = 0UL;
+      
+      for(size_t i = 0;i < entry_count;i++) {        
+        // Skip non-existing entries
+        if(IsEntryPresent(i) == false) {
+          continue; 
+        }
+        
+        // This is the pointer to resource entry field
+        ResourceEntry *entry_p = GetEntryPtr(i); 
+        
+        // We don't know how to deal with complex drawable entry
+        if(entry_p->IsComplex() == true) {
+          ReportError(INVALID_DRAWABLE_ENTRY, i);
+        } else if(entry_p->value.type != ResourceValue::DataType::STRING) {
+          printable_entry_count++; 
+        }
+      }
+      
+      // If the entry has nothing to print just return without creating the
+      // path
+      if(printable_entry_count == 0UL) {
+        dbg_printf("Skip %s-%s because it has no non-string entry\n",
+                   base_type_name.GetCharData(),
+                   readable_name.GetCharData());
+        
+        
+        return; 
+      }
+      
+      assert(false);
     }
   };
   
@@ -1511,23 +1568,38 @@ class ResourceTable : public ResourceBase {
       type_list{}
     {}
     
-    static constexpr size_t CONFIG_INDEX_NOT_FOUND = (size_t)(-1);
-    
     /*
-     * GetConfigIndex() - Given a configuration, returns its index
+     * GetDefaultConfigType() - Returns the Type object pointer if it has
+     *                          a default config
      *
-     * This function loops through all available type objects and matches 
-     * the type config object. If the object is not found, a default value
-     * 0xFFFFFFFF is returned
+     * If default config type does not exist then return nullptr which is
+     * usually treated as an error
      */
-    size_t GetConfigIndex(const TypeConfig &type_config) const {
+    Type *GetDefaultConfigType() {
       for(size_t i = 0;i < type_list.size();i++) {
-        if(type_config == type_list[i].header_p->config) {
-          return i;
+        if(type_list[i].HasDefaultTypeConfig() == true) {
+          return &type_list[i];
         }
       }
       
-      return CONFIG_INDEX_NOT_FOUND;
+      // Not found
+      return nullptr;
+    }
+    
+    /*
+     * GetConfigType() - Given a configuration, returns its type pointer
+     *
+     * This function loops through all available type objects and matches 
+     * the type config object. If the object is not found, nullptr is returned
+     */
+    Type *GetConfigType(const TypeConfig &type_config) {
+      for(size_t i = 0;i < type_list.size();i++) {
+        if(type_config == type_list[i].header_p->config) {
+          return &type_list[i];
+        }
+      }
+      
+      return nullptr;
     }
   };
   
@@ -1649,44 +1721,63 @@ class ResourceTable : public ResourceBase {
     
     // This is a pointer to the type spec header
     TypeSpec *type_spec_p = &package_p->type_spec_list[type_index];
-    
-    // Try to match the type config - if not found just use the default one
-    size_t config_index = type_spec_p->GetConfigIndex(type_config);
-    if(config_index == TypeSpec::CONFIG_INDEX_NOT_FOUND) {
-      dbg_printf("Type config index not found - using default index = 0\n");
-      
-      config_index = 0UL; 
+    // If the type spec list has no element then we know the type spec
+    // has problem
+    if(type_spec_p->type_list.size() == 0UL) {
+      ReportError(NO_TYPE_IN_TYPE_SPEC, id.data);
     }
     
-    // The config index must be correct
-    assert(config_index < type_spec_p->type_list.size());
-    Type *type_p = &type_spec_p->type_list[config_index];
+    // Use this to indicate whether we have already used the default type
+    bool use_default_type = false;
+    
+    // Try to match the type config - if not found just use the default one
+    Type *type_p = type_spec_p->GetConfigType(type_config);
+    if(type_p == nullptr) {
+      dbg_printf("Type config index not found - using default config type\n");
+      
+      // Get the default config type (usually has a buffer length of 0)
+      type_p = type_spec_p->GetDefaultConfigType();
+      use_default_type = true;
+      
+      if(type_p == nullptr) {
+        ReportError(DEFAULT_CONFIG_TYPE_NOT_FOUND, 
+                    static_cast<uint32_t>(type_id)); 
+      }
+    }
     
     // If entry ID is out of bound then just report error
     if(entry_index >= type_p->entry_count) {
       ReportError(INVALID_ENTRY_ID, entry_id); 
-    } else if(type_p->offset_table[entry_index] == Type::ENTRY_NOT_PRESENT) {
-      dbg_printf("Type config index found but entry is not present"
-                 " - using default index = 0\n");
+    } else if(type_p->IsEntryPresent(entry_index) == false) {
       
-      // If the type config is matched but no entry exists for that config on
-      // that slot, then just use the default one either
-      config_index = 0UL;
-      
-      // If the type spec list has no element then we know the type spec
-      // has problem
-      if(type_spec_p->type_list.size() == 0UL) {
-        ReportError(NO_TYPE_IN_TYPE_SPEC, id.data);
+      if(use_default_type == false) {
+        dbg_printf("Type config index found but entry is not present"
+                   " - using default config type\n");
+        
+        type_p = type_spec_p->GetDefaultConfigType();
+        use_default_type = true;
+        
+        if(type_p == nullptr) {
+          ReportError(DEFAULT_CONFIG_TYPE_NOT_FOUND, 
+                      static_cast<uint32_t>(type_id)); 
+        }
+      } else {
+        ReportError(ENTRY_NOT_PRESENT_IN_DEFAULT_TYPE, 
+                    static_cast<uint32_t>(type_id), 
+                    static_cast<uint32_t>(entry_id)); 
       }
       
-      // Re-fetch the type object from the type list, and then retrieve the
-      // entry ID
-      // Since we are using default type config, the entry offset must not
-      // be 0xFFFFFFFF
-      // Also the entry ID must be inside the bound
-      type_p = &type_spec_p->type_list[config_index];
-      if(entry_index >= type_p->entry_count || \
-         type_p->offset_table[entry_index] == Type::ENTRY_NOT_PRESENT) {
+      // After switching to default type if the entry is still not 
+      // present then report error
+      if(type_p->IsEntryPresent(entry_index) == false) {
+        ReportError(ENTRY_NOT_PRESENT_IN_DEFAULT_TYPE, 
+                    static_cast<uint32_t>(type_id), 
+                    static_cast<uint32_t>(entry_id)); 
+      }
+      
+      // After fetching the default type, if entry ID is in correct then 
+      // report error
+      if(entry_index >= type_p->entry_count) {
         ReportError(INVALID_ENTRY_ID, entry_id);
       }
     }
@@ -1947,17 +2038,14 @@ class ResourceTable : public ResourceBase {
    */
   void DebugPrintAllTypeEntryNames(Package *package_p, Type *type_p) {
 	  for(size_t i = 0;i < type_p->entry_count;i++) {
-	    uint32_t offset = type_p->offset_table[i];
-
       // Resource entry does not exist for current configuration
-      if(offset == Type::ENTRY_NOT_PRESENT) {
+      if(type_p->IsEntryPresent(i) == false) {
         //dbg_printf("        [INVALID ENTRY]\n");
         continue;
       }
 
       // This is a pointer to the resource entry
-      ResourceEntry *resource_entry_p = reinterpret_cast<ResourceEntry *>( \
-        type_p->data_p + offset);
+      ResourceEntry *resource_entry_p = type_p->GetEntryPtr(i);
 
       dbg_printf("        Name %lu = ", i);
       Buffer buffer{128};
