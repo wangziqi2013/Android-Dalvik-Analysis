@@ -1832,7 +1832,28 @@ class ResourceTable : public ResourceBase {
    * function does not clear the buffer, so the buffer could contain some other
    * contents before calling this function
    */
-  void GetResourceIdString(ResourceId id, Buffer *buffer_p) {
+  void GetResourceIdString(ResourceId id, 
+                           Buffer *buffer_p, 
+                           const TypeConfig &type_config) {
+    // Use this to know which type instance is selected
+    Type *type_p = nullptr;
+    
+    // Get the entry pointer first (anyway we would need it because we 
+    // need the name of the entry)
+    ResourceEntry *entry_p = GetResourceEntry(id, type_config, &type_p);
+    assert(type_p != nullptr);
+    
+    buffer_p.Append('@');
+    // Append the content of another buffer
+    // Remember that the base type name is not a C-String
+    buffer_p->Append(type_p->base_type_name);
+    buffer_p->Append('/');
+    
+    // Need its string pool to print the name
+    Package *package_p = type_p->type_spec_p->package_p;
+    
+    // Append the name of the entry as the last component
+    pacakge_p->key_string_pool.AppendToBuffer(entry_p->key, buffer_p);
     
     return;
   }
@@ -1849,12 +1870,16 @@ class ResourceTable : public ResourceBase {
    * configurations, and in the case none matches, just fall back to the
    * default
    *
-   * Note that this function only prints in the current resource table. If
+   * Note that this function only search the current resource table. If
    * the package ID is not in the current resource table then we need to
-   * check external packages
+   * check external packages using package group instance
+   *
+   * This function also accepts an optional type pointer for getting the actual
+   * type instance being used.
    */
   ResourceEntry *GetResourceEntry(ResourceId id, 
-                                  const TypeConfig &type_config) {
+                                  const TypeConfig &type_config,
+                                  Type **type_p_p = nullptr) {
     uint8_t package_id = id.package_id;
     uint8_t type_id = id.type_id;
     uint16_t entry_id = id.entry_id;
@@ -1940,6 +1965,12 @@ class ResourceTable : public ResourceBase {
     
     // After this we have fetched the correct type object pointer and know
     // that the entry ID is valid
+    
+    // Also optionally output the type pointer actually being used because
+    // there is no backward pointer inside the resource entry object
+    if(type_p_p != nullptr) {
+      *type_p_p = type_p;
+    }
     
     return type_p->GetEntryPtr(entry_index);
   }
