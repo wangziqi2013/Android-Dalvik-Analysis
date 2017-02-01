@@ -1275,8 +1275,7 @@ class ResourceTable : public ResourceBase {
       value_path.Append('\0');
       
       // And then enters the dir or creates it if first time
-      FileUtility::CreateOrEnterDir( \
-        static_cast<const char *>(value_path.GetData()));
+      FileUtility::CreateOrEnterDir(value_path.GetCharData());
 
       FILE *fp = FileUtility::OpenFile(file_name, "w");
       
@@ -1689,10 +1688,46 @@ class ResourceTable : public ResourceBase {
     }
     
     /*
-     * WriteBoolXml() - Writes 
+     * WriteBoolXml() - Writes a XML file on boolean constants
      */
     void WriteBoolXml(const char *file_name) {
-      assert(false);
+      FILE *fp = SwitchToValuesDir(file_name);
+      
+      FileUtility::WriteString(fp, XML_HEADER_LINE);
+      Buffer buffer;
+      
+      Package *package_p = type_spec_p->package_p;
+      ResourceTable *table_p = package_p->table_p;
+      
+      for(size_t i = 0;i < entry_count;i++) {
+        if(IsEntryPresent(i) == false) {
+          continue; 
+        }
+        
+        ResourceEntry *entry_p = GetEntryPtr(i); 
+        
+        // Bool entry must be not complex
+        if(entry_p->IsComplex() == true) {
+          ReportError(INVALID_BOOL_ENTRY, i);
+        }
+        
+        buffer.Append("<bool name=\"");
+        package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+        buffer.Append("\">");
+        
+        table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+        
+        buffer.Append("</bool>\n");
+        buffer.Append('\0');
+        
+        FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+        buffer.Reset();
+      }
+      
+      FileUtility::WriteString(fp, RESOURCE_END_TAG);
+      FileUtility::CloseFile(fp);
+      
+      return;
     }
     
     /*
