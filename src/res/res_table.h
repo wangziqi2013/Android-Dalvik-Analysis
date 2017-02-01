@@ -1356,7 +1356,7 @@ class ResourceTable : public ResourceBase {
         ResourceTable *table_p = \
           package_group.GetResourceTable(field_p->name.package_id);
         ResourceEntry *entry_p = \
-          table_p->GetResourceEntry(field_p->name, header_p->config);
+          table_p->GetResourceEntry(field_p->name, &header_p->config);
           
         package_p->key_string_pool.AppendToBuffer(entry_p->key, buffer_p);
         
@@ -1783,14 +1783,13 @@ class ResourceTable : public ResourceBase {
    * contents before calling this function
    */
   static void GetResourceIdString(ResourceId id, 
-                                  Buffer *buffer_p, 
-                                  const TypeConfig &type_config) {
+                                  Buffer *buffer_p) {
     // Use this to know which type instance is selected
     Type *type_p = nullptr;
     
     // Get the entry pointer first (anyway we would need it because we 
     // need the name of the entry)
-    ResourceEntry *entry_p = GetResourceEntry(id, type_config, &type_p);
+    ResourceEntry *entry_p = GetResourceEntry(id, nullptr, &type_p);
     assert(type_p != nullptr);
     
     buffer_p->Append('@');
@@ -1826,9 +1825,12 @@ class ResourceTable : public ResourceBase {
    *
    * This function also accepts an optional type pointer for getting the actual
    * type instance being used.
+   *
+   * If type_config is nullptr then we do not match type and always use
+   * the default resource
    */
   static ResourceEntry *GetResourceEntry(ResourceId id, 
-                                         const TypeConfig &type_config,
+                                         const TypeConfig *type_config_p,
                                          Type **type_p_p = nullptr) {
     uint8_t package_id = id.package_id;
     uint8_t type_id = id.type_id;
@@ -1863,10 +1865,17 @@ class ResourceTable : public ResourceBase {
     // Use this to indicate whether we have already used the default type
     bool use_default_type = false;
     
-    // Try to match the type config - if not found just use the default one
-    Type *type_p = type_spec_p->GetConfigType(type_config);
+    // make it nullptr to distinguish the case that there is no type config
+    Type *type_p = nullptr;
+    
+    // Match the configure index if it is supplied
+    if(type_config_p != nullptr) {
+      // Try to match the type config - if not found just use the default one
+      type_p = type_spec_p->GetConfigType(*type_config_p);
+    }
+    
     if(type_p == nullptr) {
-      dbg_printf("Type config index not found - using default config type\n");
+      dbg_printf("Type config not matched - using default config type\n");
       
       // Get the default config type (usually has a buffer length of 0)
       type_p = type_spec_p->GetDefaultConfigType();
@@ -1884,7 +1893,7 @@ class ResourceTable : public ResourceBase {
     } else if(type_p->IsEntryPresent(entry_index) == false) {
       
       if(use_default_type == false) {
-        dbg_printf("Type config index found but entry is not present"
+        dbg_printf("Type config index matched but entry is not present"
                    " - using default config type\n");
         
         type_p = type_spec_p->GetDefaultConfigType();
@@ -2159,17 +2168,6 @@ class ResourceTable : public ResourceBase {
     type_spec_p->type_id = type_id;
     type_spec_p->entry_count = type_spec_header_p->entry_count;
     type_spec_p->config_table = type_spec_header_p->data;
-    
-#ifndef NDEBUG
-    dbg_printf("    Type id = %u; entry_count = %u (type name = ", 
-               static_cast<uint32_t>(type_spec_header_p->id),
-               static_cast<uint32_t>(type_spec_header_p->entry_count));
-
-    Buffer buffer{128};
-    package_p->type_string_pool.AppendToBuffer(type_id - 1, &buffer);
-    buffer.Append(")\n");
-    buffer.WriteToFile(stderr);
-#endif
 
     return type_id;
   }
@@ -2182,7 +2180,6 @@ class ResourceTable : public ResourceBase {
 	  for(size_t i = 0;i < type_p->entry_count;i++) {
       // Resource entry does not exist for current configuration
       if(type_p->IsEntryPresent(i) == false) {
-        //dbg_printf("        [INVALID ENTRY]\n");
         continue;
       }
 
@@ -2236,7 +2233,6 @@ class ResourceTable : public ResourceBase {
           // This is the current entry filed being processed
           ResourceEntryField *field_p = entry_field_p + j;
           
-#ifndef NDEBUG          
           // Print out the 32 bit integer resource ID
           dbg_printf("            "
                      "entry name = 0x%.8X; type = 0x%.4X, data = 0x%.8X\n",
@@ -2245,11 +2241,11 @@ class ResourceTable : public ResourceBase {
                      field_p->value.data);
           
           buffer.Reset();
-          AppendResourceValueToBuffer(&field_p->value, &buffer);
+          // Append value but do not resolve reference
+          AppendResourceValueToBuffer(&field_p->value, &buffer, false);
           dbg_printf("                Printed value \"");
           buffer.Append("\"\n");
           buffer.WriteToFile(stderr);
-#endif          
           
           // If the type ID is not attr then the field name must have
           // a ATTR type ID
@@ -2264,7 +2260,7 @@ class ResourceTable : public ResourceBase {
                    resource_entry_p->value.data);
         
         buffer.Reset();
-        AppendResourceValueToBuffer(&resource_entry_p->value, &buffer);
+        AppendResourceValueToBuffer(&resource_entry_p->value, &buffer, false);
         dbg_printf("            Printed value \"");
         buffer.Append("\"\n");
         buffer.WriteToFile(stderr);
@@ -2323,19 +2319,6 @@ class ResourceTable : public ResourceBase {
     type_p->data_p = reinterpret_cast<unsigned char *>( \
       TypeUtility::Advance(type_header_p, 
                            type_header_p->data_offset));
-    
-    // Under debug mode we print it out
-#ifndef NDEBUG
-    dbg_printf("    Parsing type header @ 0x%lX: ", 
-               TypeUtility::GetPtrDiff(raw_data_p, header_p));
-    
-    type_p->readable_name.WriteToFile(stderr);
-    fputc('\n', stderr);
-    
-    dbg_printf("        Entry count = %u\n", type_header_p->entry_count);
-    
-    DebugPrintAllTypeEntryNames(package_p, type_p);
-#endif
     
     // The ID must match
     assert(static_cast<uint32_t>(type_header_p->type_id) == type_id);
@@ -2398,13 +2381,47 @@ class ResourceTable : public ResourceBase {
   }
   
   /*
+   * DebugPrintAll() - Prints everything in this resource table
+   */
+  void DebugPrintAll() {
+    for(Package &package : package_list) {
+      for(TypeSpec &type_spec : package.type_spec_list) {
+        TypeSpecHeader *type_spec_header_p = type_spec.header_p;
+        dbg_printf("Type id = %u; entry_count = %u (type name = ", 
+                   static_cast<uint32_t>(type_spec_header_p->id),
+                   static_cast<uint32_t>(type_spec_header_p->entry_count));
+    
+        Buffer buffer{128};
+        package.type_string_pool.AppendToBuffer(type_spec.type_id - 1, &buffer);
+        buffer.Append(")\n");
+        buffer.WriteToFile(stderr);
+        
+        for(Type &type : type_spec.type_list) {
+          dbg_printf("    Type config name = ");
+          
+          type.readable_name.WriteToFile(stderr);
+          fputc('\n', stderr);
+          
+          dbg_printf("    Entry count = %lu\n", type.entry_count);
+          
+          DebugPrintAllTypeEntryNames(&package, &type);
+        }
+      }
+    }
+    
+    return;
+    
+          
+  }
+  
+  /*
    * DebugWriteXml() - Writes XML into the corresponding file under /res folder
    */
   void DebugWriteXml() {
     for(Package &package : package_list) {
-      for(TypeSpec &type_spec : package.type_spec_list) {
+      for(TypeSpec &type_spec : package.type_spec_list) {        
         for(Type &type : type_spec.type_list) {
-          type.WriteXml(); 
+          type.WriteXml();
         }
       }
     }

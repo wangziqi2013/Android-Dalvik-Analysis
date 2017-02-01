@@ -12,6 +12,59 @@ namespace wangziqi2013 {
 namespace android_dalvik_analysis { 
 
 /*
+ * class ResourceId - Resource identifier in 32-bit field
+ */
+union ResourceId {
+  // The following two are used for array type resource's complex
+  // resource name
+  
+  // This indicates the resource ID represents an element inside an array
+  static constexpr uint32_t ARRAY_ELEMENT_FLAG = 0x02000000;
+  // This flags out the array notion and leaves out array index
+  static constexpr uint32_t ARRAY_INDEX_MASK = 0x00FFFFFF;
+  
+ public:
+  // The structural of resource ID is 0xpptteeee
+  // so we start declaring the entry ID at low address and then
+  // type ID and then package ID
+  struct {
+    uint16_t entry_id;
+    uint8_t type_id;
+    uint8_t package_id;
+  } BYTE_ALIGNED;
+  
+  // 32 bit identifier used as a whole
+  uint32_t data;
+  
+  /*
+   * IsArrayElement() - Whether this resource represents an array element
+   */
+  inline bool IsArrayElement() const {
+    return static_cast<bool>(data & 0x02000000);
+  }
+  
+  /*
+   * GetArrayIndex() - If the resource ID is of array type then return 
+   *                   its index
+   *
+   * If not array type then result is undefined and under debug mode assertion
+   * would fail
+   */
+  inline uint32_t GetArrayIndex() const {
+    assert(IsArrayElement() == true);
+    
+    return data & ARRAY_INDEX_MASK;
+  }
+} BYTE_ALIGNED;
+
+// Make sure the size of the union is always correct
+static_assert(sizeof(ResourceId) == sizeof(uint32_t), 
+              "Invalid size of resource ID");
+
+// This is implemented in res_table.cpp
+void GetResourceIdStringWrapper(ResourceId id, Buffer *buffer_p);
+
+/*
  * class ResourceBase - Represents common data structure and procedures for
  *                      parsing the resource file
  *
@@ -184,56 +237,6 @@ class ResourceBase {
     }
   };
   
-  /*
-   * class ResourceId - Resource identifier in 32-bit field
-   */
-  union ResourceId {
-    // The following two are used for array type resource's complex
-    // resource name
-    
-    // This indicates the resource ID represents an element inside an array
-    static constexpr uint32_t ARRAY_ELEMENT_FLAG = 0x02000000;
-    // This flags out the array notion and leaves out array index
-    static constexpr uint32_t ARRAY_INDEX_MASK = 0x00FFFFFF;
-    
-   public:
-    // The structural of resource ID is 0xpptteeee
-    // so we start declaring the entry ID at low address and then
-    // type ID and then package ID
-    struct {
-      uint16_t entry_id;
-      uint8_t type_id;
-      uint8_t package_id;
-    } BYTE_ALIGNED;
-    
-    // 32 bit identifier used as a whole
-    uint32_t data;
-    
-    /*
-     * IsArrayElement() - Whether this resource represents an array element
-     */
-    inline bool IsArrayElement() const {
-      return static_cast<bool>(data & 0x02000000);
-    }
-    
-    /*
-     * GetArrayIndex() - If the resource ID is of array type then return 
-     *                   its index
-     *
-     * If not array type then result is undefined and under debug mode assertion
-     * would fail
-     */
-    inline uint32_t GetArrayIndex() const {
-      assert(IsArrayElement() == true);
-      
-      return data & ARRAY_INDEX_MASK;
-    }
-  } BYTE_ALIGNED;
-  
-  // Make sure the size of the union is always correct
-  static_assert(sizeof(ResourceId) == sizeof(uint32_t), 
-                "Invalid size of resource ID");
-  
   // This is used to indicate the string is invalid (i.e. does not exist)
   static constexpr uint32_t INVALID_STRING = 0xFFFFFFFF;
   
@@ -375,7 +378,9 @@ class ResourceBase {
    * This function is a wrapper over ResourceValue's AppendToBuffer() because
    * the string type should be handled outside of the class
    */
-  void AppendResourceValueToBuffer(ResourceValue *value_p, Buffer *buffer_p) {
+  void AppendResourceValueToBuffer(ResourceValue *value_p, 
+                                   Buffer *buffer_p, 
+                                   bool resolve_reference=true) {
     ResourceValue::DataType type = value_p->type;
     
     // If it is string type then just grab the string from the current
@@ -383,14 +388,16 @@ class ResourceBase {
     if(type == ResourceValue::DataType::STRING) {
       string_pool.AppendToBuffer(value_p->data, buffer_p);
     } else if(type == ResourceValue::DataType::REFERENCE) {
-      // Cast it to a resource ID and then use package ID to locate
-      // the package as well as the table
-      //ResourceId id;
-      //id.data = value_p->data;
-      
-      //ResourceTable *table_p = package_group.GetResourceTable(id.package_id);
-      
-      //table_p->
+      if(resolve_reference == true) {
+        // Cast it to a resource ID and then use package ID to locate
+        // the package as well as the table
+        ResourceId id;
+        id.data = value_p->data;
+        
+        GetResourceIdStringWrapper(id, buffer_p);
+      } else {
+        buffer_p->Printf("@0x%08X", value_p->data); 
+      }
     } else {
       value_p->AppendToBuffer(buffer_p); 
     }

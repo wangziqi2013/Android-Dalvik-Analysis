@@ -70,7 +70,7 @@ const char *error_str_table[] = {
   
   // 45
   "Invalid entry ID: 0x%08X\n",
-  "TypeSpec structure contains no Type object (RES ID: 0X%08X)\n",
+  "TypeSpec structure contains no Type object (RES ID: 0x%08X)\n",
   "Package (ID = 0x%02X) has already been registered\n",
   "Invalid drawable entry (index: %u)\n",
   "Default configuration type is not found (type ID: 0x%02X)\n",
