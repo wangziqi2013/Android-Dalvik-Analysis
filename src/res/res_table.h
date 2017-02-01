@@ -1593,6 +1593,8 @@ class ResourceTable : public ResourceBase {
       FileUtility::WriteString(fp, XML_HEADER_LINE);
       Buffer buffer;
       
+      Package *package_p = type_spec_p->package_p;
+      
       for(size_t i = 0;i < entry_count;i++) {
         if(IsEntryPresent(i) == false) {
           continue; 
@@ -1602,11 +1604,72 @@ class ResourceTable : public ResourceBase {
         
         // Array entry must be complex, otherwise we could not
         // intepret it
-        if(entry_p->IsComplex() == false) {
+        if(entry_p->IsComplex() == false || \
+           entry_p->entry_count == 0) {
           ReportError(INVALID_ARRAY_ENTRY, i);
         }
         
+        // We have already asserted that the array must have at least
+        // one element, so we know the first field is valid
+        ResourceEntryField *field_p = entry_p->field_data;
+        const char *array_tag = nullptr;
         
+        // We use this as a sample value to determine the type 
+        // of the array
+        ResourceValue *value_p = &field_p->value;
+        if(field_p->value.type == ResourceValue::DataType::REFERENCE) {
+          ResourceId id;
+          id.data = field_p->value.data;
+          ResourceEntry *ref_entry_p = \
+            GetResourceEntry(id, &header_p->config, nullptr);
+          
+          if(ref_entry_p->IsComplex() == true) {
+            dbg_printf("The reference type is a complex value\n");
+            
+            ReportError(INVALID_ARRAY_ENTRY, i);
+          }
+          
+          value_p = &ref_entry_p->value;
+        }
+        
+        if(value_p->type == ResourceValue::DataType::INT_DEC || \
+           value_p->type == ResourceValue::DataType::INT_HEX) {
+          array_tag = "integer-array";
+        } else if(value_p->type == ResourceValue::DataType::STRING) {
+          array_tag = "string-array";
+        } else {
+          ReportError(INVALID_ARRAY_ENTRY, i); 
+        }
+        
+        // Write the beginning tag first
+        buffer.Printf("<%s name=\"", array_tag);
+        package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+        
+        buffer.Append("\">\n");
+        buffer.Append('\0');
+        
+        FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+        buffer.Reset();
+        
+        for(size_t j = 0;j < entry_p->entry_count;j++) {
+          buffer.Append("<item>");
+          package_p->table_p->AppendResourceValueToBuffer(&field_p->value, &buffer);
+          buffer.Append("</item>");
+          
+          buffer.Append('\n');
+          buffer.Append('\0');
+          
+          FileUtility::WriteString(fp, buffer.GetCharData(), 2);
+          buffer.Reset();
+          
+          field_p++; 
+        }
+        
+        buffer.Printf("</%s>\n", array_tag);
+        buffer.Append('\0');
+        
+        FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+        buffer.Reset();
       }
       
       FileUtility::WriteString(fp, RESOURCE_END_TAG);
