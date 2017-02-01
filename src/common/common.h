@@ -113,6 +113,7 @@ enum ErrorCode : uint64_t {
   DEFAULT_CONFIG_TYPE_NOT_FOUND,
   
   ENTRY_NOT_PRESENT_IN_DEFAULT_TYPE = 50,
+  INVALID_ARRAY_ENTRY,
 };
 
 // Error string table

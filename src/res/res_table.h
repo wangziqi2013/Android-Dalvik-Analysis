@@ -1218,8 +1218,10 @@ class ResourceTable : public ResourceBase {
         // Decompile binary XML
         ProcessXmlTypeXml();
       } else if(base_type_name == "raw") {
-        // Decompile binary XML
+        // Do nothing regarding raw file type
         ProcessRawType();
+      } else if(base_type_name == "array") {
+        WriteArrayXml("arrays.xml");
       } else {
 #ifndef NDEBUG
         dbg_printf("Unknown attribute name: ");
@@ -1574,6 +1576,37 @@ class ResourceTable : public ResourceBase {
         
         // Clear all previous contents
         buffer.Reset();
+      }
+      
+      FileUtility::WriteString(fp, RESOURCE_END_TAG);
+      FileUtility::CloseFile(fp);
+      
+      return;
+    }
+    
+    /*
+     * WriteArrayXml() - Writes arrays.xml file
+     */
+    void WriteArrayXml(const char *file_name) {
+      FILE *fp = SwitchToValuesDir(file_name);
+      
+      FileUtility::WriteString(fp, XML_HEADER_LINE);
+      Buffer buffer;
+      
+      for(size_t i = 0;i < entry_count;i++) {
+        if(IsEntryPresent(i) == false) {
+          continue; 
+        }
+        
+        ResourceEntry *entry_p = GetEntryPtr(i); 
+        
+        // Array entry must be complex, otherwise we could not
+        // intepret it
+        if(entry_p->IsComplex() == false) {
+          ReportError(INVALID_ARRAY_ENTRY, i);
+        }
+        
+        
       }
       
       FileUtility::WriteString(fp, RESOURCE_END_TAG);
