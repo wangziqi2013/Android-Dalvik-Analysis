@@ -1654,6 +1654,14 @@ class ResourceTable : public ResourceBase {
         buffer.Reset();
         
         for(size_t j = 0;j < entry_p->entry_count;j++) {
+          // Array index is also recorded inside the name of the field
+          // if it does not match the actual index then report error
+          if(field_p->name.GetArrayIndex() != j) {
+            ReportError(WRONG_ARRAY_INDEX, 
+                        j, 
+                        static_cast<uint64_t>(field_p->name.GetArrayIndex()));
+          }
+          
           buffer.Append("<item>");
           package_p->table_p->AppendResourceValueToBuffer(&field_p->value, &buffer);
           buffer.Append("</item>");
