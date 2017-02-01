@@ -115,6 +115,7 @@ enum ErrorCode : uint64_t {
   ENTRY_NOT_PRESENT_IN_DEFAULT_TYPE = 50,
   INVALID_ARRAY_ENTRY,
   WRONG_ARRAY_INDEX,
+  INVALID_BOOL_ENTRY,
 };
 
 // Error string table

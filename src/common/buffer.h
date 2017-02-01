@@ -266,9 +266,6 @@ class Buffer {
       ReportError(ERROR_FLUSH_FILE, "(unknown)"); 
     }
     
-    // Reset the pointer to cleared buffer
-    current_length = 0;
-    
     return;
   }
   

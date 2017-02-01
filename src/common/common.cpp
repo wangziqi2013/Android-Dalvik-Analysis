@@ -79,6 +79,7 @@ const char *error_str_table[] = {
   "Entry not present in default type (type ID: 0x%02X; entry ID: 0x%04X)\n",
   "Invalid array entry (index: %lu)\n",
   "Wrong array index in index type: expected %lu, actual %lu\n",
+  "Invalid boolean type entry (index: %lu)\n",
 };
 
 /*
