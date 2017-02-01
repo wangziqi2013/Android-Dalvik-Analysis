@@ -22,6 +22,17 @@ void TestResourceTableBasic(const char *file_name) {
   unsigned char *data = FileUtility::MapFileReadOnly(file_name, &length);
   
   ResourceTable table{data, length, false};
+  
+  fprintf(stderr, "\n========================================\n");
+  fprintf(stderr, "========================================\n");
+  fprintf(stderr, "========================================\n");
+  
+  table.DebugPrintAll();
+  
+  fprintf(stderr, "\n========================================\n");
+  fprintf(stderr, "========================================\n");
+  fprintf(stderr, "========================================\n\n");
+  
   table.DebugWriteXml();
   
   FileUtility::UnmapFile(data, length); 
@@ -31,6 +42,8 @@ void TestResourceTableBasic(const char *file_name) {
 
 int main(int argc, char **argv) {
   EnterTestDir();
+  
+  //TestResourceTableBasic("resources-system.arsc");
   
   Argv args{argc, argv};
   const std::vector<std::string> &arg_list = args.GetArgList();
