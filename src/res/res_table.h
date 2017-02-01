@@ -1222,6 +1222,8 @@ class ResourceTable : public ResourceBase {
         ProcessRawType();
       } else if(base_type_name == "array") {
         WriteArrayXml("arrays.xml");
+      } else if(base_type_name == "bool") {
+        WriteBoolXml("bools.xml");
       } else {
 #ifndef NDEBUG
         dbg_printf("Unknown attribute name: ");
@@ -1676,6 +1678,13 @@ class ResourceTable : public ResourceBase {
       FileUtility::CloseFile(fp);
       
       return;
+    }
+    
+    /*
+     * WriteBoolXml() - Writes 
+     */
+    void WriteBoolXml(const char *file_name) {
+      assert(false);
     }
     
     /*
