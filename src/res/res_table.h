@@ -632,9 +632,19 @@ class ResourceTable : public ResourceBase {
               
               buffer.Append('\"');
             } else if(field_p->name.data == ResourceEntryField::ATTR_L10N) {
-              // Do nothing
+              buffer.Append(" localization=\"");
+              
+              // Then print the corresponding value for localization
+              if(field_p->value.data == ResourceEntryField::L10N_SUGGESTED) {
+                buffer.Append("suggested\""); 
+              } else if(field_p->value.data == \
+                        ResourceEntryField::L10N_NOT_REQUIRED) {
+                buffer.Append("not_required\"");
+              } else {
+                ReportError(INVALID_ATTR_ENTRY, "localization settings unknown");
+              } 
             } else {
-              ReportError(INVALID_ATTR_ENTRY, "Unknown resource field name\n"); 
+              ReportError(INVALID_ATTR_ENTRY, "Unknown resource field nam"); 
             }
             
             field_p++;

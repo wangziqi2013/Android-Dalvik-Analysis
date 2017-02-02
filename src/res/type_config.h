@@ -336,7 +336,12 @@ class TypeConfig {
     uint32_t screenConfig2;
   };
 
+  // Not really sure whether this is counted as an actual data field
   bool localeScriptWasComputed;
+  
+  ///////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////
 
   // Flags indicating a set of config values.  These flag constants must
   // match the corresponding ones in android.content.pm.ActivityInfo and
