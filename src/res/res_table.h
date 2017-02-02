@@ -1751,15 +1751,29 @@ class ResourceTable : public ResourceBase {
         buffer.Append(")\n");
         buffer.WriteToFile(stderr);
         
+        // Here we try to find default value every type we need
+        bool default_found = false;
+        
         for(Type &type : type_spec.type_list) {
           dbg_printf("    Type config name = ");
           
-          type.readable_name.WriteToFile(stderr);
-          fputc('\n', stderr);
+          if(type.readable_name.GetLength() == 0UL) {
+            fprintf(stderr, "[Default]\n");
+            default_found = true;  
+          } else {
+            type.readable_name.WriteToFile(stderr);
+            fputc('\n', stderr);
+          }
           
           dbg_printf("    Entry count = %lu\n", type.entry_count);
           
           DebugPrintAllTypeEntryNames(&package, &type);
+        }
+        
+        // Print as a warning
+        if(default_found == false) {
+          dbg_printf("*** No default type found for typespec (ID = %u)!\n",
+                     type_spec.type_id);
         }
       }
     }
