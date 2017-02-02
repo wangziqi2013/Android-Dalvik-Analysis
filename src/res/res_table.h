@@ -550,6 +550,78 @@ class ResourceTable : public ResourceBase {
     }
     
     /*
+     * PrintAttrOther() - Prints everything that is not an attribute flags
+     *                    or enum
+     *
+     * Accepts the pointer to the first field entry, and returns the 
+     * number of fields processed
+     */
+    size_t PrintAttrOther(ResourceEntryField *field_p,
+                          ResourceEntry *entry_p,
+                          ResourceTable *table_p,
+                          Buffer *buffer_p,
+                          uint32_t format_mask) {
+      size_t processed_entry = 0UL;
+      
+      // Try to loop over all entry fields. We may break halfway
+      // if there is a resource ID
+      for(size_t i = 0;i < entry_p->entry_count;i++) {
+        uint32_t name = field_p->name.data;
+        
+        if(name == ResourceEntryField::ATTR_TYPE) {
+          // Only prints if there is at least one type specified
+          // It is possible to have none, if there is a flags or enum
+          // following
+          if((format_mask & \
+              ResourceEntryField::TYPE_ANY) != 0x00000000) {
+            buffer_p->Append(" format=\"");
+            PrintAttrFormat(buffer_p, format_mask);
+            buffer_p->Append('\"');
+          }
+        } else if(name == ResourceEntryField::ATTR_MIN) {
+          buffer_p->Append(" min=\"");
+          
+          table_p->AppendResourceValueToBuffer(&field_p->value, buffer_p);
+          
+          buffer_p->Append('\"');
+        } else if(name == ResourceEntryField::ATTR_MAX) {
+          buffer_p->Append(" max=\"");
+          
+          table_p->AppendResourceValueToBuffer(&field_p->value, buffer_p);
+          
+          buffer_p->Append('\"');
+        } else if(name == ResourceEntryField::ATTR_L10N) {
+          buffer_p->Append(" localization=\"");
+          
+          // Then print the corresponding value for localization
+          if(field_p->value.data == ResourceEntryField::L10N_SUGGESTED) {
+            buffer_p->Append("suggested\""); 
+          } else if(field_p->value.data == \
+                    ResourceEntryField::L10N_NOT_REQUIRED) {
+            buffer_p->Append("not_required\"");
+          } else {
+            ReportError(INVALID_ATTR_ENTRY, "localization settings unknown");
+          } 
+        } else if(name == ResourceEntryField::ATTR_OTHER || \
+                  name == ResourceEntryField::ATTR_ZERO || \
+                  name == ResourceEntryField::ATTR_ONE || \
+                  name == ResourceEntryField::ATTR_TWO || \
+                  name == ResourceEntryField::ATTR_FEW || \
+                  name == ResourceEntryField::ATTR_MANY) {
+          // Don't know how to process it
+          assert(false);
+        } else {
+          break; 
+        }
+        
+        processed_entry++;
+        field_p++;
+      } // for 
+      
+      return processed_entry;
+    }
+    
+    /*
      * WriteAttrXml() - Treat this as an attribute type resource and write XML
      *
      * We try to create and enter the directory res/values-???/ where ??? is the
@@ -569,9 +641,11 @@ class ResourceTable : public ResourceBase {
       
       // Then loop through all attributes and print them to the file 
       for(size_t i = 0;i < entry_count;i++) {
-        uint32_t offset = offset_table[i];
-        ResourceEntry *entry_p = reinterpret_cast<ResourceEntry *>( \
-         data_p + offset);
+        if(IsEntryPresent(i) == false) {
+          continue;
+        } 
+        
+        ResourceEntry *entry_p = GetEntryPtr(i);
         
         // Attributes must be complex because we want to know its format
         if(entry_p->IsComplex() == false) {
@@ -595,83 +669,47 @@ class ResourceTable : public ResourceBase {
         
         // This points to the only field
         ResourceEntryField *field_p = entry_p->field_data; 
-        // This must be the first name field of the complex entry
-        assert(field_p->name.data == 0x01000000);
+        
+        // This describes what will follow
+        assert(field_p->name.data == ResourceEntryField::ATTR_TYPE);
         
         // This is a bit mask that specifies the format of data allowed
         uint32_t format_mask = field_p->value.data;
         
-        // If both flags are not set then we knoe it is neither a flag nor enum
-        // so each field has its own meaning, and we could just use a state
-        // machine to interpret it
+        // This flag indicates whether there are enum or flags after all 
+        // other entries are processed
+        bool has_enum_or_flags = false;
         if((format_mask & \
             (ResourceEntryField::TYPE_ENUM | \
-             ResourceEntryField::TYPE_FLAGS)) == 0x00000000) {
-          
-          for(size_t j = 0;j < entry_p->entry_count;j++) {
-            if(field_p->name.data == ResourceEntryField::ATTR_TYPE) {
-              buffer.Append(" format=\"");
-              
-              // Must have at least type specified here
-              assert((format_mask & \
-                      ResourceEntryField::TYPE_ANY) != 0x00000000);
-              
-              PrintAttrFormat(&buffer, format_mask);
-              
-              buffer.Append('\"');                
-            } else if(field_p->name.data == ResourceEntryField::ATTR_MIN) {
-              buffer.Append(" min=\"");
-              
-              table_p->AppendResourceValueToBuffer(&field_p->value, &buffer);
-              
-              buffer.Append('\"');
-            } else if(field_p->name.data == ResourceEntryField::ATTR_MAX) {
-              buffer.Append(" max=\"");
-              
-              table_p->AppendResourceValueToBuffer(&field_p->value, &buffer);
-              
-              buffer.Append('\"');
-            } else if(field_p->name.data == ResourceEntryField::ATTR_L10N) {
-              buffer.Append(" localization=\"");
-              
-              // Then print the corresponding value for localization
-              if(field_p->value.data == ResourceEntryField::L10N_SUGGESTED) {
-                buffer.Append("suggested\""); 
-              } else if(field_p->value.data == \
-                        ResourceEntryField::L10N_NOT_REQUIRED) {
-                buffer.Append("not_required\"");
-              } else {
-                ReportError(INVALID_ATTR_ENTRY, "localization settings unknown");
-              } 
-            } else {
-              ReportError(INVALID_ATTR_ENTRY, "Unknown resource field nam"); 
-            }
-            
-            field_p++;
-          } // for 
-          
+             ResourceEntryField::TYPE_FLAGS)) != 0x00000000) {
+          has_enum_or_flags = true;       
+        }
+        
+        // Print all other stuff and then return the number of fields
+        // having been processed
+        size_t processed_entry = \
+          PrintAttrOther(field_p, entry_p, table_p, &buffer, format_mask);
+        
+        if(has_enum_or_flags == false) {
           buffer.Append(" />\n");
-                
-          // Terminate this string
-          buffer.Append('\0');
-          // Write with identation level = 1
-          FileUtility::WriteString(fp, buffer.GetCharData(), 1);
-          
-          buffer.Reset();
         } else {
-          // Close the current line and make it to the file
           buffer.Append(">\n");
-          buffer.Append('\0');
-          FileUtility::WriteString(fp, buffer.GetCharData(), 1);
-          buffer.Reset();
-          
+        }
+                
+        // Terminate this string
+        buffer.Append('\0');
+        // Write with identation level = 1
+        FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+        buffer.Reset();
+        
+        if(has_enum_or_flags == true) {          
           // It is an array, so need to pass the starting element and 
           // entry count
           WriteAttrEnumFlags(fp,
                              &buffer, 
                              format_mask, 
-                             field_p + 1, 
-                             entry_p->entry_count - 1);
+                             field_p + processed_entry, 
+                             entry_p->entry_count - processed_entry);
           
           FileUtility::WriteString(fp, "</attr>\n", 1);
           buffer.Reset();
