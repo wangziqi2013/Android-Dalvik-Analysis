@@ -43,7 +43,9 @@ void TestResourceTableBasic(const char *file_name) {
 int main(int argc, char **argv) {
   EnterTestDir();
   
-  //TestResourceTableBasic("resources-system.arsc");
+  dbg_printf("Opening Android system resource file\n");
+  TestResourceTableBasic("resources-system.arsc");
+  dbg_printf("Finished opening Android system resource file\n");
   
   Argv args{argc, argv};
   const std::vector<std::string> &arg_list = args.GetArgList();

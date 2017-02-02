@@ -80,6 +80,7 @@ const char *error_str_table[] = {
   "Invalid array entry (index: %lu)\n",
   "Wrong array index in index type: expected %lu, actual %lu\n",
   "Invalid boolean type entry (index: %lu)\n",
+  "Attribute is not enum or flags - unknown type (index: %lu)\n",
 };
 
 /*

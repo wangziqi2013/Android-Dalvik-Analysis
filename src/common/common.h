@@ -116,6 +116,7 @@ enum ErrorCode : uint64_t {
   INVALID_ARRAY_ENTRY,
   WRONG_ARRAY_INDEX,
   INVALID_BOOL_ENTRY,
+  ATTR_NOT_ENUM_FLAGS, 
 };
 
 // Error string table

@@ -1224,6 +1224,8 @@ class ResourceTable : public ResourceBase {
         WriteArrayXml("arrays.xml");
       } else if(base_type_name == "bool") {
         WriteBoolXml("bools.xml");
+      } else if(base_type_name == "color") {
+        WriteColorXml("colors.xml");
       } else {
 #ifndef NDEBUG
         dbg_printf("Unknown attribute name: ");
@@ -1336,11 +1338,6 @@ class ResourceTable : public ResourceBase {
                             uint32_t format,
                             ResourceEntryField *field_p,
                             uint32_t entry_count) {
-      // Make sure it is enum or flag type
-      assert((format & \
-              (ResourceEntryField::TYPE_ENUM | \
-               ResourceEntryField::TYPE_FLAGS)) != 0x00000000);
-      
       // Need this to print the name of another entry
       Package *package_p = type_spec_p->package_p;
       
@@ -1417,6 +1414,7 @@ class ResourceTable : public ResourceBase {
         }
         
         Package *package_p = type_spec_p->package_p;
+        ResourceTable *table_p = package_p->table_p;
         
         // First print name:
         buffer.Append("<attr name=\"");
@@ -1426,23 +1424,51 @@ class ResourceTable : public ResourceBase {
         
         // This points to the only field
         ResourceEntryField *field_p = entry_p->field_data; 
-        // This defines the format of the following data, so must appear here
+        // This must be the first name field of the complex entry
         assert(field_p->name.data == 0x01000000);
         
         // This is a bit mask that specifies the format of data allowed
         uint32_t format_mask = field_p->value.data;
         
-        // Common case: Just one attribute, print format
-        if(entry_p->entry_count == 1) {
-          buffer.Append(" format=\"");
+        // If both flags are not set then we knoe it is neither a flag nor enum
+        // so each field has its own meaning, and we could just use a state
+        // machine to interpret it
+        if((format_mask & \
+            (ResourceEntryField::TYPE_ENUM | \
+             ResourceEntryField::TYPE_FLAGS)) == 0x00000000) {
           
-          // Must have at least type specified here
-          assert((format_mask & ResourceEntryField::TYPE_ANY) != 0x00000000);
+          for(size_t j = 0;j < entry_p->entry_count;j++) {
+            if(field_p->name.data == ResourceEntryField::ATTR_TYPE) {
+              buffer.Append(" format=\"");
+              
+              // Must have at least type specified here
+              assert((format_mask & \
+                      ResourceEntryField::TYPE_ANY) != 0x00000000);
+              
+              PrintAttrFormat(&buffer, format_mask);
+              
+              buffer.Append('\"');                
+            } else if(field_p->name.data == ResourceEntryField::ATTR_MIN) {
+              buffer.Append(" min=\"");
+              
+              table_p->AppendResourceValueToBuffer(&field_p->value, &buffer);
+              
+              buffer.Append('\"');
+            } else if(field_p->name.data == ResourceEntryField::ATTR_MAX) {
+              buffer.Append(" max=\"");
+              
+              table_p->AppendResourceValueToBuffer(&field_p->value, &buffer);
+              
+              buffer.Append('\"');
+            } else {
+              ReportError(INVALID_ATTR_ENTRY, "Unknown resource field name\n"); 
+            }
+            
+            field_p++;
+          } // for 
           
-          PrintAttrFormat(&buffer, format_mask);
-          
-          buffer.Append("\" />\n");
-          
+          buffer.Append(" />\n");
+                
           // Terminate this string
           buffer.Append('\0');
           // Write with identation level = 1
@@ -1728,6 +1754,14 @@ class ResourceTable : public ResourceBase {
       FileUtility::CloseFile(fp);
       
       return;
+    }
+    
+    /*
+     * WriteColorXml() - Writes a color XML file
+     */
+    void WriteColorXml(const char *file_name) {
+      (void)file_name;
+      assert(false);
     }
     
     /*
