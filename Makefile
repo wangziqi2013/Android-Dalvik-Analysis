@@ -5,9 +5,9 @@ BUILD=./build
 TEST=./test
 CXX_FLAG=-g -Wl,--no-as-needed -lz -I$(SRC)/dex/ -I$(SRC)/apk/ -I$(SRC)/common/ -I$(SRC)/res/ -std=c++11 -Wall -Wextra 
 
-all: apk_test xml_test
+all: apk_test xml_test buffer_test res_table_test
 
-$(BIN)/apk_test: $(BUILD)/apk.o $(TEST)/apk_test.cpp $(TEST)/test_suite.h $(BUILD)/test_suite.o $(BUILD)/common.o 
+$(BIN)/apk_test: $(BUILD)/apk.o $(TEST)/apk_test.cpp $(TEST)/test_suite.h $(BUILD)/test_suite.o $(BUILD)/common.o $(BUILD)/res_base.o 
 	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(BUILD)/apk.o $(TEST)/apk_test.cpp $(BUILD)/common.o $(BUILD)/res_base.o -o $(BIN)/apk_test
 	ln -sf $(BIN)/apk_test ./apk_test-bin
 
@@ -46,7 +46,7 @@ $(BUILD)/res_table.o: $(SRC)/res/res_table.cpp $(SRC)/res/res_table.h $(SRC)/res
 $(BUILD)/package_group.o: $(SRC)/res/package_group.cpp $(SRC)/res/package_group.h
 	g++ -c $(CXX_FLAG) $(SRC)/res/package_group.cpp -o $(BUILD)/package_group.o
 
-$(BUILD)/res_base.o: $(SRC)/res/res_base.cpp $(SRC)/res/res_base.h $(SRC)/res/res_value.h
+$(BUILD)/res_base.o: $(SRC)/res/res_base.cpp $(SRC)/res/res_base.h $(SRC)/res/res_value.h $(SRC)/res/type_config.h
 	g++ -c $(CXX_FLAG) $(SRC)/res/res_base.cpp -o $(BUILD)/res_base.o
 
 prepare:
