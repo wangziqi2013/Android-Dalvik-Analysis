@@ -7,6 +7,7 @@
 #include "common.h"
 #include "utf.h"
 #include "res_value.h"
+#include "type_config.h"
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 
