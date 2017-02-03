@@ -403,6 +403,8 @@ class ResourceTable : public ResourceBase {
         WriteStyleXml("styles.xml"); 
       } else if(base_type_name == "string") {
         WriteStringXml("strings.xml");
+      } else if(base_type_name == "dimen") {
+        WriteDimenXml("dimens.xml");
       } else {
 #ifndef NDEBUG
         dbg_printf("Unknown attribute name: ");
@@ -1171,6 +1173,62 @@ class ResourceTable : public ResourceBase {
         
         buffer.Append("</string>\n");
         buffer.Append('\0');
+        
+        FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+        buffer.Reset();
+      }
+      
+      FileUtility::WriteString(fp, RESOURCE_END_TAG);
+      FileUtility::CloseFile(fp);
+      
+      return;
+    }
+    
+    /*
+     * WriteDimenXml() - Writes a dimension XML file
+     */
+    void WriteDimenXml(const char *file_name) {
+      FILE *fp = SwitchToValuesDir(file_name);
+      
+      FileUtility::WriteString(fp, XML_HEADER_LINE);
+      Buffer buffer;
+      
+      Package *package_p = type_spec_p->package_p;
+      ResourceTable *table_p = package_p->table_p;
+      
+      for(size_t i = 0;i < entry_count;i++) {
+        if(IsEntryPresent(i) == false) {
+          continue; 
+        }
+        
+        ResourceEntry *entry_p = GetEntryPtr(i); 
+        
+        // Dimension entry must be not complex
+        if(entry_p->IsComplex() == true) {
+          ReportError(INVALID_DIMEN_ENTRY, i);
+        }
+        
+        // If the type of the value is dimension then we just print
+        // a dimension flag
+        if(entry_p->value.type == ResourceValue::DataType::DIMENSION) {
+          buffer.Append("<dimen name=\"");
+          package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+          buffer.Append("\">");
+        
+          table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+          
+          buffer.Append("</dimen>\n");
+          buffer.Append('\0');
+        } else {
+          buffer.Append("<item type=\"dimen\" name=\"");
+          package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+          buffer.Append("\">");
+          
+          table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+          
+          buffer.Append("</item>\n");
+          buffer.Append('\0');
+        }
         
         FileUtility::WriteString(fp, buffer.GetCharData(), 1);
         buffer.Reset();

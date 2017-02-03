@@ -122,6 +122,7 @@ enum ErrorCode : uint64_t {
   INVALID_STYLE_ENTRY,
   RESOURCE_ID_NOT_AVAILABLE, 
   INVALID_STRING_ENTRY,
+  INVALID_DIMEN_ENTRY,
 };
 
 // Error string table

@@ -284,8 +284,8 @@ class ResourceValue {
       } // switch
     } else {
       switch(unit) {
-        case COMPLEX_UNIT_FRACTION: buffer_p->Append("%%"); break;
-        case COMPLEX_UNIT_FRACTION_PARENT: buffer_p->Append("%%p"); break;
+        case COMPLEX_UNIT_FRACTION: buffer_p->Append("%"); break;
+        case COMPLEX_UNIT_FRACTION_PARENT: buffer_p->Append("%p"); break;
         default: {
           ReportError(UNKNOWN_FRACTION_UNIT, unit);
         } // default
