@@ -40,7 +40,7 @@ $(BUILD)/apk.o: $(SRC)/apk/apk.cpp $(SRC)/apk/apk.h
 $(BUILD)/xml.o: $(SRC)/res/xml.cpp $(SRC)/res/xml.h $(SRC)/res/res_base.h
 	g++ -c $(CXX_FLAG) $(SRC)/res/xml.cpp -o $(BUILD)/xml.o
 
-$(BUILD)/res_table.o: $(SRC)/res/res_table.cpp $(SRC)/res/res_table.h $(SRC)/res/res_base.h
+$(BUILD)/res_table.o: $(SRC)/res/res_table.cpp $(SRC)/res/res_table.h $(SRC)/res/res_base.h $(SRC)/res/res_value.h $(SRC)/res/type_config.h $(SRC)/common/utf.h
 	g++ -c $(CXX_FLAG) $(SRC)/res/res_table.cpp -o $(BUILD)/res_table.o
 
 $(BUILD)/package_group.o: $(SRC)/res/package_group.cpp $(SRC)/res/package_group.h
