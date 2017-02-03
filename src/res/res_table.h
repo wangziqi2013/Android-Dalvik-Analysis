@@ -872,10 +872,20 @@ class ResourceTable : public ResourceBase {
           ReportError(INVALID_ARRAY_ENTRY, i);
         }
         
-        // We have already asserted that the array must have at least
-        // one element, so we know the first field is valid
-        ResourceEntryField *field_p = entry_p->field_data;
-        const char *array_tag = nullptr;
+        // If there is no entry then we just close the tag at the same line 
+        // and continue to the next entry
+        if(entry_p->entry_count == 0) {
+          buffer.Append("<array name=\"");
+          package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+          
+          buffer.Append("\" />\n"); 
+          buffer.Append('\0');
+        
+          FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+          buffer.Reset();
+          
+          continue;
+        }
         
         // We use this as a sample value to determine the type 
         // of the array
@@ -895,6 +905,11 @@ class ResourceTable : public ResourceBase {
           value_p = &ref_entry_p->value;
         }
         
+        // We have already asserted that the array must have at least
+        // one element, so we know the first field is valid
+        ResourceEntryField *field_p = entry_p->field_data;
+        
+        const char *array_tag = nullptr;        
         if(value_p->type == ResourceValue::DataType::INT_DEC || \
            value_p->type == ResourceValue::DataType::INT_HEX) {
           array_tag = "integer-array";
