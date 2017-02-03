@@ -310,10 +310,6 @@ class ResourceTable : public ResourceBase {
     // we just resort to the default
     Buffer readable_name;
     
-    // This is the name of the base type, i.e. attr without any postfix
-    // This is also not a C string
-    Buffer base_type_name;
-    
     // Number of entries in this type table
     size_t entry_count;
     
@@ -330,7 +326,6 @@ class ResourceTable : public ResourceBase {
       header_p{nullptr},
       type_spec_p{nullptr},
       readable_name{INIT_BUFFER_LENGTH},
-      base_type_name{INIT_BUFFER_LENGTH},
       entry_count{0UL},
       offset_table{nullptr},
       data_p{nullptr}
@@ -375,6 +370,9 @@ class ResourceTable : public ResourceBase {
      * drawable, etc.
      */
     void WriteXml() {
+      // Retrieve the base type name
+      Buffer &base_type_name = *type_spec_p->GetBaseTypeName();
+      
       if(base_type_name == "attr") {
         WriteAttrXml("attrs.xml");
       } else if(base_type_name == "drawable") {
@@ -768,7 +766,7 @@ class ResourceTable : public ResourceBase {
       if(printable_entry_count == 0UL) {
 #ifndef NDEBUG
         dbg_printf("Skip resource type \"");
-        base_type_name.WriteToFile(stderr);
+        type_spec_p->GetBaseTypeName()->WriteToFile(stderr);
         if(HasDefaultTypeConfig() == false) {
           fputc('-', stderr);
           readable_name.WriteToFile(stderr); 
@@ -1359,6 +1357,7 @@ class ResourceTable : public ResourceBase {
    * class TypeSpec - General type specification on configurations
    */
   class TypeSpec {
+    static constexpr size_t BASE_TYPE_NAME_INIT_LENGTH = 16UL;
    public: 
     // This points to the type spec header
     TypeSpecHeader *header_p;
@@ -1394,8 +1393,16 @@ class ResourceTable : public ResourceBase {
       package_p{nullptr},
       entry_count{0UL},
       config_table{nullptr},
-      type_list{}
+      type_list{},
+      base_type_name{BASE_TYPE_NAME_INIT_LENGTH}
     {}
+    
+    /*
+     * GetBaseTypeName() - Returns the base type name buffer pointer
+     */
+    Buffer *GetBaseTypeName() {
+      return &base_type_name;
+    }
     
     /*
      * GetDefaultConfigType() - Returns the Type object pointer if it has
@@ -1574,7 +1581,7 @@ class ResourceTable : public ResourceBase {
         buffer_p->Append('@');
       }
       
-      buffer_p->Append(type.base_type_name);
+      buffer_p->Append(*type.type_spec_p->GetBaseTypeName());
       buffer_p->Append('/');
     
       // Append the name of the entry as the last component
@@ -2088,9 +2095,6 @@ class ResourceTable : public ResourceBase {
     type_p->header_p = type_header_p;
     type_p->type_spec_p = type_spec_p;
     type_header_p->config.GetName(&type_p->readable_name);
-    // Also write the base type name into the buffer
-    package_p->type_string_pool.AppendToBuffer(type_spec_p->type_id - 1, 
-                                               &type_p->base_type_name);
     type_p->entry_count = type_header_p->entry_count;
     
     // The offset table is just located after the header
