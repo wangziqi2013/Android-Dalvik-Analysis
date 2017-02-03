@@ -118,7 +118,8 @@ enum ErrorCode : uint64_t {
   INVALID_BOOL_ENTRY,
   ATTR_NOT_ENUM_FLAGS,
   
-  INVALID_ID_ENTRY = 55, 
+  INVALID_ID_ENTRY = 55,
+  INVALID_STYLE_ENTRY, 
 };
 
 // Error string table

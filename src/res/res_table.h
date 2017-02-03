@@ -1034,8 +1034,80 @@ class ResourceTable : public ResourceBase {
       return;
     }
     
-    void WriteStyleXml() {
+    /*
+     * WriteStyleXml() - Writes a style XML file
+     */
+    void WriteStyleXml(const char *file_name) {
+      FILE *fp = SwitchToValuesDir(file_name);
       
+      FileUtility::WriteString(fp, XML_HEADER_LINE);
+      Buffer buffer;
+      
+      Package *package_p = type_spec_p->package_p;
+      ResourceTable *table_p = package_p->table_p;
+      
+      for(size_t i = 0;i < entry_count;i++) {
+        if(IsEntryPresent(i) == false) {
+          continue; 
+        }
+        
+        ResourceEntry *entry_p = GetEntryPtr(i); 
+        
+        // Bool entry must be not complex
+        if(entry_p->IsComplex() == false) {
+          ReportError(INVALID_STYLE_ENTRY, i);
+        }
+        
+        buffer.Append("<style name=\"");
+        package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+        
+        // If there is no entry then this is a one line style
+        if(entry_p->entry_count == 0) {
+          buffer.Append("\" />\n");
+          buffer.Append('\0');
+          
+          FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+          buffer.Reset();
+          
+          continue;
+        } else {
+          buffer.Append("\">\n");
+          buffer.Append('\0');
+          
+          FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+          buffer.Reset();
+          
+          // For each field there is a item line
+          ResourceEntryField *field_p = entry_p->field_data;
+          for(size_t i = 0;i < entry_p->entry_count;i++) {
+            buffer.Append("<item name=\"");  
+            
+            // We use the key of the entry as the name of the item
+            ResourceEntry *name_entry_p = \
+              GetResourceEntry(field_p->name, &header_p->config);
+            
+            package_p->key_string_pool.AppendToBuffer(name_entry_p->key, 
+                                                      &buffer);
+            buffer.Append("\">");
+            
+            table_p->AppendResourceValueToBuffer(&field_p->value, &buffer);
+            buffer.Append("</item>\n");
+            buffer.Append('\0');
+            
+            FileUtility::WriteString(fp, buffer.GetCharData(), 2);
+            buffer.Reset();
+            
+            field_p++;
+          }
+          
+          FileUtility::WriteString(fp, "</style>\n", 1);
+        }
+      }
+      
+      FileUtility::WriteString(fp, RESOURCE_END_TAG);
+      FileUtility::CloseFile(fp);
+      
+      return;
     }
     
     /*

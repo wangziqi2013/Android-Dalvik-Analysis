@@ -84,6 +84,7 @@ const char *error_str_table[] = {
   
   //55
   "Invalid id entry (index: %lu)\n",
+  "Invalid style entry (index: %lu)\n",
 };
 
 /*
