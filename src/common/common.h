@@ -123,6 +123,8 @@ enum ErrorCode : uint64_t {
   RESOURCE_ID_NOT_AVAILABLE, 
   INVALID_STRING_ENTRY,
   INVALID_DIMEN_ENTRY,
+  
+  INVALID_COLOR_ENTRY = 60, 
 };
 
 // Error string table

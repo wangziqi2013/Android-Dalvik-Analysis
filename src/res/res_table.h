@@ -868,8 +868,7 @@ class ResourceTable : public ResourceBase {
         
         // Array entry must be complex, otherwise we could not
         // intepret it
-        if(entry_p->IsComplex() == false || \
-           entry_p->entry_count == 0) {
+        if(entry_p->IsComplex() == false) {
           ReportError(INVALID_ARRAY_ENTRY, i);
         }
         
@@ -902,7 +901,7 @@ class ResourceTable : public ResourceBase {
         } else if(value_p->type == ResourceValue::DataType::STRING) {
           array_tag = "string-array";
         } else {
-          ReportError(INVALID_ARRAY_ENTRY, i); 
+          array_tag = "array";
         }
         
         // Write the beginning tag first
@@ -1244,8 +1243,61 @@ class ResourceTable : public ResourceBase {
      * WriteColorXml() - Writes a color XML file
      */
     void WriteColorXml(const char *file_name) {
-      (void)file_name;
-      assert(false);
+      FILE *fp = SwitchToValuesDir(file_name);
+      
+      FileUtility::WriteString(fp, XML_HEADER_LINE);
+      Buffer buffer;
+      
+      Package *package_p = type_spec_p->package_p;
+      ResourceTable *table_p = package_p->table_p;
+      
+      for(size_t i = 0;i < entry_count;i++) {
+        if(IsEntryPresent(i) == false) {
+          continue; 
+        }
+        
+        ResourceEntry *entry_p = GetEntryPtr(i); 
+        
+        // Dimension entry must be not complex
+        if(entry_p->IsComplex() == true) {
+          ReportError(INVALID_COLOR_ENTRY, i);
+        }
+        
+        ResourceValue::DataType type = entry_p->value.type;
+         
+        // If the type of the value is dimension then we just print
+        // a dimension flag
+        if(type == ResourceValue::DataType::INT_COLOR_ARGB8 || \
+           type == ResourceValue::DataType::INT_COLOR_RGB8 || \
+           type == ResourceValue::DataType::INT_COLOR_ARGB4 || \
+           type == ResourceValue::DataType::INT_COLOR_RGB4) {
+          buffer.Append("<color name=\"");
+          package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+          buffer.Append("\">");
+        
+          table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+          
+          buffer.Append("</color>\n");
+          buffer.Append('\0');
+        } else {
+          buffer.Append("<item type=\"color\" name=\"");
+          package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+          buffer.Append("\">");
+          
+          table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+          
+          buffer.Append("</item>\n");
+          buffer.Append('\0');
+        }
+        
+        FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+        buffer.Reset();
+      }
+      
+      FileUtility::WriteString(fp, RESOURCE_END_TAG);
+      FileUtility::CloseFile(fp);
+      
+      return;
     }
     
     /*
