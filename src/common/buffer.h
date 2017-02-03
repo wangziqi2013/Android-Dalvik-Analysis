@@ -252,7 +252,7 @@ class Buffer {
    *
    * This function will flush the buffer, so it is relatively slow
    */
-  void WriteToFile(FILE *fp) {
+  void WriteToFile(FILE *fp) const {
     assert(fp != nullptr);
     
     size_t ret = fwrite(data_p, 1, current_length, fp);

@@ -371,7 +371,7 @@ class ResourceTable : public ResourceBase {
      */
     void WriteXml() {
       // Retrieve the base type name
-      Buffer &base_type_name = *type_spec_p->GetBaseTypeName();
+      const Buffer &base_type_name = *type_spec_p->GetBaseTypeName();
       
       if(base_type_name == "attr") {
         WriteAttrXml("attrs.xml");
@@ -1400,7 +1400,7 @@ class ResourceTable : public ResourceBase {
     /*
      * GetBaseTypeName() - Returns the base type name buffer pointer
      */
-    Buffer *GetBaseTypeName() {
+    inline Buffer *GetBaseTypeName() {
       return &base_type_name;
     }
     
