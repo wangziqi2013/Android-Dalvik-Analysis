@@ -1173,6 +1173,7 @@ class ResourceTable : public ResourceBase {
         buffer.Append('\0');
         
         FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+        buffer.Reset();
       }
       
       FileUtility::WriteString(fp, RESOURCE_END_TAG);
