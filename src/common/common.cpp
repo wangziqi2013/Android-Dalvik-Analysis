@@ -86,6 +86,7 @@ const char *error_str_table[] = {
   "Invalid id entry (index: %lu)\n",
   "Invalid style entry (index: %lu)\n",
   "Resource ID (0x%08X) is not availale\n",
+  "Invalid string entry (index: %lu)\n",
 };
 
 /*

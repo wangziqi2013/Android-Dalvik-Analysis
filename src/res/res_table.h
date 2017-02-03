@@ -401,6 +401,8 @@ class ResourceTable : public ResourceBase {
         WriteIdXml("ids.xml");
       } else if(base_type_name == "style") {
         WriteStyleXml("styles.xml"); 
+      } else if(base_type_name == "string") {
+        WriteStringXml("strings.xml");
       } else {
 #ifndef NDEBUG
         dbg_printf("Unknown attribute name: ");
@@ -1067,7 +1069,7 @@ class ResourceTable : public ResourceBase {
         
         ResourceEntry *entry_p = GetEntryPtr(i); 
         
-        // Bool entry must be not complex
+        // Style entry must be complex
         if(entry_p->IsComplex() == false) {
           ReportError(INVALID_STYLE_ENTRY, i);
         }
@@ -1128,6 +1130,49 @@ class ResourceTable : public ResourceBase {
           
           FileUtility::WriteString(fp, "</style>\n", 1);
         }
+      }
+      
+      FileUtility::WriteString(fp, RESOURCE_END_TAG);
+      FileUtility::CloseFile(fp);
+      
+      return;
+    }
+    
+    /*
+     * WriteStringXml() - Writes a string xml file
+     */
+    void WriteStringXml(const char *file_name) {
+      FILE *fp = SwitchToValuesDir(file_name);
+      
+      FileUtility::WriteString(fp, XML_HEADER_LINE);
+      Buffer buffer;
+      
+      Package *package_p = type_spec_p->package_p;
+      ResourceTable *table_p = package_p->table_p;
+      
+      for(size_t i = 0;i < entry_count;i++) {
+        if(IsEntryPresent(i) == false) {
+          continue; 
+        }
+        
+        ResourceEntry *entry_p = GetEntryPtr(i); 
+        
+        // String entry must be not complex
+        if(entry_p->IsComplex() == true) {
+          ReportError(INVALID_STRING_ENTRY, i);
+        }
+        
+        // Print the tag first
+        buffer.Append("<string name=\"");
+        package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+        buffer.Append("\">");
+        
+        table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+        
+        buffer.Append("</string>\n");
+        buffer.Append('\0');
+        
+        FileUtility::WriteString(fp, buffer.GetCharData(), 1);
       }
       
       FileUtility::WriteString(fp, RESOURCE_END_TAG);

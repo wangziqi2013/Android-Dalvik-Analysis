@@ -46,7 +46,7 @@ $(BUILD)/res_table.o: $(SRC)/res/res_table.cpp $(SRC)/res/res_table.h $(SRC)/res
 $(BUILD)/package_group.o: $(SRC)/res/package_group.cpp $(SRC)/res/package_group.h
 	g++ -c $(CXX_FLAG) $(SRC)/res/package_group.cpp -o $(BUILD)/package_group.o
 
-$(BUILD)/res_base.o: $(SRC)/res/res_base.cpp $(SRC)/res/res_base.h $(SRC)/res/res_value.h $(SRC)/res/type_config.h
+$(BUILD)/res_base.o: $(SRC)/res/res_base.cpp $(SRC)/res/res_base.h $(SRC)/res/res_value.h $(SRC)/res/type_config.h $(SRC)/common/utf.h
 	g++ -c $(CXX_FLAG) $(SRC)/res/res_base.cpp -o $(BUILD)/res_base.o
 
 prepare:
