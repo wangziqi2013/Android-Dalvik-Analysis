@@ -887,6 +887,10 @@ class ResourceTable : public ResourceBase {
           continue;
         }
         
+        // We have already asserted that the array must have at least
+        // one element, so we know the first field is valid
+        ResourceEntryField *field_p = entry_p->field_data;
+        
         // We use this as a sample value to determine the type 
         // of the array
         ResourceValue *value_p = &field_p->value;
@@ -904,10 +908,6 @@ class ResourceTable : public ResourceBase {
           
           value_p = &ref_entry_p->value;
         }
-        
-        // We have already asserted that the array must have at least
-        // one element, so we know the first field is valid
-        ResourceEntryField *field_p = entry_p->field_data;
         
         const char *array_tag = nullptr;        
         if(value_p->type == ResourceValue::DataType::INT_DEC || \
@@ -1380,6 +1380,11 @@ class ResourceTable : public ResourceBase {
     
     // Type values of different configurations
     std::vector<Type> type_list;
+    
+    // ASCII representation of the type name
+    // This is used by many routines to identify a type because type ID
+    // does not identify types across packages
+    Buffer base_type_name;
     
     /*
      * Constructor
@@ -1944,6 +1949,9 @@ class ResourceTable : public ResourceBase {
     type_spec_p->type_id = type_id;
     type_spec_p->entry_count = type_spec_header_p->entry_count;
     type_spec_p->config_table = type_spec_header_p->data;
+    
+    package_p->type_string_pool.AppendToBuffer(type_id - 1,
+                                               &type_spec_p->base_type_name);
 
     return type_id;
   }
