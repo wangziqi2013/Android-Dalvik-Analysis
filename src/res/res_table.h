@@ -397,6 +397,10 @@ class ResourceTable : public ResourceBase {
         WriteBoolXml("bools.xml");
       } else if(base_type_name == "color") {
         WriteColorXml("colors.xml");
+      } else if(base_type_name == "id") {
+        WriteIdXml("ids.xml");
+      } else if(base_type_name == "style") {
+        WriteStyleXml("styles.xml"); 
       } else {
 #ifndef NDEBUG
         dbg_printf("Unknown attribute name: ");
@@ -975,6 +979,63 @@ class ResourceTable : public ResourceBase {
       FileUtility::CloseFile(fp);
       
       return;
+    }
+
+    /*
+     * WriteIdXml() - Writes all ID information into a XML file
+     */
+    void WriteIdXml(const char *file_name) {
+      FILE *fp = SwitchToValuesDir(file_name);
+      
+      FileUtility::WriteString(fp, XML_HEADER_LINE);
+      Buffer buffer;
+      
+      // We need an extra buffer to hold the id value and check
+      // whether it is 0 length or not
+      Buffer id_value_buffer;
+      
+      Package *package_p = type_spec_p->package_p;
+      ResourceTable *table_p = package_p->table_p;
+      
+      for(size_t i = 0;i < entry_count;i++) {
+        if(IsEntryPresent(i) == false) {
+          continue; 
+        }
+        
+        ResourceEntry *entry_p = GetEntryPtr(i); 
+        
+        // ID entry must not be complex
+        if(entry_p->IsComplex() == true) {
+          ReportError(INVALID_ID_ENTRY, i);
+        }
+        
+        buffer.Append("<item type=\"id\" name=\"");
+        package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+        
+        table_p->AppendResourceValueToBuffer(&entry_p->value, &id_value_buffer);
+        if(id_value_buffer.GetLength() == 0UL) {
+          buffer.Append("\" />\n");
+        } else {
+          buffer.Append("\">");
+          buffer.Append(id_value_buffer);
+          buffer.Append("</item>\n"); 
+        }
+        
+        buffer.Append('\0');
+        
+        FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+        buffer.Reset();
+        id_value_buffer.Reset();
+      }
+      
+      FileUtility::WriteString(fp, RESOURCE_END_TAG);
+      FileUtility::CloseFile(fp);
+      
+      return;
+    }
+    
+    void WriteStyleXml() {
+      
     }
     
     /*
