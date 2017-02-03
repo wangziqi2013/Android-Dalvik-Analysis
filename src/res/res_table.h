@@ -1347,25 +1347,67 @@ class ResourceTable : public ResourceBase {
   static void GetResourceIdString(ResourceId id, 
                                   const TypeConfig *type_config_p,
                                   Buffer *buffer_p) {
-    // Use this to know which type instance is selected
-    Type *type_p = nullptr;
+    // Maybe in the future we will need this
+    (void)type_config_p;
     
-    // Get the entry pointer first (anyway we would need it because we 
-    // need the name of the entry)
-    ResourceEntry *entry_p = GetResourceEntry(id, type_config_p, &type_p);
-    assert(type_p != nullptr);
+    uint8_t package_id = id.package_id;
+    uint8_t type_id = id.type_id;
+    uint16_t entry_id = id.entry_id;
     
-    buffer_p->Append('@');
-    // Append the content of another buffer
-    // Remember that the base type name is not a C-String
-    buffer_p->Append(type_p->base_type_name);
-    buffer_p->Append('/');
+    uint8_t type_index = type_id - 1;
+    uint16_t entry_index = entry_id;
     
-    // Need its string pool to print the name
-    Package *package_p = type_p->type_spec_p->package_p;
+    // Since this function is static we always use the global package group
+    ResourceTable *table_p = package_group.GetResourceTable(package_id);
+    auto it = table_p->package_map.find(package_id);
+    if(it == table_p->package_map.end()) {
+      ReportError(PACKAGE_ID_NOT_FOUND, static_cast<uint32_t>(package_id)); 
+    }
     
-    // Append the name of the entry as the last component
-    package_p->key_string_pool.AppendToBuffer(entry_p->key, buffer_p);
+    // This is the package pointer found
+    Package *package_p = it->second;
+    
+    // Then verify whether the type ID is correct
+    if(type_index >= package_p->GetTypeCount()) {
+      ReportError(INVALID_TYPE_ID, static_cast<uint32_t>(type_id));
+    }
+    
+    // This is a pointer to the type spec header
+    TypeSpec *type_spec_p = &package_p->type_spec_list[type_index];
+    
+    // Then for each type in the type spec's list loop to find the most
+    // appropriate one
+    for(Type &type : type_spec_p->type_list) {
+      if(entry_index >= type.entry_count) {
+        dbg_printf("Entry index is greater than the"
+                   " entry count of type instance\n");
+        continue;
+      }
+      
+      // Entry is not present - try next
+      if(type.IsEntryPresent(entry_index) == false) {
+        continue;
+      }
+      
+      // This is the entry whose name we are using
+      ResourceEntry *entry_p = type.GetEntryPtr(entry_index);
+      
+      if(package_id == 0x01) {
+        buffer_p->Append("@android:");
+      } else {
+        buffer_p->Append('@');
+      }
+      
+      buffer_p->Append(type.base_type_name);
+      buffer_p->Append('/');
+    
+      // Append the name of the entry as the last component
+      package_p->key_string_pool.AppendToBuffer(entry_p->key, buffer_p);
+      
+      return;
+    }
+    
+    ReportError(RESOURCE_ID_NOT_AVAILABLE, id.data);
     
     return;
   }

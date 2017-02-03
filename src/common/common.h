@@ -119,7 +119,8 @@ enum ErrorCode : uint64_t {
   ATTR_NOT_ENUM_FLAGS,
   
   INVALID_ID_ENTRY = 55,
-  INVALID_STYLE_ENTRY, 
+  INVALID_STYLE_ENTRY,
+  RESOURCE_ID_NOT_AVAILABLE, 
 };
 
 // Error string table
