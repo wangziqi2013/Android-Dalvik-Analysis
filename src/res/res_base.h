@@ -63,7 +63,9 @@ static_assert(sizeof(ResourceId) == sizeof(uint32_t),
               "Invalid size of resource ID");
 
 // This is implemented in res_table.cpp
-void GetResourceIdStringWrapper(ResourceId id, Buffer *buffer_p);
+void GetResourceIdStringWrapper(ResourceId id, 
+                                const TypeConfig *type_config_p, 
+                                Buffer *buffer_p);
 
 /*
  * class ResourceBase - Represents common data structure and procedures for
@@ -381,6 +383,7 @@ class ResourceBase {
    */
   void AppendResourceValueToBuffer(ResourceValue *value_p, 
                                    Buffer *buffer_p, 
+                                   const TypeConfig *type_config_p=nullptr,
                                    bool resolve_reference=true) {
     ResourceValue::DataType type = value_p->type;
     
@@ -395,7 +398,12 @@ class ResourceBase {
         ResourceId id;
         id.data = value_p->data;
         
-        GetResourceIdStringWrapper(id, buffer_p);
+        // If it is a null reference we just print @null to the buffer
+        if(id.data == 0x00000000) {
+          buffer_p->Append("@null"); 
+        } else {
+          GetResourceIdStringWrapper(id, type_config_p, buffer_p);
+        }
       } else {
         buffer_p->Printf("@0x%08X", value_p->data); 
       }

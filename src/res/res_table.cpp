@@ -11,8 +11,10 @@ namespace android_dalvik_analysis {
  * This is declared for class ResourceBase to call a static member function
  * inside class ResourceTable
  */
-void GetResourceIdStringWrapper(ResourceId id, Buffer *buffer_p) {
-  ResourceTable::GetResourceIdString(id, buffer_p);
+void GetResourceIdStringWrapper(ResourceId id, 
+                                const TypeConfig *type_config_p,
+                                Buffer *buffer_p) {
+  ResourceTable::GetResourceIdString(id, type_config_p, buffer_p);
   
   return;
 }

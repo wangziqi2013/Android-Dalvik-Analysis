@@ -537,7 +537,9 @@ class ResourceTable : public ResourceBase {
         
         buffer_p->Append("\" value=\"");
         
-        table_p->AppendResourceValueToBuffer(&field_p->value, buffer_p);
+        table_p->AppendResourceValueToBuffer(&field_p->value, 
+                                             buffer_p, 
+                                             &header_p->config);
         buffer_p->Append("\" />\n");
         buffer_p->Append('\0');
         
@@ -585,13 +587,17 @@ class ResourceTable : public ResourceBase {
         } else if(name == ResourceEntryField::ATTR_MIN) {
           buffer_p->Append(" min=\"");
           
-          table_p->AppendResourceValueToBuffer(&field_p->value, buffer_p);
+          table_p->AppendResourceValueToBuffer(&field_p->value, 
+                                               buffer_p, 
+                                               &header_p->config);
           
           buffer_p->Append('\"');
         } else if(name == ResourceEntryField::ATTR_MAX) {
           buffer_p->Append(" max=\"");
           
-          table_p->AppendResourceValueToBuffer(&field_p->value, buffer_p);
+          table_p->AppendResourceValueToBuffer(&field_p->value, 
+                                               buffer_p, 
+                                               &header_p->config);
           
           buffer_p->Append('\"');
         } else if(name == ResourceEntryField::ATTR_L10N) {
@@ -821,7 +827,9 @@ class ResourceTable : public ResourceBase {
         package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
         buffer.Append("\">");
         
-        table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+        table_p->AppendResourceValueToBuffer(&entry_p->value, 
+                                             &buffer,
+                                             &header_p->config);
         
         buffer.Append("</item>\n");
         buffer.WriteToFile(fp);
@@ -913,7 +921,9 @@ class ResourceTable : public ResourceBase {
           }
           
           buffer.Append("<item>");
-          package_p->table_p->AppendResourceValueToBuffer(&field_p->value, &buffer);
+          package_p->table_p->AppendResourceValueToBuffer(&field_p->value, 
+                                                          &buffer,
+                                                          &header_p->config);
           buffer.Append("</item>");
           
           buffer.Append('\n');
@@ -966,7 +976,9 @@ class ResourceTable : public ResourceBase {
         package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
         buffer.Append("\">");
         
-        table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+        table_p->AppendResourceValueToBuffer(&entry_p->value, 
+                                             &buffer, 
+                                             &header_p->config);
         
         buffer.Append("</bool>\n");
         buffer.Append('\0');
@@ -1012,7 +1024,9 @@ class ResourceTable : public ResourceBase {
         buffer.Append("<item type=\"id\" name=\"");
         package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
         
-        table_p->AppendResourceValueToBuffer(&entry_p->value, &id_value_buffer);
+        table_p->AppendResourceValueToBuffer(&entry_p->value, 
+                                             &id_value_buffer,
+                                             &header_p->config);
         if(id_value_buffer.GetLength() == 0UL) {
           buffer.Append("\" />\n");
         } else {
@@ -1061,6 +1075,15 @@ class ResourceTable : public ResourceBase {
         buffer.Append("<style name=\"");
         package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
         
+        // For styles we also need to append parent information as a reference
+        // string
+        if(entry_p->parent_id.data != 0x00000000) {                   
+          buffer.Append("\" parent=\"");
+          GetResourceIdString(entry_p->parent_id, 
+                              &header_p->config, 
+                              &buffer);
+        }
+        
         // If there is no entry then this is a one line style
         if(entry_p->entry_count == 0) {
           buffer.Append("\" />\n");
@@ -1088,9 +1111,12 @@ class ResourceTable : public ResourceBase {
             
             package_p->key_string_pool.AppendToBuffer(name_entry_p->key, 
                                                       &buffer);
+                                                      
             buffer.Append("\">");
             
-            table_p->AppendResourceValueToBuffer(&field_p->value, &buffer);
+            table_p->AppendResourceValueToBuffer(&field_p->value, 
+                                                 &buffer, 
+                                                 &header_p->config);
             buffer.Append("</item>\n");
             buffer.Append('\0');
             
@@ -1319,13 +1345,14 @@ class ResourceTable : public ResourceBase {
    * contents before calling this function
    */
   static void GetResourceIdString(ResourceId id, 
+                                  const TypeConfig *type_config_p,
                                   Buffer *buffer_p) {
     // Use this to know which type instance is selected
     Type *type_p = nullptr;
     
     // Get the entry pointer first (anyway we would need it because we 
     // need the name of the entry)
-    ResourceEntry *entry_p = GetResourceEntry(id, nullptr, &type_p);
+    ResourceEntry *entry_p = GetResourceEntry(id, type_config_p, &type_p);
     assert(type_p != nullptr);
     
     buffer_p->Append('@');
@@ -1778,7 +1805,7 @@ class ResourceTable : public ResourceBase {
           
           buffer.Reset();
           // Append value but do not resolve reference
-          AppendResourceValueToBuffer(&field_p->value, &buffer, false);
+          AppendResourceValueToBuffer(&field_p->value, &buffer, nullptr, false);
           dbg_printf("                Printed value \"");
           buffer.Append("\"\n");
           buffer.WriteToFile(stderr);
@@ -1796,7 +1823,10 @@ class ResourceTable : public ResourceBase {
                    resource_entry_p->value.data);
         
         buffer.Reset();
-        AppendResourceValueToBuffer(&resource_entry_p->value, &buffer, false);
+        AppendResourceValueToBuffer(&resource_entry_p->value, 
+                                    &buffer, 
+                                    nullptr, 
+                                    false);
         dbg_printf("            Printed value \"");
         buffer.Append("\"\n");
         buffer.WriteToFile(stderr);
