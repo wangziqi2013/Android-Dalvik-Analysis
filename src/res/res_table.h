@@ -846,6 +846,17 @@ class ResourceTable : public ResourceBase {
       return;
     }
     
+    // Store common array tag here
+    static constexpr const char *ARRAY_TAG_LIST[] = {
+      "string-array",
+      "integer-array",
+      "array",
+    };
+        
+    static constexpr int STRING_ARRAY_TYPE_INDEX = 0;
+    static constexpr int INTEGER_ARRAY_TYPE_INDEX = 1;
+    static constexpr int OTHER_ARRAY_TYPE_INDEX = 2;
+    
     /*
      * WriteArrayXml() - Writes arrays.xml file
      */
@@ -892,29 +903,32 @@ class ResourceTable : public ResourceBase {
         // We use this as a sample value to determine the type 
         // of the array
         ResourceValue *value_p = &field_p->value;
+        const char *array_tag = nullptr;     
+        
+        // Next determine the array tag
         if(field_p->value.type == ResourceValue::DataType::REFERENCE) {
           ResourceId id;
           id.data = field_p->value.data;
-          ResourceEntry *ref_entry_p = \
-            GetResourceEntry(id, &header_p->config, nullptr);
           
-          if(ref_entry_p->IsComplex() == true) {
-            dbg_printf("The reference type is a complex value\n");
+          const Buffer &base_type_name = *GetResourceIdBaseTypeName(id);
             
-            ReportError(INVALID_ARRAY_ENTRY, i);
+          if(base_type_name == "string") {
+            array_tag = ARRAY_TAG_LIST[STRING_ARRAY_TYPE_INDEX];
+          } else if(base_type_name == "integer") {
+            array_tag = ARRAY_TAG_LIST[INTEGER_ARRAY_TYPE_INDEX];
+          } else {
+            array_tag = ARRAY_TAG_LIST[OTHER_ARRAY_TYPE_INDEX]; 
           }
-          
-          value_p = &ref_entry_p->value;
-        }
-        
-        const char *array_tag = nullptr;        
-        if(value_p->type == ResourceValue::DataType::INT_DEC || \
-           value_p->type == ResourceValue::DataType::INT_HEX) {
-          array_tag = "integer-array";
-        } else if(value_p->type == ResourceValue::DataType::STRING) {
-          array_tag = "string-array";
         } else {
-          array_tag = "array";
+          if(value_p->type == ResourceValue::DataType::INT_DEC || \
+             value_p->type == ResourceValue::DataType::INT_HEX) {
+            array_tag = ARRAY_TAG_LIST[INTEGER_ARRAY_TYPE_INDEX];
+          } else if(value_p->type == ResourceValue::DataType::STRING) {
+            array_tag = ARRAY_TAG_LIST[STRING_ARRAY_TYPE_INDEX];
+          } else {
+            // Simple type other than strings and integers
+            array_tag = ARRAY_TAG_LIST[OTHER_ARRAY_TYPE_INDEX]; 
+          } 
         }
         
         // Write the beginning tag first
