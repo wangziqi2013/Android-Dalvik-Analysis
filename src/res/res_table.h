@@ -525,114 +525,20 @@ class ResourceTable : public ResourceBase {
                            Buffer *buffer_p,
                            FILE *fp);
     
-    /*
-     * WriteColorXml() - Writes a color XML file
-     */
-    void WriteColorXml(const char *file_name) {
-      FILE *fp = SwitchToValuesDir(file_name);
-      
-      FileUtility::WriteString(fp, XML_HEADER_LINE);
-      Buffer buffer;
-      
-      Package *package_p = type_spec_p->package_p;
-      ResourceTable *table_p = package_p->table_p;
-      
-      for(size_t i = 0;i < entry_count;i++) {
-        if(IsEntryPresent(i) == false) {
-          continue; 
-        }
-        
-        ResourceEntry *entry_p = GetEntryPtr(i); 
-        
-        // Dimension entry must be not complex
-        if(entry_p->IsComplex() == true) {
-          ReportError(INVALID_COLOR_ENTRY, i);
-        }
-        
-        ResourceValue::DataType type = entry_p->value.type;
-         
-        // If the type of the value is dimension then we just print
-        // a dimension flag
-        if(type == ResourceValue::DataType::INT_COLOR_ARGB8 || \
-           type == ResourceValue::DataType::INT_COLOR_RGB8 || \
-           type == ResourceValue::DataType::INT_COLOR_ARGB4 || \
-           type == ResourceValue::DataType::INT_COLOR_RGB4) {
-          WriteColorTagLine(table_p, package_p, entry_p, &buffer, fp);
-          
-          continue;
-        } else if(type == ResourceValue::DataType::REFERENCE) {
-          ResourceId id;
-          id.data = entry_p->value.data;
-          
-          // If the simple entry is a reference then we use the value's 
-          // data as a refrence ID and get its base type name
-          const Buffer &base_type_name = *GetResourceIdBaseTypeName(id);
-          
-          // If the reference is from "color" type then also identify it as
-          // a color (which might be another reference, but we do not 
-          // resolve reference at this stage)
-          if(base_type_name == "color") {
-            WriteColorTagLine(table_p, package_p, entry_p, &buffer, fp);
-            
-            continue;
-          }
-        }
-          
-        buffer.Append("<item type=\"color\" name=\"");
-        package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
-        buffer.Append("\">");
-        
-        table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
-        
-        buffer.Append("</item>\n");
-        buffer.Append('\0');
-        
-        FileUtility::WriteString(fp, buffer.GetCharData(), 1);
-        buffer.Reset();
-      }
-      
-      FileUtility::WriteString(fp, RESOURCE_END_TAG);
-      FileUtility::CloseFile(fp);
-      
-      return;
-    }
+    // Writes color type information into a XML file
+    void WriteColorXml(const char *file_name);
     
-    /*
-     * WriteLayoutXml() - This file does not write layouts.xml file
-     *                    but instead it decompiles the binary XML 
-     *                    indicated inside resource entries
-     */
-    void ProcessLayoutXml() {
-      // TO BE IMPLEMENTED
-      return;
-    }
+    // Process layout type xmls
+    void ProcessLayoutXml();
     
-    /*
-     * WriteAnimXml() - Decompile the animation XML file recorded inside 
-     *                  the entries
-     */
-    void ProcessAnimXml() {
-      // TO BE IMPLEMENTED
-      return;
-    }
+    // Process animation XMLs
+    void ProcessAnimXml();
     
-    /*
-     * WriteXmlTypeXml() - Decompile the XML type XML file recorded inside 
-     *                     the entries
-     */
-    void ProcessXmlTypeXml() {
-      // TO BE IMPLEMENTED
-      return;
-    }
+    // Process XML type files
+    void ProcessXmlTypeXml();
     
-    /*
-     * ProcessRawType() - Decompile the raw type file recorded inside 
-     *                    the entries
-     */
-    void ProcessRawType() {
-      // TO BE IMPLEMENTED
-      return;
-    }
+    // Processes raw type files
+    void ProcessRawType();
   };
   
   /*
