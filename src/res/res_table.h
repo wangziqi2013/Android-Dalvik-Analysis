@@ -542,6 +542,9 @@ class ResourceTable : public ResourceBase {
     
     // Process XML files inside animator type
     void ProcessAnimatorXml();
+    
+    // Process XML files inside interpolator type
+    void ProcessInterpolatorXml();
   };
   
   /*
