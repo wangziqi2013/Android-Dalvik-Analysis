@@ -382,5 +382,70 @@ void TYPE::WriteAttrXml(const char *file_name) {
   return;
 }
 
+/*
+ * WriteDrawableXml() - Writes drawable as a XML file
+ *
+ * Note that not all drawables are written into the XML. In particular,
+ * we do not extract file name represented as strings into the XML
+ *
+ * A consequence of selected extraction is that we might directly
+ * jump the file and does not create the /values directory and the file
+ * if there is nothing to be printed for the current configuration
+ */
+void TYPE::WriteDrawableXml(const char *file_name) {
+  // If there is nothing to print just return without creating
+  // the path
+  if(HasNonStringDrawableEntry() == false) {
+    return; 
+  }
+  
+  FILE *fp = SwitchToValuesDir(file_name);
+  
+  FileUtility::WriteString(fp, XML_HEADER_LINE);
+  Buffer buffer;
+  
+  // Need its string pool
+  Package *package_p = type_spec_p->package_p;
+  ResourceTable *table_p = package_p->table_p;
+  
+  // Basically the same for every resource type, just copied from 
+  // another function
+  for(size_t i = 0;i < entry_count;i++) {
+    if(IsEntryPresent(i) == false) {
+      continue; 
+    }
+    
+    ResourceEntry *entry_p = GetEntryPtr(i); 
+    
+    if(entry_p->IsComplex() == true) {
+      ReportError(INVALID_DRAWABLE_ENTRY, i);
+    } else if(entry_p->value.type == ResourceValue::DataType::STRING) {
+      continue;
+    }
+    
+    // After this point we know the entry is not string and is valid
+    
+    FileUtility::WriteString(fp, "<item type=\"drawable\" name=\"", 1);
+    
+    package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+    buffer.Append("\">");
+    
+    table_p->AppendResourceValueToBuffer(&entry_p->value, 
+                                         &buffer,
+                                         &header_p->config);
+    
+    buffer.Append("</item>\n");
+    buffer.WriteToFile(fp);
+    
+    // Clear all previous contents
+    buffer.Reset();
+  }
+  
+  FileUtility::WriteString(fp, RESOURCE_END_TAG);
+  FileUtility::CloseFile(fp);
+  
+  return;
+}
+
 } // namespace android_dalvik_analysis
 } // namespace wangziqi2013
