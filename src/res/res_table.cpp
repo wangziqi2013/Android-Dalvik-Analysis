@@ -154,6 +154,233 @@ void TYPE::PrintAttrFormat(Buffer *buffer_p, uint32_t format) {
   return;
 }
 
+/*
+ * WriteAttrEnumFlags() - Writes nested attr types, i.e. enum or flags
+ *                        to the file pointer
+ */
+void TYPE::WriteAttrEnumFlags(FILE *fp,
+                              Buffer *buffer_p, 
+                              uint32_t format,
+                              ResourceEntryField *field_p,
+                              uint32_t entry_count) {
+  // Need this to print the name of another entry
+  Package *package_p = type_spec_p->package_p;
+  
+  const char *tag = nullptr; 
+  
+  if((format & ResourceEntryField::TYPE_ENUM) != 0x00000000) {
+    tag = "<enum name=\"";
+  } else {
+    tag = "<flag name=\"";
+  }
+  
+  for(uint32_t i = 0;i < entry_count;i++) {
+    // If it is a type enum then print it at the 2nd ident level
+    buffer_p->Append(tag);
+    
+    ResourceTable *table_p = \
+      package_group.GetResourceTable(field_p->name.package_id);
+    ResourceEntry *entry_p = \
+      table_p->GetResourceEntry(field_p->name, &header_p->config);
+      
+    package_p->key_string_pool.AppendToBuffer(entry_p->key, buffer_p);
+    
+    buffer_p->Append("\" value=\"");
+    
+    table_p->AppendResourceValueToBuffer(&field_p->value, 
+                                         buffer_p, 
+                                         &header_p->config);
+    buffer_p->Append("\" />\n");
+    buffer_p->Append('\0');
+    
+    FileUtility::WriteString(fp, buffer_p->GetCharData(), 2);
+    
+    field_p++;
+    
+    // Must do this for every iteration otherwise we repeat the 
+    // same content
+    buffer_p->Reset(); 
+  }
+  
+  return;
+}
+
+/*
+ * PrintAttrOther() - Prints everything that is not an attribute flags
+ *                    or enum
+ *
+ * Accepts the pointer to the first field entry, and returns the 
+ * number of fields processed
+ */
+size_t TYPE::PrintAttrOther(ResourceEntryField *field_p,
+                            ResourceEntry *entry_p,
+                            ResourceTable *table_p,
+                            Buffer *buffer_p,
+                            uint32_t format_mask) {
+  size_t processed_entry = 0UL;
+  
+  // Try to loop over all entry fields. We may break halfway
+  // if there is a resource ID
+  for(size_t i = 0;i < entry_p->entry_count;i++) {
+    uint32_t name = field_p->name.data;
+    
+    if(name == ResourceEntryField::ATTR_TYPE) {
+      // Only prints if there is at least one type specified
+      // It is possible to have none, if there is a flags or enum
+      // following
+      if((format_mask & \
+          ResourceEntryField::TYPE_ANY) != 0x00000000) {
+        buffer_p->Append(" format=\"");
+        PrintAttrFormat(buffer_p, format_mask);
+        buffer_p->Append('\"');
+      }
+    } else if(name == ResourceEntryField::ATTR_MIN) {
+      buffer_p->Append(" min=\"");
+      
+      table_p->AppendResourceValueToBuffer(&field_p->value, 
+                                           buffer_p, 
+                                           &header_p->config);
+      
+      buffer_p->Append('\"');
+    } else if(name == ResourceEntryField::ATTR_MAX) {
+      buffer_p->Append(" max=\"");
+      
+      table_p->AppendResourceValueToBuffer(&field_p->value, 
+                                           buffer_p, 
+                                           &header_p->config);
+      
+      buffer_p->Append('\"');
+    } else if(name == ResourceEntryField::ATTR_L10N) {
+      buffer_p->Append(" localization=\"");
+      
+      // Then print the corresponding value for localization
+      if(field_p->value.data == ResourceEntryField::L10N_SUGGESTED) {
+        buffer_p->Append("suggested\""); 
+      } else if(field_p->value.data == \
+                ResourceEntryField::L10N_NOT_REQUIRED) {
+        buffer_p->Append("not_required\"");
+      } else {
+        ReportError(INVALID_ATTR_ENTRY, "localization settings unknown");
+      } 
+    } else if(name == ResourceEntryField::ATTR_OTHER || \
+              name == ResourceEntryField::ATTR_ZERO || \
+              name == ResourceEntryField::ATTR_ONE || \
+              name == ResourceEntryField::ATTR_TWO || \
+              name == ResourceEntryField::ATTR_FEW || \
+              name == ResourceEntryField::ATTR_MANY) {
+      // Don't know how to process it
+      assert(false);
+    } else {
+      break; 
+    }
+    
+    processed_entry++;
+    field_p++;
+  } // for 
+  
+  return processed_entry;
+}
+
+/*
+ * WriteAttrXml() - Treat this as an attribute type resource and write XML
+ *
+ * We try to create and enter the directory res/values-???/ where ??? is the
+ * type information, and then create an XML file named "attrs.xml"
+ *
+ * Note that this function takes the file name tobe written since the file
+ * name is different from what is recorded in the type string pool
+ */
+void TYPE::WriteAttrXml(const char *file_name) {
+  FILE *fp = SwitchToValuesDir(file_name);
+  
+  FileUtility::WriteString(fp, XML_HEADER_LINE);
+  
+  // We re-use this buffer for each entry and rewind it to 
+  // the beginning everytime
+  Buffer buffer;
+  
+  // Then loop through all attributes and print them to the file 
+  for(size_t i = 0;i < entry_count;i++) {
+    if(IsEntryPresent(i) == false) {
+      continue;
+    } 
+    
+    ResourceEntry *entry_p = GetEntryPtr(i);
+    
+    // Attributes must be complex because we want to know its format
+    if(entry_p->IsComplex() == false) {
+      ReportError(INVALID_ATTR_ENTRY, "Attribute entry must be complex"); 
+    } else if(entry_p->entry_count == 0) {
+      ReportError(INVALID_ATTR_ENTRY, 
+                  "Attribute entry must have at least 1 field"); 
+    } else if(entry_p->parent_id.data != 0x00000000) {
+      ReportError(INVALID_ATTR_ENTRY, 
+                  "Attribute parent ID must be 0"); 
+    }
+    
+    Package *package_p = type_spec_p->package_p;
+    ResourceTable *table_p = package_p->table_p;
+    
+    // First print name:
+    buffer.Append("<attr name=\"");
+    package_p->key_string_pool.AppendToBuffer(entry_p->key, 
+                                              &buffer);
+    buffer.Append('\"');
+    
+    // This points to the only field
+    ResourceEntryField *field_p = entry_p->field_data; 
+    
+    // This describes what will follow
+    assert(field_p->name.data == ResourceEntryField::ATTR_TYPE);
+    
+    // This is a bit mask that specifies the format of data allowed
+    uint32_t format_mask = field_p->value.data;
+    
+    // This flag indicates whether there are enum or flags after all 
+    // other entries are processed
+    bool has_enum_or_flags = false;
+    if((format_mask & \
+        (ResourceEntryField::TYPE_ENUM | \
+         ResourceEntryField::TYPE_FLAGS)) != 0x00000000) {
+      has_enum_or_flags = true;       
+    }
+    
+    // Print all other stuff and then return the number of fields
+    // having been processed
+    size_t processed_entry = \
+      PrintAttrOther(field_p, entry_p, table_p, &buffer, format_mask);
+    
+    if(has_enum_or_flags == false) {
+      buffer.Append(" />\n");
+    } else {
+      buffer.Append(">\n");
+    }
+            
+    // Terminate this string
+    buffer.Append('\0');
+    // Write with identation level = 1
+    FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+    buffer.Reset();
+    
+    if(has_enum_or_flags == true) {          
+      // It is an array, so need to pass the starting element and 
+      // entry count
+      WriteAttrEnumFlags(fp,
+                         &buffer, 
+                         format_mask, 
+                         field_p + processed_entry, 
+                         entry_p->entry_count - processed_entry);
+      
+      FileUtility::WriteString(fp, "</attr>\n", 1);
+      buffer.Reset();
+    }
+  } // loop through all entries
+  
+  FileUtility::WriteString(fp, RESOURCE_END_TAG);
+  FileUtility::CloseFile(fp);
+  
+  return;
+}
 
 } // namespace android_dalvik_analysis
 } // namespace wangziqi2013
