@@ -539,6 +539,9 @@ class ResourceTable : public ResourceBase {
     
     // Processes raw type files
     void ProcessRawType();
+    
+    // Process XML files inside animator type
+    void ProcessAnimatorXml();
   };
   
   /*

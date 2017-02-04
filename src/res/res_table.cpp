@@ -70,6 +70,8 @@ void TYPE::WriteXml() {
     WriteStringXml("strings.xml");
   } else if(base_type_name == "dimen") {
     WriteDimenXml("dimens.xml");
+  } else if(base_type_name == "animator") {
+    ProcessAnimatorXml();
   } else {
 #ifndef NDEBUG
     dbg_printf("Unknown attribute name: ");
@@ -961,6 +963,14 @@ void TYPE::ProcessXmlTypeXml() {
  *                    the entries
  */
 void TYPE::ProcessRawType() {
+  // TO BE IMPLEMENTED
+  return;
+}
+
+/*
+ * ProcessAnimatorXml() - Processes animator type XMLs
+ */
+void TYPE::ProcessAnimatorXml() {
   // TO BE IMPLEMENTED
   return;
 }
