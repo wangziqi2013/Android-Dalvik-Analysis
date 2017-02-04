@@ -1596,6 +1596,42 @@ class ResourceTable : public ResourceBase {
   }
   
   /*
+   * GetResourceIdBaseTypeName() - Returns a buffer indicating the type name
+   *                               of a certain resource ID
+   *
+   * Since type name is stored inside the TypeSpec class, we do not iterate 
+   * over types, which is an optimization over the traditional 
+   * GetResourceEntry()
+   */
+  static Buffer *GetResourceIdBaseTypeName(ResourceId id) {
+    uint8_t package_id = id.package_id;
+    uint8_t type_id = id.type_id;
+    
+    // Type index starts at 1 because we use type = 0 as invalid indicator
+    uint8_t type_index = type_id - 1;
+    
+    // Since this function is static we always use the global package group
+    ResourceTable *table_p = package_group.GetResourceTable(package_id);
+    auto it = table_p->package_map.find(package_id);
+    if(it == table_p->package_map.end()) {
+      ReportError(PACKAGE_ID_NOT_FOUND, static_cast<uint32_t>(package_id)); 
+    }
+    
+    // This is the package pointer found
+    Package *package_p = it->second;
+    
+    // Then verify whether the type ID is correct
+    if(type_index >= package_p->GetTypeCount()) {
+      ReportError(INVALID_TYPE_ID, static_cast<uint32_t>(type_id));
+    }
+    
+    // This is a pointer to the type spec header
+    TypeSpec *type_spec_p = &package_p->type_spec_list[type_index];
+    
+    return &type_spec_p->base_type_name; 
+  }
+  
+  /*
    * GetResourceEntry() - Returns the resource entry pointer given an ID
    *
    * Since each resource has a unique resource identifier we could locate them
