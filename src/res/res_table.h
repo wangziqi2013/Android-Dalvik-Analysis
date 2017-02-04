@@ -363,60 +363,9 @@ class ResourceTable : public ResourceBase {
                                                offset_table[entry_id]);
     }
     
-    /*
-     * WriteXml() - Writes an XML file that represents the structure of the
-     *              current type
-     *
-     * The XML file is written according to the type of the resource. We
-     * hardcode the format for each type and its identifier, e.g. attr, string,
-     * drawable, etc.
-     */
-    void WriteXml() {
-      // Retrieve the base type name
-      const Buffer &base_type_name = *type_spec_p->GetBaseTypeName();
-      
-      if(base_type_name == "attr") {
-        WriteAttrXml("attrs.xml");
-      } else if(base_type_name == "drawable") {
-        WriteDrawableXml("drawbles.xml");
-      } else if(base_type_name == "layout") {
-        // Decompile binary XML
-        ProcessLayoutXml();
-      } else if(base_type_name == "anim") {
-        // Decompile binary XML
-        ProcessAnimXml();
-      } else if(base_type_name == "xml") {
-        // Decompile binary XML
-        ProcessXmlTypeXml();
-      } else if(base_type_name == "raw") {
-        // Do nothing regarding raw file type
-        ProcessRawType();
-      } else if(base_type_name == "array") {
-        WriteArrayXml("arrays.xml");
-      } else if(base_type_name == "bool") {
-        WriteBoolXml("bools.xml");
-      } else if(base_type_name == "color") {
-        WriteColorXml("colors.xml");
-      } else if(base_type_name == "id") {
-        WriteIdXml("ids.xml");
-      } else if(base_type_name == "style") {
-        WriteStyleXml("styles.xml"); 
-      } else if(base_type_name == "string") {
-        WriteStringXml("strings.xml");
-      } else if(base_type_name == "dimen") {
-        WriteDimenXml("dimens.xml");
-      } else {
-#ifndef NDEBUG
-        dbg_printf("Unknown attribute name: ");
-        base_type_name.WriteToFile(stderr);
-        fprintf(stderr, "\n");
-#endif
-
-        ReportError(UNKNOWN_TYPE_TO_WRITE_XML); 
-      }
-      
-      return;
-    }
+    // Entry point of all write xml functions. It dispatches control
+    // based on the base type
+    void WriteXml(); 
     
     static constexpr const char *RES_PATH = "res";
     static constexpr const char *VALUE_PATH_PREFIX = "values";
