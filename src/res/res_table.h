@@ -416,46 +416,9 @@ class ResourceTable : public ResourceBase {
       return fp;
     }
     
-    /*
-     * PrintAttrFormat() - Prints the format of attributes into the buffer
-     */
-    void PrintAttrFormat(Buffer *buffer_p, uint32_t format) {
-      if(format & ResourceEntryField::TYPE_REFERENCE) {
-        buffer_p->Append("reference|");
-      }
-      
-      if(format & ResourceEntryField::TYPE_STRING) {
-        buffer_p->Append("string|");
-      }
-      
-      if(format & ResourceEntryField::TYPE_INTEGER) {
-        buffer_p->Append("integer|");
-      }
-      
-      if(format & ResourceEntryField::TYPE_BOOLEAN) {
-        buffer_p->Append("boolean|");
-      }
-      
-      if(format & ResourceEntryField::TYPE_COLOR) {
-        buffer_p->Append("color|");
-      }
-      
-      if(format & ResourceEntryField::TYPE_FLOAT) {
-        buffer_p->Append("float|");
-      }
-      
-      if(format & ResourceEntryField::TYPE_DIMENSION) {
-        buffer_p->Append("dimension|");
-      }
-      
-      if(format & ResourceEntryField::TYPE_FRACTION) {
-        buffer_p->Append("fraction|");
-      }
-      
-      buffer_p->Rewind(1);
-      
-      return;
-    }
+    // For attribute type resources, prints its allowed format by interpreting
+    // the value of the first field
+    void PrintAttrFormat(Buffer *buffer_p, uint32_t format);
     
     /*
      * WriteAttrEnumFlags() - Writes nested attr types, i.e. enum or flags

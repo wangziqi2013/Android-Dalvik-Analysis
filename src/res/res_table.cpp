@@ -113,6 +113,47 @@ void TYPE::WriteColorTagLine(ResourceTable *table_p,
   return;
 }
 
+/*
+ * PrintAttrFormat() - Prints the format of attributes into the buffer
+ */
+void TYPE::PrintAttrFormat(Buffer *buffer_p, uint32_t format) {
+  if(format & ResourceEntryField::TYPE_REFERENCE) {
+    buffer_p->Append("reference|");
+  }
+  
+  if(format & ResourceEntryField::TYPE_STRING) {
+    buffer_p->Append("string|");
+  }
+  
+  if(format & ResourceEntryField::TYPE_INTEGER) {
+    buffer_p->Append("integer|");
+  }
+  
+  if(format & ResourceEntryField::TYPE_BOOLEAN) {
+    buffer_p->Append("boolean|");
+  }
+  
+  if(format & ResourceEntryField::TYPE_COLOR) {
+    buffer_p->Append("color|");
+  }
+  
+  if(format & ResourceEntryField::TYPE_FLOAT) {
+    buffer_p->Append("float|");
+  }
+  
+  if(format & ResourceEntryField::TYPE_DIMENSION) {
+    buffer_p->Append("dimension|");
+  }
+  
+  if(format & ResourceEntryField::TYPE_FRACTION) {
+    buffer_p->Append("fraction|");
+  }
+  
+  buffer_p->Rewind(1);
+  
+  return;
+}
+
 
 } // namespace android_dalvik_analysis
 } // namespace wangziqi2013
