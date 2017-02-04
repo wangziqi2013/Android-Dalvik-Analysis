@@ -493,131 +493,14 @@ class ResourceTable : public ResourceBase {
       "integer-array",
       "array",
     };
-        
+    
+    // Valid indices inside ARRAY_TAG_LIST
     static constexpr int STRING_ARRAY_TYPE_INDEX = 0;
     static constexpr int INTEGER_ARRAY_TYPE_INDEX = 1;
     static constexpr int OTHER_ARRAY_TYPE_INDEX = 2;
     
-    /*
-     * WriteArrayXml() - Writes arrays.xml file
-     */
-    void WriteArrayXml(const char *file_name) {
-      FILE *fp = SwitchToValuesDir(file_name);
-      
-      FileUtility::WriteString(fp, XML_HEADER_LINE);
-      Buffer buffer;
-      
-      Package *package_p = type_spec_p->package_p;
-      
-      for(size_t i = 0;i < entry_count;i++) {
-        if(IsEntryPresent(i) == false) {
-          continue; 
-        }
-        
-        ResourceEntry *entry_p = GetEntryPtr(i); 
-        
-        // Array entry must be complex, otherwise we could not
-        // intepret it
-        if(entry_p->IsComplex() == false) {
-          ReportError(INVALID_ARRAY_ENTRY, i);
-        }
-        
-        // If there is no entry then we just close the tag at the same line 
-        // and continue to the next entry
-        if(entry_p->entry_count == 0) {
-          buffer.Append("<array name=\"");
-          package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
-          
-          buffer.Append("\" />\n"); 
-          buffer.Append('\0');
-        
-          FileUtility::WriteString(fp, buffer.GetCharData(), 1);
-          buffer.Reset();
-          
-          continue;
-        }
-        
-        // We have already asserted that the array must have at least
-        // one element, so we know the first field is valid
-        ResourceEntryField *field_p = entry_p->field_data;
-        
-        // We use this as a sample value to determine the type 
-        // of the array
-        ResourceValue *value_p = &field_p->value;
-        const char *array_tag = nullptr;     
-        
-        // Next determine the array tag
-        if(field_p->value.type == ResourceValue::DataType::REFERENCE) {
-          ResourceId id;
-          id.data = field_p->value.data;
-          
-          const Buffer &base_type_name = *GetResourceIdBaseTypeName(id);
-            
-          if(base_type_name == "string") {
-            array_tag = ARRAY_TAG_LIST[STRING_ARRAY_TYPE_INDEX];
-          } else if(base_type_name == "integer") {
-            array_tag = ARRAY_TAG_LIST[INTEGER_ARRAY_TYPE_INDEX];
-          } else {
-            array_tag = ARRAY_TAG_LIST[OTHER_ARRAY_TYPE_INDEX]; 
-          }
-        } else {
-          if(value_p->type == ResourceValue::DataType::INT_DEC || \
-             value_p->type == ResourceValue::DataType::INT_HEX) {
-            array_tag = ARRAY_TAG_LIST[INTEGER_ARRAY_TYPE_INDEX];
-          } else if(value_p->type == ResourceValue::DataType::STRING) {
-            array_tag = ARRAY_TAG_LIST[STRING_ARRAY_TYPE_INDEX];
-          } else {
-            // Simple type other than strings and integers
-            array_tag = ARRAY_TAG_LIST[OTHER_ARRAY_TYPE_INDEX]; 
-          } 
-        }
-        
-        // Write the beginning tag first
-        buffer.Printf("<%s name=\"", array_tag);
-        package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
-        
-        buffer.Append("\">\n");
-        buffer.Append('\0');
-        
-        FileUtility::WriteString(fp, buffer.GetCharData(), 1);
-        buffer.Reset();
-        
-        for(size_t j = 0;j < entry_p->entry_count;j++) {
-          // Array index is also recorded inside the name of the field
-          // if it does not match the actual index then report error
-          if(field_p->name.GetArrayIndex() != j) {
-            ReportError(WRONG_ARRAY_INDEX, 
-                        j, 
-                        static_cast<uint64_t>(field_p->name.GetArrayIndex()));
-          }
-          
-          buffer.Append("<item>");
-          package_p->table_p->AppendResourceValueToBuffer(&field_p->value, 
-                                                          &buffer,
-                                                          &header_p->config);
-          buffer.Append("</item>");
-          
-          buffer.Append('\n');
-          buffer.Append('\0');
-          
-          FileUtility::WriteString(fp, buffer.GetCharData(), 2);
-          buffer.Reset();
-          
-          field_p++; 
-        }
-        
-        buffer.Printf("</%s>\n", array_tag);
-        buffer.Append('\0');
-        
-        FileUtility::WriteString(fp, buffer.GetCharData(), 1);
-        buffer.Reset();
-      }
-      
-      FileUtility::WriteString(fp, RESOURCE_END_TAG);
-      FileUtility::CloseFile(fp);
-      
-      return;
-    }
+    // Writes array into XML file
+    void WriteArrayXml(const char *file_name); 
     
     /*
      * WriteBoolXml() - Writes a XML file on boolean constants
