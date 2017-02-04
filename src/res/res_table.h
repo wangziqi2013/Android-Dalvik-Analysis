@@ -274,6 +274,8 @@ class ResourceTable : public ResourceBase {
     }
   } BYTE_ALIGNED;
   
+  class Package;
+  
   /*
    * class Type - Represents a certain type of resource and all its contents
    */
@@ -1266,6 +1268,14 @@ class ResourceTable : public ResourceBase {
       return;
     }
     
+    // Writes the color tag line into file
+    // Implemented in the CPP file
+    void WriteColorTagLine(ResourceTable *table_p,
+                           Package *package_p, 
+                           ResourceEntry *entry_p,
+                           Buffer *buffer_p,
+                           FILE *fp);
+    
     /*
      * WriteColorXml() - Writes a color XML file
      */
@@ -1298,24 +1308,35 @@ class ResourceTable : public ResourceBase {
            type == ResourceValue::DataType::INT_COLOR_RGB8 || \
            type == ResourceValue::DataType::INT_COLOR_ARGB4 || \
            type == ResourceValue::DataType::INT_COLOR_RGB4) {
-          buffer.Append("<color name=\"");
-          package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
-          buffer.Append("\">");
-        
-          table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+          WriteColorTagLine(table_p, package_p, entry_p, &buffer, fp);
           
-          buffer.Append("</color>\n");
-          buffer.Append('\0');
-        } else {
-          buffer.Append("<item type=\"color\" name=\"");
-          package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
-          buffer.Append("\">");
+          continue;
+        } else if(type == ResourceValue::DataType::REFERENCE) {
+          ResourceId id;
+          id.data = entry_p->value.data;
           
-          table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+          // If the simple entry is a reference then we use the value's 
+          // data as a refrence ID and get its base type name
+          const Buffer &base_type_name = *GetResourceIdBaseTypeName(id);
           
-          buffer.Append("</item>\n");
-          buffer.Append('\0');
+          // If the reference is from "color" type then also identify it as
+          // a color (which might be another reference, but we do not 
+          // resolve reference at this stage)
+          if(base_type_name == "color") {
+            WriteColorTagLine(table_p, package_p, entry_p, &buffer, fp);
+            
+            continue;
+          }
         }
+          
+        buffer.Append("<item type=\"color\" name=\"");
+        package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+        buffer.Append("\">");
+        
+        table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+        
+        buffer.Append("</item>\n");
+        buffer.Append('\0');
         
         FileUtility::WriteString(fp, buffer.GetCharData(), 1);
         buffer.Reset();
@@ -1364,8 +1385,6 @@ class ResourceTable : public ResourceBase {
       return;
     }
   };
-  
-  class Package;
   
   /*
    * class TypeSpec - General type specification on configurations
