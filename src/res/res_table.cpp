@@ -939,8 +939,65 @@ void TYPE::WriteColorXml(const char *file_name) {
 /*
  * WriteIntegerXml() - Writes XML for integer type
  */
-void WriteIntegerXml(const char *file_name) {
+void TYPE::WriteIntegerXml(const char *file_name) {
+  FILE *fp = SwitchToValuesDir(file_name);
   
+  FileUtility::WriteString(fp, XML_HEADER_LINE);
+  Buffer buffer;
+  
+  Package *package_p = type_spec_p->package_p;
+  ResourceTable *table_p = package_p->table_p;
+  
+  for(size_t i = 0;i < entry_count;i++) {
+    if(IsEntryPresent(i) == false) {
+      continue; 
+    }
+    
+    ResourceEntry *entry_p = GetEntryPtr(i); 
+    
+    // Dimension entry must be not complex
+    if(entry_p->IsComplex() == true) {
+      ReportError(INVALID_INTEGER_ENTRY, i);
+    }
+    
+    ResourceValue::DataType type = entry_p->value.type;
+    
+    // If the type of the value is dimension then we just print
+    // a dimension flag
+    if(type == ResourceValue::DataType::INT_DEC || \
+       type == ResourceValue::DataType::INT_HEX) {
+      buffer.Append("<integer name=\"");
+      package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+      buffer.Append("\">");
+    
+      table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+      
+      buffer.Append("</integer>\n");
+      buffer.Append('\0');
+    } else if(type == ResourceValue::DataType::REFERENCE) {
+      buffer.Append("<item type=\"integer\" name=\"");
+      package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+      buffer.Append("\">");
+      
+      table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+      
+      buffer.Append("</item>\n");
+      buffer.Append('\0');
+    } else {
+      dbg_printf("Unknown value type for integer type XML: 0x%04X\n",
+                 static_cast<uint32_t>(type));
+                 
+      ReportError(INVALID_INTEGER_ENTRY, i);
+    }
+    
+    FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+    buffer.Reset();
+  }
+  
+  FileUtility::WriteString(fp, RESOURCE_END_TAG);
+  FileUtility::CloseFile(fp);
+  
+  return;
 }
 
 /*

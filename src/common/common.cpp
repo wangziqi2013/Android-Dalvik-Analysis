@@ -91,6 +91,7 @@ const char *error_str_table[] = {
   
   //60
   "Invalid color entry (index: %lu)\n",
+  "Invalid integer entry (index: %lu)\n",
 };
 
 /*

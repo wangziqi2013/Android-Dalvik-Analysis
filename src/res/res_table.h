@@ -528,6 +528,9 @@ class ResourceTable : public ResourceBase {
     // Writes color type information into a XML file
     void WriteColorXml(const char *file_name);
     
+    // Writes integer type information into a XML file
+    void WriteIntegerXml(const char *file_name);
+    
     // Process layout type xmls
     void ProcessLayoutXml();
     
