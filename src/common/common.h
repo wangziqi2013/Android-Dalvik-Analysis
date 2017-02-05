@@ -126,6 +126,7 @@ enum ErrorCode : uint64_t {
   
   INVALID_COLOR_ENTRY = 60, 
   INVALID_INTEGER_ENTRY, 
+  INVALID_FRACTION_ENTRY,
 };
 
 // Error string table

@@ -80,6 +80,8 @@ void TYPE::WriteXml() {
     WriteIntegerXml("integers.xml");
   } else if(base_type_name == "transition") {
     ProcessTransitionXml();
+  } else if(base_type_name == "fraction") {
+    WriteFractionXml("fractions.xml");
   } else {
 #ifndef NDEBUG
     dbg_printf("Unknown attribute name: ");
@@ -1003,6 +1005,69 @@ void TYPE::WriteIntegerXml(const char *file_name) {
 }
 
 /*
+ * WriteFractionXml() - Writes XML for fraction type
+ */
+void TYPE::WriteFractionXml(const char *file_name) {
+  FILE *fp = SwitchToValuesDir(file_name);
+  
+  FileUtility::WriteString(fp, XML_HEADER_LINE);
+  Buffer buffer;
+  
+  Package *package_p = type_spec_p->package_p;
+  ResourceTable *table_p = package_p->table_p;
+  
+  for(size_t i = 0;i < entry_count;i++) {
+    if(IsEntryPresent(i) == false) {
+      continue; 
+    }
+    
+    ResourceEntry *entry_p = GetEntryPtr(i); 
+    
+    // Dimension entry must be not complex
+    if(entry_p->IsComplex() == true) {
+      ReportError(INVALID_FRACTION_ENTRY, i);
+    }
+    
+    ResourceValue::DataType type = entry_p->value.type;
+    
+    // If the type of the value is dimension then we just print
+    // a dimension flag
+    if(type == ResourceValue::DataType::FRACTION) {
+      buffer.Append("<fraction name=\"");
+      package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+      buffer.Append("\">");
+    
+      table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+      
+      buffer.Append("</fraction>\n");
+      buffer.Append('\0');
+    } else if(type == ResourceValue::DataType::REFERENCE) {
+      buffer.Append("<item type=\"fraction\" name=\"");
+      package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+      buffer.Append("\">");
+      
+      table_p->AppendResourceValueToBuffer(&entry_p->value, &buffer);
+      
+      buffer.Append("</item>\n");
+      buffer.Append('\0');
+    } else {
+      dbg_printf("Unknown value type for fraction type XML: 0x%04X\n",
+                 static_cast<uint32_t>(type));
+                 
+      ReportError(INVALID_FRACTION_ENTRY, i);
+    }
+    
+    FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+    buffer.Reset();
+  }
+  
+  FileUtility::WriteString(fp, RESOURCE_END_TAG);
+  FileUtility::CloseFile(fp);
+  
+  return;
+}
+
+/*
  * ProcessLayoutXml() - This file does not write layouts.xml file
  *                      but instead it decompiles the binary XML 
  *                      indicated inside resource entries
@@ -1066,7 +1131,7 @@ void TYPE::ProcessMipmapXml() {
 /*
  * ProcessTransitionXml() - Processes transition type XMLs
  */
-void ProcessTransitionXml() {
+void TYPE::ProcessTransitionXml() {
   // TO BE IMPLEMENTED
   return;
 }
