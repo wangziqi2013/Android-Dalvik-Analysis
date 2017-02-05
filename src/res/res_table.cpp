@@ -86,6 +86,8 @@ void TYPE::WriteXml() {
     WritePluralsXml("plurals.xml");
   } else if(base_type_name == "menu") {
     ProcessMenuXml();
+  } else if(base_type_name == "^attr-private") {
+    WriteAttrXml("^attr-privates.xml");
   } else {
 #ifndef NDEBUG
     dbg_printf("Unknown attribute name: ");
