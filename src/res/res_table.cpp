@@ -78,6 +78,8 @@ void TYPE::WriteXml() {
     ProcessMipmapXml();
   } else if(base_type_name == "integer") {
     WriteIntegerXml("integers.xml");
+  } else if(base_type_name == "transition") {
+    ProcessTransitionXml();
   } else {
 #ifndef NDEBUG
     dbg_printf("Unknown attribute name: ");
@@ -1057,6 +1059,14 @@ void TYPE::ProcessInterpolatorXml() {
  * ProcessMipmapXml() - Processes mipmap type XMLs
  */
 void TYPE::ProcessMipmapXml() {
+  // TO BE IMPLEMENTED
+  return;
+}
+
+/*
+ * ProcessTransitionXml() - Processes transition type XMLs
+ */
+void ProcessTransitionXml() {
   // TO BE IMPLEMENTED
   return;
 }

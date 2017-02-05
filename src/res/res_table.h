@@ -551,6 +551,9 @@ class ResourceTable : public ResourceBase {
     
     // Process XML files inside mipmap type
     void ProcessMipmapXml();
+    
+    // Process XML files inside transition type
+    void ProcessTransitionXml();
   };
   
   /*
