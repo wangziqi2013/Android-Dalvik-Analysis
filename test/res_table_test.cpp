@@ -27,25 +27,25 @@ void TestResourceTableBasic(const char *file_name) {
   size_t length;
   unsigned char *data = FileUtility::MapFileReadOnly(file_name, &length);
   
-  // This will be destroyed after this function exits
-  // and resource table automatically deregisters itself from the
-  // package group map
-  ResourceTable table{data, length, false};
+  // Must be allocated on the heap because we need to free the memory
+  // manually before memory is unmapped
+  ResourceTable *table_p = new ResourceTable{data, length, false};
   
   if(print_flag == true) {
     fprintf(stderr, "\n========================================\n");
     fprintf(stderr, "========================================\n");
     fprintf(stderr, "========================================\n");
     
-    table.DebugPrintAll();
+    table_p->DebugPrintAll();
   }
   
   fprintf(stderr, "\n========================================\n");
   fprintf(stderr, "========================================\n");
   fprintf(stderr, "========================================\n\n");
   
-  table.DebugWriteXml();
+  table_p->DebugWriteXml();
   
+  delete table_p;
   FileUtility::UnmapFile(data, length); 
   
   return;
@@ -92,17 +92,7 @@ unsigned char *LoadSystemResource(size_t *length_p,
 int main(int argc, char **argv) {
   EnterTestDir();
   
-  dbg_printf("Opening Android system resource file\n");
-  size_t sys_res_length;
-  ResourceTable *table_p = nullptr;
-  
-  unsigned char *sys_res_data_p = \
-    LoadSystemResource(&sys_res_length, &table_p);
-    
-  dbg_printf("Finished opening Android system resource file\n");
-  
   Argv args{argc, argv};
-  const std::vector<std::string> &arg_list = args.GetArgList();
   
   // Enabling flags optionally depending on the command line 
   if(args.Exists("print") == true) {
@@ -113,6 +103,16 @@ int main(int argc, char **argv) {
     print_system_flag = true; 
   }
   
+  dbg_printf("Opening Android system resource file\n");
+  size_t sys_res_length;
+  ResourceTable *table_p = nullptr;
+  
+  unsigned char *sys_res_data_p = \
+    LoadSystemResource(&sys_res_length, &table_p);
+    
+  dbg_printf("Finished opening Android system resource file\n");
+  
+  const std::vector<std::string> &arg_list = args.GetArgList();
   if(arg_list.size() == 0UL) {
     TestResourceTableBasic("resources.arsc");
   } else if(arg_list.size() == 1UL) {
