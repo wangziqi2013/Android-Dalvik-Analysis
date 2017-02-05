@@ -534,6 +534,9 @@ class ResourceTable : public ResourceBase {
     // Writes fraction type information into a XML file
     void WriteFractionXml(const char *file_name);
     
+    // Writes plurals type information into a XML file
+    void WritePluralsXml(const char *file_name);
+    
     // Process layout type xmls
     void ProcessLayoutXml();
     

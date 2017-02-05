@@ -82,6 +82,8 @@ void TYPE::WriteXml() {
     ProcessTransitionXml();
   } else if(base_type_name == "fraction") {
     WriteFractionXml("fractions.xml");
+  } else if(base_type_name == "plurals") {
+    WritePluralsXml("plurals.xml");
   } else {
 #ifndef NDEBUG
     dbg_printf("Unknown attribute name: ");
@@ -1059,6 +1061,84 @@ void TYPE::WriteFractionXml(const char *file_name) {
     
     FileUtility::WriteString(fp, buffer.GetCharData(), 1);
     buffer.Reset();
+  }
+  
+  FileUtility::WriteString(fp, RESOURCE_END_TAG);
+  FileUtility::CloseFile(fp);
+  
+  return;
+}
+
+/*
+ * WritePluralsXml() - Writes plurals XML file
+ */
+void TYPE::WritePluralsXml(const char *file_name) {
+  FILE *fp = SwitchToValuesDir(file_name);
+  
+  FileUtility::WriteString(fp, XML_HEADER_LINE);
+  Buffer buffer;
+  
+  Package *package_p = type_spec_p->package_p;
+  ResourceTable *table_p = package_p->table_p;
+  
+  for(size_t i = 0;i < entry_count;i++) {
+    if(IsEntryPresent(i) == false) {
+      continue; 
+    }
+    
+    ResourceEntry *entry_p = GetEntryPtr(i); 
+    
+    // Dimension entry must be not complex
+    if(entry_p->IsComplex() == false) {
+      ReportError(INVALID_PLURALS_ENTRY, i);
+    }
+    
+    buffer.Append("<plurals name=\"");
+    package_p->key_string_pool.AppendToBuffer(entry_p->key, &buffer);
+    buffer.Append("\">\n");
+    buffer.Append('\0');
+    
+    // Write the plurals tag as first level line
+    FileUtility::WriteString(fp, buffer.GetCharData(), 1);
+    buffer.Reset();
+    
+    // Each entry field is a line in the XML file denoting the 
+    // type of plural
+    ResourceEntryField *field_p = entry_p->field_data;
+    
+    // Loop through all fields
+    for(size_t j = 0;j < entry_p->entry_count;j++) {
+      buffer.Append("<item quantity=\"");
+      
+      switch(field_p->name.data) {
+        case ResourceEntryField::ATTR_OTHER: buffer.Append("other\">"); break;
+        case ResourceEntryField::ATTR_ZERO: buffer.Append("zero\">"); break;
+        case ResourceEntryField::ATTR_ONE: buffer.Append("one\">"); break;
+        case ResourceEntryField::ATTR_TWO: buffer.Append("two\">"); break;
+        case ResourceEntryField::ATTR_FEW: buffer.Append("few\">"); break;
+        case ResourceEntryField::ATTR_MANY: buffer.Append("many\">"); break;
+        default: {
+          dbg_printf("Invalid field: unknown quantity type 0x%08X\n", 
+                     field_p->name.data);
+          
+          ReportError(INVALID_PLURALS_ENTRY, i);
+        } // default
+      } // switch
+      
+      // Then append the actual value to the buffer and then terminate the line
+      table_p->AppendResourceValueToBuffer(&field_p->value, &buffer);
+      buffer.Append("</item>\n");
+      buffer.Append('\0');
+      
+      // Write it at second level
+      FileUtility::WriteString(fp, buffer.GetCharData(), 2);
+      
+      buffer.Reset();
+      field_p++;
+    }
+    
+    // Finish the block
+    FileUtility::WriteString(fp, "</plurals>\n", 1);
   }
   
   FileUtility::WriteString(fp, RESOURCE_END_TAG);
