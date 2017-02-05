@@ -545,6 +545,9 @@ class ResourceTable : public ResourceBase {
     
     // Process XML files inside interpolator type
     void ProcessInterpolatorXml();
+    
+    // Process XML files inside mipmap type
+    void ProcessMipmapXml();
   };
   
   /*

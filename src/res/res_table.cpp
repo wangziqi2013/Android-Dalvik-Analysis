@@ -74,6 +74,10 @@ void TYPE::WriteXml() {
     ProcessAnimatorXml();
   } else if(base_type_name == "interpolator") {
     ProcessInterpolatorXml();
+  } else if(base_type_name == "mipmap") {
+    ProcessMipmapXml();
+  } else if(base_type_name == "integer") {
+    WriteIntegerXml("integers.xml");
   } else {
 #ifndef NDEBUG
     dbg_printf("Unknown attribute name: ");
@@ -933,9 +937,16 @@ void TYPE::WriteColorXml(const char *file_name) {
 }
 
 /*
- * WriteLayoutXml() - This file does not write layouts.xml file
- *                    but instead it decompiles the binary XML 
- *                    indicated inside resource entries
+ * WriteIntegerXml() - Writes XML for integer type
+ */
+void WriteIntegerXml(const char *file_name) {
+  
+}
+
+/*
+ * ProcessLayoutXml() - This file does not write layouts.xml file
+ *                      but instead it decompiles the binary XML 
+ *                      indicated inside resource entries
  */
 void TYPE::ProcessLayoutXml() {
   // TO BE IMPLEMENTED
@@ -943,8 +954,8 @@ void TYPE::ProcessLayoutXml() {
 }
 
 /*
- * WriteAnimXml() - Decompile the animation XML file recorded inside 
- *                  the entries
+ * ProcessAnimXml() - Decompile the animation XML file recorded inside 
+ *                    the entries
  */
 void TYPE::ProcessAnimXml() {
   // TO BE IMPLEMENTED
@@ -952,8 +963,8 @@ void TYPE::ProcessAnimXml() {
 }
 
 /*
- * WriteXmlTypeXml() - Decompile the XML type XML file recorded inside 
- *                     the entries
+ * ProcessXmlTypeXml() - Decompile the XML type XML file recorded inside 
+ *                       the entries
  */
 void TYPE::ProcessXmlTypeXml() {
   // TO BE IMPLEMENTED
@@ -981,6 +992,14 @@ void TYPE::ProcessAnimatorXml() {
  * ProcessInterpolatorXml() - Processes interpolator type XMLs
  */
 void TYPE::ProcessInterpolatorXml() {
+  // TO BE IMPLEMENTED
+  return;
+}
+
+/*
+ * ProcessMipmapXml() - Processes mipmap type XMLs
+ */
+void TYPE::ProcessMipmapXml() {
   // TO BE IMPLEMENTED
   return;
 }
