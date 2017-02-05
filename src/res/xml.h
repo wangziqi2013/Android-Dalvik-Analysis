@@ -25,8 +25,7 @@ class BinaryXml : public ResourceBase {
   using ResourceId = uint32_t;
   
   /*
-   * class ElementHeader - XML elements all have an extra header that
-   *                       describes its property in the original file
+   * class ElementHeader - This is the header for all general XML headers
    */
   class ElementHeader {
    public:
@@ -37,11 +36,11 @@ class BinaryXml : public ResourceBase {
   } BYTE_ALIGNED;
   
   /*
-   * class NameSpaceStart - Denotes the start of a namespace. All elements 
-   *                        inside this inherits the same ns unless specified
-   *                        otherwise
+   * class NameSpaceStartHeader - Denotes the start of a namespace. All elements 
+   *                              inside this inherits the same ns unless 
+   *                              specified otherwise
    */
-  class NameSpaceStart {
+  class NameSpaceStartHeader {
    public: 
     // These two are common for all XML elements
     CommonHeader common_header;
@@ -54,7 +53,7 @@ class BinaryXml : public ResourceBase {
   
   // They have exactly the same layout; just the type field in the common 
   // header is different
-  using NameSpaceEnd = NameSpaceStart;
+  using NameSpaceEndHeader = NameSpaceStartHeader;
   
   /*
    * class NameSpaceStatus - Describes namespaces we have entered and not
@@ -72,7 +71,7 @@ class BinaryXml : public ResourceBase {
     /*
      * Constructor
      */
-    NameSpaceStatus(NameSpaceStart *start_p) :
+    NameSpaceStatus(NameSpaceStartHeader *start_p) :
       prefix{start_p->prefix},
       uri{start_p->uri},
       printed{false}
@@ -80,9 +79,9 @@ class BinaryXml : public ResourceBase {
   };
   
   /*
-   * class ElementStart - The start of an element
+   * class ElementStartHeader - The start of an element
    */
-  class ElementStart {
+  class ElementStartHeader {
    public:
     // The header_length field in common header only covers the following two
     CommonHeader common_header;
@@ -134,7 +133,7 @@ class BinaryXml : public ResourceBase {
   ResourceMapHeader *resource_map_header_p;
   
   // # of 32 bit entries in the res map
-  size_t resource_map_size;
+  size_t resource_map_entry_count;
   
   // Pointer to the first element of the resource map array
   ResourceId *resource_map_p;
@@ -162,7 +161,7 @@ class BinaryXml : public ResourceBase {
     ResourceBase{p_raw_data_p, p_length, p_own_data},
     xml_header_p{nullptr},
     resource_map_header_p{nullptr},
-    resource_map_size{0UL},
+    resource_map_entry_count{0UL},
     resource_map_p{nullptr},
     name_space_list{},
     unprinted_name_space_count{0UL} {
@@ -185,6 +184,9 @@ class BinaryXml : public ResourceBase {
   
   /*
    * Destructor
+   *
+   * Note that array ownership and destruction has already been handled in the
+   * base class destructor
    */
   ~BinaryXml() {
     return;
@@ -196,7 +198,7 @@ class BinaryXml : public ResourceBase {
    * We use xml_header_p to denote whether XML is valid or at least has 
    * a valid header
    */
-  bool IsValidXml() {
+  inline bool IsValidXml() {
     return xml_header_p != nullptr;
   }
   
@@ -253,7 +255,8 @@ class BinaryXml : public ResourceBase {
    * ParseResourceMap() - Parses the string pool and constructs the string 
    *                      pool object
    *
-   * Note that the resource map has the same layout as a general header
+   * Note that the resource map has the same layout as a general header. We
+   * also verify the size of the resource map using the number of entry here
    */
   void ParseResourceMap(CommonHeader *header_p) {
     resource_map_header_p = reinterpret_cast<ResourceMapHeader *>(header_p);
@@ -266,7 +269,8 @@ class BinaryXml : public ResourceBase {
       ReportError(CORRUPT_RESOURCE_MAP);
     }
     
-    resource_map_size = \
+    // This is the number of entries inside the resource map
+    resource_map_entry_count = \
       (header_p->total_length - header_p->header_length) / sizeof(ResourceId);
       
     resource_map_p = reinterpret_cast<ResourceId *>( \
@@ -281,8 +285,8 @@ class BinaryXml : public ResourceBase {
   void ParseNameSpaceStart(CommonHeader *header_p) {
     assert(header_p->type == ChunkType::NAME_SPACE_START);
     
-    NameSpaceStart *name_space_start_p = \
-      reinterpret_cast<NameSpaceStart *>(header_p);
+    NameSpaceStartHeader *name_space_start_p = \
+      reinterpret_cast<NameSpaceStartHeader *>(header_p);
     
     // We have seen a new ns and it is not printed yet
     unprinted_name_space_count++;
@@ -294,8 +298,8 @@ class BinaryXml : public ResourceBase {
   }
   
   /*
-   * UriToNameSpace() - This converts an URI string to its associated name 
-   *                    space string
+   * UriToNameSpacePrefix() - This converts an URI string to its associated name 
+   *                          space prefix string
    *
    * If the URI is not found for all active name spaces then return 
    * Otherwise it is an error and an exception is thrown
@@ -303,7 +307,7 @@ class BinaryXml : public ResourceBase {
    * Note that we store both URI and name space ID as string index, so we do
    * not have to actually do string comparison
    */
-  uint32_t UriToNameSpace(uint32_t uri) {
+  uint32_t UriToNameSpacePrefix(uint32_t uri) {
     for(const NameSpaceStatus &ns_stat : name_space_list) {
       if(ns_stat.uri == uri) {
         return ns_stat.prefix; 
@@ -339,7 +343,7 @@ class BinaryXml : public ResourceBase {
   void PrintOptionalNameSpace(uint32_t uri) {
     if(uri != INVALID_STRING) {
       // Since it is URI we need to convert it to prefix
-      uint32_t ns_prefix = UriToNameSpace(uri);
+      uint32_t ns_prefix = UriToNameSpacePrefix(uri);
       
       string_pool.AppendToBuffer(ns_prefix, &buffer);
       buffer.AppendByte(':');
@@ -354,8 +358,8 @@ class BinaryXml : public ResourceBase {
   void ParseElementStart(CommonHeader *header_p) {
     assert(header_p->type == ChunkType::ELEMENT_START);
     
-    ElementStart *element_start_p = \
-      reinterpret_cast<ElementStart *>(header_p);
+    ElementStartHeader *element_start_p = \
+      reinterpret_cast<ElementStartHeader *>(header_p);
     
     // Element opening character
     buffer.AppendByte('<');
@@ -374,7 +378,7 @@ class BinaryXml : public ResourceBase {
         TypeUtility::Advance(
           header_p, 
           element_start_p->attribute_offset + \
-            offsetof(ElementStart, name_space)));
+            offsetof(ElementStartHeader, name_space)));
     
     // For each attribute parse it using the i-th element's pointer
     for(uint16_t i = 0;i < element_start_p->attribute_count;i++) {
