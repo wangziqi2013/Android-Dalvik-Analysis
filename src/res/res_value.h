@@ -239,6 +239,10 @@ class ResourceValue {
   
  private: 
   
+  // Since we use this constant in multiple places, this allows us to change
+  // the format conveniently
+  static constexpr const char *FLOAT_FORMAT_STRING = "%f";
+  
   /*
    * AppendComplexValueToBuffer() - Called for dimention or fraction value
    */
@@ -264,13 +268,14 @@ class ResourceValue {
                   RADIX_MULTS[(data >> COMPLEX_RADIX_SHIFT) & \
                               COMPLEX_RADIX_MASK];
     
-    buffer_p->Printf("%f", value);
-    
     // Then extract the unit and print it
+    // For percentage numerics we need to multiply the number by 100
     
     // Extract the unit
     uint32_t unit = (data >> COMPLEX_UNIT_SHIFT) & COMPLEX_UNIT_MASK;
     if(type == DataType::DIMENSION) {
+      buffer_p->Printf(FLOAT_FORMAT_STRING, value);
+      
       switch(unit) {
         case COMPLEX_UNIT_PX: buffer_p->Append("px"); break;
         case COMPLEX_UNIT_DIP: buffer_p->Append("dp"); break;
@@ -283,6 +288,8 @@ class ResourceValue {
         } // default
       } // switch
     } else {
+      buffer_p->Printf(FLOAT_FORMAT_STRING, value * 100.0f);
+      
       switch(unit) {
         case COMPLEX_UNIT_FRACTION: buffer_p->Append("%"); break;
         case COMPLEX_UNIT_FRACTION_PARENT: buffer_p->Append("%p"); break;
