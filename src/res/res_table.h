@@ -560,6 +560,9 @@ class ResourceTable : public ResourceBase {
     
     // Process XML files inside transition type
     void ProcessTransitionXml();
+    
+    // Process XML files inside menu type
+    void ProcessMenuXml();
   };
   
   /*

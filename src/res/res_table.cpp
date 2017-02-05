@@ -84,6 +84,8 @@ void TYPE::WriteXml() {
     WriteFractionXml("fractions.xml");
   } else if(base_type_name == "plurals") {
     WritePluralsXml("plurals.xml");
+  } else if(base_type_name == "menu") {
+    ProcessMenuXml();
   } else {
 #ifndef NDEBUG
     dbg_printf("Unknown attribute name: ");
@@ -1212,6 +1214,14 @@ void TYPE::ProcessMipmapXml() {
  * ProcessTransitionXml() - Processes transition type XMLs
  */
 void TYPE::ProcessTransitionXml() {
+  // TO BE IMPLEMENTED
+  return;
+}
+
+/*
+ * ProcessMenuXml() - Processes menu type XMLs
+ */
+void TYPE::ProcessMenuXml() {
   // TO BE IMPLEMENTED
   return;
 }
