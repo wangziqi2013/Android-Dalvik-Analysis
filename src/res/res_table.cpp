@@ -12,7 +12,6 @@ namespace android_dalvik_analysis {
 #endif
 
 
-
 /*
  * GetResourceIdStringWrapper() - Wraps the corresponding function in class 
  *                                ResourceTable

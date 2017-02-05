@@ -732,6 +732,9 @@ class ResourceTable : public ResourceBase {
     return; 
   }
   
+  // This is the Android system package ID
+  static constexpr uint8_t SYSTEM_PACKAGE_ID = 0x01;
+  
   /*
    * GetResourceIdString() - Returns the string representation of a resource ID
    *
@@ -787,7 +790,7 @@ class ResourceTable : public ResourceBase {
       // This is the entry whose name we are using
       ResourceEntry *entry_p = type.GetEntryPtr(entry_index);
       
-      if(package_id == 0x01) {
+      if(package_id == SYSTEM_PACKAGE_ID) {
         buffer_p->Append("@android:");
       } else {
         buffer_p->Append('@');
