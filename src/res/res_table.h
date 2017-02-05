@@ -727,8 +727,18 @@ class ResourceTable : public ResourceBase {
   
   /*
    * Destructor
+   *
+   * Note that the base class constructor has already taken care of the 
+   * ownership of the data array
    */
   ~ResourceTable() {
+    dbg_printf("Unregistering packages...\n");
+    
+    // Unregister all packages from the package group here
+    for(Package &package : package_list) {
+      package_group.UnregisterPackage(package.header_p->id);
+    }
+    
     return; 
   }
   

@@ -4,7 +4,7 @@
 #ifndef _PACKAGE_GROUP_H
 #define _PACKAGE_GROUP_H
 
-#include <map>
+#include <unordered_map>
 #include "common.h"
 #include <mutex>
 
@@ -22,7 +22,7 @@ class PackageGroup {
   // This maps the package ID to its containing resource table
   // We do not directly map to package because the member function is written
   // inside the ResourceTable class
-  std::map<uint8_t, ResourceTable *> package_map;
+  std::unordered_map<uint8_t, ResourceTable *> package_map;
   
   // Use this to protect the map under concurrent workload
   std::mutex map_lock;
@@ -44,6 +44,28 @@ class PackageGroup {
     if(insert_ret.second == false) {
       ReportError(PACKAGE_ALREADY_REGISTERED, 
                   static_cast<uint32_t>(package_id));
+    }
+    
+    return;
+  }
+  
+  /*
+   * UnregisterPackage() - Unregister a package from the package group
+   *
+   * This has to be called everytime a resource table is destroyed
+   */
+  void UnregisterPackage(uint8_t package_id) {
+    map_lock.lock();
+    
+    // Return value indicates the number of packages removed
+    // If it is 0 then we know the ID even does not exist
+    size_t erased_count = package_map.erase(package_id);
+    
+    map_lock.unlock();
+    
+    // If the package is not registered then throw error
+    if(erased_count == 0UL) {
+      ReportError(PACKAGE_ID_NOT_FOUND, static_cast<uint32_t>(package_id)); 
     }
     
     return;

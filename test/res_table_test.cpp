@@ -10,6 +10,12 @@
 using namespace wangziqi2013;
 using namespace android_dalvik_analysis;
 
+// If this is turned on we print out the package after loading them
+bool print_flag = false;
+
+// If this is turned on we also print system package content
+bool print_system_flag = false;
+
 /*
  * TestResourceTableBasic() - Tests whether basic stuff works
  */
@@ -26,11 +32,13 @@ void TestResourceTableBasic(const char *file_name) {
   // package group map
   ResourceTable table{data, length, false};
   
-  fprintf(stderr, "\n========================================\n");
-  fprintf(stderr, "========================================\n");
-  fprintf(stderr, "========================================\n");
-  
-  table.DebugPrintAll();
+  if(print_flag == true) {
+    fprintf(stderr, "\n========================================\n");
+    fprintf(stderr, "========================================\n");
+    fprintf(stderr, "========================================\n");
+    
+    table.DebugPrintAll();
+  }
   
   fprintf(stderr, "\n========================================\n");
   fprintf(stderr, "========================================\n");
@@ -59,6 +67,18 @@ unsigned char *LoadSystemResource(size_t *length_p,
   // This must be on the heap to avoid overwriting
   ResourceTable *table_p = new ResourceTable{data, length, false};
   
+  if(print_flag == true && print_system_flag == true) {
+    fprintf(stderr, "\n========================================\n");
+    fprintf(stderr, "========================================\n");
+    fprintf(stderr, "========================================\n");
+    
+    table_p->DebugPrintAll();
+  }
+  
+  fprintf(stderr, "\n========================================\n");
+  fprintf(stderr, "========================================\n");
+  fprintf(stderr, "========================================\n\n");
+  
   dbg_printf("Writing XML for Android system resource file\n");
   table_p->DebugWriteXml();
   
@@ -83,6 +103,16 @@ int main(int argc, char **argv) {
   
   Argv args{argc, argv};
   const std::vector<std::string> &arg_list = args.GetArgList();
+  
+  // Enabling flags optionally depending on the command line 
+  if(args.Exists("print") == true) {
+    print_flag = true; 
+  }
+  
+  if(args.Exists("print-system") == true) {
+    print_system_flag = true; 
+  }
+  
   if(arg_list.size() == 0UL) {
     TestResourceTableBasic("resources.arsc");
   } else if(arg_list.size() == 1UL) {
@@ -94,6 +124,10 @@ int main(int argc, char **argv) {
   // This does not try to free the mapped file region
   delete table_p;
   FileUtility::UnmapFile(sys_res_data_p, sys_res_length); 
+  
+  dbg_printf("print_flag = %d; print_system_flag = %d\n", 
+             print_flag, 
+             print_system_flag);
   
   return 0; 
 }
