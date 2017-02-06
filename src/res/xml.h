@@ -79,8 +79,8 @@ class BinaryXml : public ResourceBase {
     uint32_t prefix;
     uint32_t uri;
     
-    // Whether the name space information has been printed on the most recent
-    // element tags
+    // This is marked if the name space status has not yet been stored
+    // into an Element instance
     bool printed;
     
     /*
@@ -185,6 +185,14 @@ class BinaryXml : public ResourceBase {
   // This is the number of namespaces that have not been printed
   size_t unprinted_name_space_count;
   
+  // This is the root element of XML
+  Element root_element;
+  
+  // This represents the current element
+  // Whenever we have seen an element start tag it will be pushed into
+  // the list inside the current element
+  Element *current_elemenet_p;
+  
   // Always keep this the last object
   // This is used to hold the results of converting it back to normal XML
   Buffer buffer;
@@ -204,7 +212,9 @@ class BinaryXml : public ResourceBase {
     resource_map_entry_count{0UL},
     resource_map_p{nullptr},
     name_space_map{},
-    unprinted_name_space_count{0UL} {
+    unprinted_name_space_count{0UL},
+    root_element{},
+    current_elemenet_p{&root_element} {
     
     // This sets up xml_header_p, and also verifies basic
     // properties of the bianry file
