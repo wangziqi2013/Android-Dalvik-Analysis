@@ -40,7 +40,7 @@ void TestOutputXml(BinaryXml *xml_p, const char *file_name) {
   _PrintTestName();
   
   Buffer buffer{file_name};
-  xml_p->WriteXml(buffer);
+  xml_p->WriteXml(&buffer);
   
   return; 
 }

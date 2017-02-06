@@ -89,6 +89,22 @@ class Buffer {
     return;
   }
   
+  /*
+   * Constructor - This constructs a buffer from a C string without the 
+   *               terminating 0
+   */
+  Buffer(const char *s) {
+    current_length = strlen(s);
+    length = current_length;
+    data_p = new unsigned char[length];
+    
+    // Copy all valid data into this buffer
+    memcpy(data_p, s, current_length);  
+    
+    return;
+  }
+    
+  
   // Deleted functions to avoid assignment
   Buffer &operator=(const Buffer &) = delete;
   Buffer &operator=(Buffer &&) = delete;
