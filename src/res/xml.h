@@ -181,6 +181,20 @@ class BinaryXml : public ResourceBase {
       attribute_list{},
       cdata_list{}
     {}
+    
+    /*
+     * GetName() - Returns the index of its name
+     */
+    inline uint32_t GetName() const {
+      return header_p->name; 
+    }
+    
+    /*
+     * GetNameSpace() - Returns the index of its name space
+     */
+    inline uint32_t GetNameSpace() const {
+      return header_p->name_space; 
+    }
   };
   
  // Private data memver
@@ -716,6 +730,126 @@ class BinaryXml : public ResourceBase {
     } // switch type
     
     return ret_header_p;
+  }
+  
+  /*
+   * WriteElement() - Writes an XML element
+   */
+  void WriteElement(int level, 
+                    FILE *fp, 
+                    Buffer *buffer_p, 
+                    Element *element_p) {
+    buffer_p->Append('<');
+    
+    // Prints the optional name space and also tag name
+    PrintOptionalNameSpace(element_p->GetNameSpace(), buffer_p);
+    string_pool.AppendToBuffer(element_p->GetName(), buffer_p);
+    
+    // For all name spaces that require a declaration inside this
+    // element node
+    for(const NameSpaceStatus &ns_status : element_p->name_space_list) {
+      buffer_p->Append(" xmlns:");
+      string_pool.AppendToBuffer(ns_status.prefix, buffer_p);
+      buffer_p->Append("=\"");
+      string_pool.AppendToBuffer(ns_status.uri, buffer_p);
+      buffer_p->Append('\"');
+    }
+    
+    // For all attributes also print them
+    for(Attribute *attribute_p : element_p->attribute_list) {
+      Attribute &attribute = *attribute_p;
+      
+      buffer_p->Append(' ');
+      PrintOptionalNameSpace(attribute.name_space, buffer_p);
+      
+      string_pool.AppendToBuffer(attribute.name, buffer_p);
+      buffer_p->Append("=\"");
+      
+      // If raw value is not available then have to print the actual value
+      if(attribute.raw_value != INVALID_STRING) {
+        string_pool.AppendToBuffer(attribute.raw_value, buffer_p);
+      } else {
+        AppendResourceValueToBuffer(&attribute.resource_value, buffer_p); 
+      }
+      
+      buffer_p->Append('\"');
+    }
+    
+    // It has no child node
+    if(element_p->child_list.size() == 0UL && \
+       element_p->cdata_list.size() == 0UL) {
+      buffer_p->Append(" />");
+      buffer_p->Append('\0');
+      
+      FileUtility::WriteString(fp, buffer_p->GetCharData(), level);
+      buffer_p->Reset();
+    } else {
+      buffer_p->Append('>');
+      buffer_p->Append('\0');
+      
+      FileUtility::WriteString(fp, buffer_p->GetCharData(), level);
+      buffer_p->Reset();
+      
+      // Recursively print child elements
+      for(Element *child_p : element_p->child_list) {
+        WriteElement(level + 1, fp, buffer_p, child_p);
+      }
+      
+      buffer_p->Append("</");
+      PrintOptionalNameSpace(element_p->GetNameSpace(), buffer_p);
+      string_pool.AppendToBuffer(element_p->GetName(), buffer_p);
+      buffer_p->Append('>');
+      buffer_p->Append('\0');
+      
+      FileUtility::WriteString(fp, buffer_p->GetCharData(), level);
+      buffer_p->Reset();
+    }
+    
+    
+    
+    return;
+  }
+  
+  /*
+   * WriteXml() - Writes XML file to the given path
+   */
+  void WriteXml(Buffer *path_p) {
+    assert(path_p != nullptr);
+    
+    FILE *fp = \
+      FileUtility::CreateOrEnterPath(path_p->GetCharData(), 
+                                     path_p->GetLength(), 
+                                     "wb");
+
+    // If the path is invalid
+    if(fp == nullptr) {
+#ifdef NDEBUG
+      dbg_printf("Invalid path: ");
+      path_p->WriteToFile(stderr);
+      fputc('\n', stderr);
+#endif
+      
+      ReportError(INVALID_XML_PATH);
+    }
+    
+    FileUtility::WriteString(fp, XML_HEADER_LINE);
+    
+    // If there are more than 1 root node
+    if(root_element.child_list.size() > 1UL) {
+       ReportError(MULTIPLE_ROOT_NODE);
+    } else if(root_element.child_list.size() == 0UL) {
+      ReportError(MISSING_ROOT_NODE);
+    }
+    
+    // Write elements in a recursive manner
+    Buffer buffer;
+    WriteElement(0, fp, &buffer, root_element.child_list[0]);
+    
+    // Write XML ending and close the fp
+    FileUtility::WriteString(fp, RESOURCE_END_TAG);
+    FileUtility::CloseFile(fp);
+    
+    return;
   }
 };
 
