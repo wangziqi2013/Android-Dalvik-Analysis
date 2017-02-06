@@ -128,12 +128,41 @@ void TestUtf16() {
   return;
 }
 
+/*
+ * TestEnterPath() - Tests whether entering a path works correctly
+ */
+void TestEnterPath() {
+  _PrintTestName();
+  
+  char *cwd = FileUtility::GetCwd();
+  
+  static const char test_string1[] = "this/is/a/test/";
+  static const char test_string2[] = "this/is/a/test2/file.cpp";
+  
+  Buffer buffer;
+  buffer.Append(test_string1);
+  
+  FileUtility::CreateOrEnterPath(buffer.GetCharData(), buffer.GetLength(), "wb+");
+  
+  // We know the path exists and cwd must be a directory
+  FileUtility::CreateOrEnterDir(cwd);
+  
+  buffer.Reset();
+  buffer.Append(test_string2);
+  FileUtility::CreateOrEnterPath(buffer.GetCharData(), buffer.GetLength(), "wb+");
+  
+  delete[] cwd;
+  
+  return;
+}
+
 int main() {
   EnterTestDir();
   
   TestBasicExtend();
   TestPrintf();
   TestUtf16();
+  TestEnterPath();
   
   return 0;
 }
