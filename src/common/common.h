@@ -161,6 +161,8 @@ class FileUtility {
   inline static FILE *OpenFile(const char *file_name, const char *mode) {
     FILE *fp = fopen(file_name, mode);
     if(fp == nullptr) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_OPEN_FILE, file_name);
     }
     
@@ -173,6 +175,8 @@ class FileUtility {
   inline static void CloseFile(FILE *fp) {
     int ret = fclose(fp);
     if(ret != 0) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_CLOSE_FILE); 
     }
     
@@ -196,6 +200,8 @@ class FileUtility {
       // This prints space characters of a given length
       ret = fprintf(fp, "%*s", ident * ident_length, "");
       if(ret < 0) {
+        dbg_printf("Reason: %s\n", strerror(errno));
+        
         ReportError(ERROR_WRITE_FILE, "[Unknown]"); 
       }
     }
@@ -203,6 +209,8 @@ class FileUtility {
     // Use formatted print to save a few function calls
     ret = fprintf(fp, "%s", s);
     if(ret < 0) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_WRITE_FILE, "[Unknown]"); 
     }
     
@@ -233,6 +241,8 @@ class FileUtility {
     
     size_t size_read = fread(data_p, 1, file_length, fp);
     if(size_read != file_length) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_READ_FILE, size_read);
     }
     
@@ -257,6 +267,8 @@ class FileUtility {
   
     int fd = open(file_name, O_RDONLY, 0);
     if(fd == -1) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_OPEN_FILE, file_name); 
     }
     
@@ -268,6 +280,8 @@ class FileUtility {
                      fd, 
                      0);
     if(ptr == MAP_FAILED) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_MAP_FILE, file_name); 
     }
     
@@ -275,6 +289,8 @@ class FileUtility {
     // an extra reference to the file
     int ret = close(fd);
     if(ret == -1) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_CLOSE_FILE); 
     }
     
@@ -290,6 +306,8 @@ class FileUtility {
   static void UnmapFile(void *ptr, size_t length) {
     int ret = munmap(ptr, length);
     if(ret == -1) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_UNMAP_FILE); 
     }
     
@@ -323,17 +341,23 @@ class FileUtility {
     
     seek_ret = fseek(fp, 0, SEEK_END);
     if(seek_ret != 0) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_SEEK_FILE); 
     }
     
     long file_size = ftell(fp);
     if(file_size == -1L) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_ACQUIRE_FILE_SIZE); 
     }
     
     // Do not forget to set it back to the beginning of file
     seek_ret = fseek(fp, 0, SEEK_SET);
     if(seek_ret != 0) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_SEEK_FILE); 
     }
     
@@ -346,6 +370,8 @@ class FileUtility {
   inline static void EnterDir(const char *dir) {
     int ret = chdir(dir);
     if(ret == -1) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_CHDIR, dir); 
     }
     
@@ -361,6 +387,8 @@ class FileUtility {
   inline static void CreateDir(const char *dir) {
     int ret = mkdir(dir, S_IRUSR | S_IWUSR | S_IXUSR);
     if(ret == -1) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_MKDIR, dir); 
     }
     
@@ -373,6 +401,8 @@ class FileUtility {
   inline static void DeleteFile(const char *file_name) {
     int ret = unlink(file_name);
     if(ret == -1) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      
       ReportError(ERROR_UNLINK, file_name); 
     }
     
@@ -399,6 +429,8 @@ class FileUtility {
         CreateDir(dir);
         EnterDir(dir);
       } else {
+        dbg_printf("Reason: %s\n", strerror(errno));
+        
         ReportError(ERROR_STAT, dir); 
       }
     } else if(S_ISDIR(buf.st_mode)) {
@@ -446,6 +478,8 @@ class FileUtility {
           
           continue;
         } else {
+          dbg_printf("Reason: %s\n", strerror(errno));
+          
           ReportError(ERROR_GETCWD, current_size); 
         }
       } else {
@@ -526,15 +560,15 @@ class FileUtility {
       // Then q must be '/'
       *q = '\0';
       // From p to q is a component in the path
-      EnterDir(p);
-      p = q + 1;
+      CreateOrEnterDir(p);
+      p = ++q;
     }
     
     FILE *fp = nullptr;
     if(open_file == true) {
       fp = OpenFile(p, mode);
     } else {
-      EnterDir(p); 
+      CreateOrEnterDir(p); 
     }
     
     delete[] data_p;
