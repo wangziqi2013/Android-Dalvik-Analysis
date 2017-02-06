@@ -156,6 +156,7 @@ class BinaryXml : public ResourceBase {
     std::vector<Element *> child_list;
     std::vector<NameSpaceStatus> name_space_list;
     std::vector<Attribute *> attribute_list;
+    std::vector<CommonHeader *> cdata_list;
     
     /*
      * Constructor
@@ -164,7 +165,8 @@ class BinaryXml : public ResourceBase {
       header_p{reinterpret_cast<ElementStartHeader *>(p_header_p)},
       child_list{},
       name_space_list{},
-      attribute_list{}
+      attribute_list{},
+      cdata_list{}
     {}
     
     /*
@@ -176,7 +178,8 @@ class BinaryXml : public ResourceBase {
       header_p{nullptr},
       child_list{},
       name_space_list{},
-      attribute_list{}
+      attribute_list{},
+      cdata_list{}
     {}
   };
   
@@ -254,6 +257,10 @@ class BinaryXml : public ResourceBase {
     while(next_header_p != nullptr) {
       next_header_p = ParseNext(next_header_p);
     }
+    
+    // Check consistency
+    VerifyElementStack();
+    VerifyNameSpace();
         
     return;  
   }
@@ -325,6 +332,31 @@ class BinaryXml : public ResourceBase {
     
     assert(false);
     return nullptr;
+  }
+  
+  /*
+   * verifyElementStack() - Verifies that the element stack is empty after
+   *                        parsing all nodes
+   */
+  void VerifyElementStack() {
+    if(element_stack.size() != 0UL) {
+      ReportError(ELEMENT_UNCLOSED); 
+    }
+    
+    return;
+  }
+  
+  /*
+   * VerifyNameSpace() - Checks whether name spaces are all closed
+   */
+  void VerifyNameSpace() {
+    for(const auto &p : name_space_map) {
+      if(p.second.ended == false || p.second.printed == false) {
+        ReportError(NAME_SPACE_UNCLOSED);
+      }
+    }
+    
+    return;
   }
   
   /*
@@ -607,6 +639,17 @@ class BinaryXml : public ResourceBase {
   }
   
   /*
+   * ParseCData() - Parses CDATA chunk
+   *
+   * CDATA chunk is not common, so we handle this in a simple manner
+   */
+  void ParseCData(CommonHeader *header_p) {
+    current_element_p->cdata_list.emplace_back(header_p);
+    
+    return; 
+  }
+  
+  /*
    * ParseNext() - Central scheduling function that acts as a state machine and 
    *               calls sorresponding routine based on its type in the common 
    *               header
@@ -658,6 +701,10 @@ class BinaryXml : public ResourceBase {
       }
       case ChunkType::ELEMENT_END: {
         ParseElementEnd(next_header_p);
+        break; 
+      }
+      case ChunkType::CDATA: {
+        ParseCData(next_header_p);
         break; 
       }
       default: {        

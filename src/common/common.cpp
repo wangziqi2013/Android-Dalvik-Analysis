@@ -100,6 +100,8 @@ const char *error_str_table[] = {
   "Unexpected end of XML element node (stack empty)\n",
   "Element end tag and start tag does not match\n",
   "Unexpected end of a name space that does not exist\n",
+  "There is at least one unclosed element after parsing\n",
+  "There is at least one unclosed name space after parsing\n",
 };
 
 /*
