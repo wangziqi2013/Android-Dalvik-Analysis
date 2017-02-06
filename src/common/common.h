@@ -456,6 +456,76 @@ class FileUtility {
     assert(false);
     return nullptr;
   }
+  
+  /*
+   * CreateOrEnterPath() - Creates all directories in a given path
+   *                       and then opens the file
+   *
+   * The file is opened if the path is not terminated with '/'. Otherwise
+   * a file pointer is returned with the file being opened using fopen()
+   * and the given mode.
+   *
+   * If the path is a directory then mode could be nullptr
+   *
+   * Note that path_p must be null terminated, and could be const. We always
+   * alloctae a buffer inside this function in order to modify the path
+   */
+  static FILE *CreateOrEnterPath(char *path_p, 
+                                 const char *mode=nullptr) {
+    // Allocate it on the heap and copy the path to the buffer
+    char *data_p = new char[strlen(path_p) + 1];
+    strcpy(data_p, path_p);
+    
+    // We use this as the beginning of the current path component
+    char *p = data_p;
+    // This is the current read location
+    char *q = p;
+    
+    // If it is an absolute path just enter root folder
+    // and start with the remainder
+    if(*p == '/') {
+      EnterDir("/"); 
+      p++;
+      q++;
+    }
+    
+    // Whether we should open a file
+    bool open_file = true;
+    
+    while(1) {
+      while(*q != '\0' && *q != '/') {
+        q++;  
+      }
+      
+      if(*q == '\0') {
+        // This means we have reached the end of the string
+        break; 
+      } else if(*(q + 1) == '\0') {
+        // This means we have reached the end of the string
+        // and the last component is a path
+        *q = '\0';
+        open_file = false;
+        break;
+      }
+      
+      // Then q must be '/'
+      *q = '\0';
+      // From p to q is a component in the path
+      EnterDir(p);
+      p = q + 1;
+    }
+    
+    FILE *fp = nullptr;
+    if(open_file == true) {
+      fp = OpenFile(p, mode);
+    } else {
+      EnterDir(p); 
+    }
+    
+    delete[] data_p;
+    
+    return fp;
+  }
 };
 
 /////////////////////////////////////////////////////////////////////
