@@ -778,13 +778,13 @@ class BinaryXml : public ResourceBase {
     // It has no child node
     if(element_p->child_list.size() == 0UL && \
        element_p->cdata_list.size() == 0UL) {
-      buffer_p->Append(" />");
+      buffer_p->Append("/>\n");
       buffer_p->Append('\0');
       
       FileUtility::WriteString(fp, buffer_p->GetCharData(), level);
       buffer_p->Reset();
     } else {
-      buffer_p->Append('>');
+      buffer_p->Append(">\n");
       buffer_p->Append('\0');
       
       FileUtility::WriteString(fp, buffer_p->GetCharData(), level);
@@ -798,7 +798,7 @@ class BinaryXml : public ResourceBase {
       buffer_p->Append("</");
       PrintOptionalNameSpace(element_p->GetNameSpace(), buffer_p);
       string_pool.AppendToBuffer(element_p->GetName(), buffer_p);
-      buffer_p->Append('>');
+      buffer_p->Append(">\n");
       buffer_p->Append('\0');
       
       FileUtility::WriteString(fp, buffer_p->GetCharData(), level);
@@ -832,7 +832,9 @@ class BinaryXml : public ResourceBase {
       ReportError(INVALID_XML_PATH);
     }
     
-    FileUtility::WriteString(fp, XML_HEADER_LINE);
+    // Write the begin line of XML
+    FileUtility::WriteString(fp, 
+                             "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
     
     // If there are more than 1 root node
     if(root_element.child_list.size() > 1UL) {
@@ -846,7 +848,6 @@ class BinaryXml : public ResourceBase {
     WriteElement(0, fp, &buffer, root_element.child_list[0]);
     
     // Write XML ending and close the fp
-    FileUtility::WriteString(fp, RESOURCE_END_TAG);
     FileUtility::CloseFile(fp);
     
     return;
