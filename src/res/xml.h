@@ -116,7 +116,7 @@ class BinaryXml : public ResourceBase {
     // Number of attributes with the element
     uint16_t attribute_count;
     
-    // The following also describes attributes, but they are special attributes
+    // The index of few special attributes into the above attribute array
     // so they are separately stored. 
     // 0 means non-exist, and the index here starts at 1
     uint16_t id_index;
@@ -144,6 +144,10 @@ class BinaryXml : public ResourceBase {
    */
   class Element {
    public:
+    // This points to the actual element start header
+    // and has all information we need to parse the element
+    ElementStartHeader *header_p; 
+     
     // These three describes the element
     std::vector<Element *> child_list;
     std::vector<NameSpaceStatus> name_space_list;
@@ -153,6 +157,7 @@ class BinaryXml : public ResourceBase {
      * Constructor
      */
     Element() :
+      header_p{nullptr},
       child_list{},
       name_space_list{},
       attribute_list{}
@@ -188,14 +193,17 @@ class BinaryXml : public ResourceBase {
   // This is the root element of XML
   Element root_element;
   
+  // This is a stack of element nodes we are working on
+  // Since we do not do recursive traversal, we need to maintain a 
+  // stack manually
+  // When we see an element end tag, we just pop the top from the stack and
+  // use it as the current element pointer
+  std::vector<Element *> element_stack;
+  
   // This represents the current element
   // Whenever we have seen an element start tag it will be pushed into
   // the list inside the current element
-  Element *current_elemenet_p;
-  
-  // Always keep this the last object
-  // This is used to hold the results of converting it back to normal XML
-  Buffer buffer;
+  Element *current_element_p;
   
  public:
   
@@ -214,7 +222,8 @@ class BinaryXml : public ResourceBase {
     name_space_map{},
     unprinted_name_space_count{0UL},
     root_element{},
-    current_elemenet_p{&root_element} {
+    element_stack{},
+    current_element_p{&root_element} {
     
     // This sets up xml_header_p, and also verifies basic
     // properties of the bianry file
@@ -251,13 +260,6 @@ class BinaryXml : public ResourceBase {
    */
   inline bool IsValidXml() {
     return xml_header_p != nullptr;
-  }
-  
-  /*
-   * GetBuffer() - Returns the buffer inside the object
-   */
-  inline Buffer *GetBuffer() {
-    return &buffer; 
   }
   
   /*
@@ -340,10 +342,9 @@ class BinaryXml : public ResourceBase {
   /*
    * ParseNameSpaceStart() - Parse the start of namespace
    *
-   * This function does not explciitly print the namespace at once because name
-   * space is associated with element tags. However it pushes name space into
-   * a list, and whenever we see an element tag we check whether the list is
-   * empty, and if it is then just print the associated namespace
+   * This function adds a new class Element instance to the parent element
+   * i.e. current_element_p, and then pushes name spaces, attributes into the
+   * new element, and then switch pointer to this element
    */
   void ParseNameSpaceStart(CommonHeader *header_p) {
     assert(header_p->type == ChunkType::NAME_SPACE_START);
@@ -411,27 +412,26 @@ class BinaryXml : public ResourceBase {
    *   "namespace:" 
    * where namespace is the name space string translated using URI
    */
-  void PrintOptionalNameSpace(uint32_t uri) {
+  void PrintOptionalNameSpace(uint32_t uri, Buffer *buffer_p) {
     if(uri != INVALID_STRING) {
       // Since it is URI we need to convert it to prefix
       uint32_t ns_prefix = UriToNameSpacePrefix(uri);
       
-      string_pool.AppendToBuffer(ns_prefix, &buffer);
-      buffer.AppendByte(':');
+      string_pool.AppendToBuffer(ns_prefix, buffer_p);
+      buffer_p->Append(':');
     }
     
     return;
   }
   
   /*
-   * PrintNameSpaceStart() - Prints all name spaces that have not been printed
-   *                         yet to the body of the element tag
+   * AddNameSpace() - Prints all name spaces that have not been printed
+   *                  yet to the body of the element tag
    *
-   * Note that after printing all name spaces this function will leave an
-   * extra space character in the buffer. In some cases this is not necessary
-   * and the caller is resopnsible for calling Rewind() to eat back
+   * This function adds all name spaces that have not been associated with any
+   * tag yet to the current element, and then set the flag to true
    */
-  void PrintNameSpaceStart(Buffer *buffer_p) {
+  void AddNameSpace() {
     // As an optimization, we first check whether there is any
     // unprinted name spaces. If not then return directly without 
     // looping through all items
@@ -443,15 +443,9 @@ class BinaryXml : public ResourceBase {
     for(auto &it : name_space_map) {
       NameSpaceStatus &ns_status = it.second;
       
-      // Print it as 
+      // Push the unprinted name space into the current element
       if(ns_status.printed == false) {
-        buffer_p->Append("xmlns:");
-        string_pool.AppendToBuffer(ns_status.prefix, &buffer);
-        
-        buffer_p->Append("=\"");
-        
-        string_pool.AppendToBuffer(ns_status.uri, &buffer); 
-        buffer_p->Append("\" ");
+        current_element_p->name_space_list.push_back(ns_status);
         
         // Set the mark to avoid it from being printed in the next tag
         ns_status.printed = true;
@@ -466,23 +460,15 @@ class BinaryXml : public ResourceBase {
   }
   
   /*
-   * ParseElementStart() - Parse the start of element
+   * AddAttribute() - Adds attributes into the attribute list for the current
+   *                  element node
    */
-  void ParseElementStart(CommonHeader *header_p) {
+  void AddAttribute(CommonHeader *header_p) {
+    // Make sure it is element start type
     assert(header_p->type == ChunkType::ELEMENT_START);
     
     ElementStartHeader *element_start_p = \
       reinterpret_cast<ElementStartHeader *>(header_p);
-    
-    // Element opening character
-    buffer.Append('<');
-    
-    // Prints the optional name space string with a colon
-    PrintOptionalNameSpace(element_start_p->name_space);
-    
-    // Then output the tag name
-    string_pool.AppendToBuffer(element_start_p->name, &buffer);
-    buffer.Append(' ');
     
     // It is attribute offset + relative offset of name_space field inside 
     // the structure
@@ -493,88 +479,66 @@ class BinaryXml : public ResourceBase {
           element_start_p->attribute_offset + \
             offsetof(ElementStartHeader, name_space)));
     
-    // For each attribute parse it using the i-th element's pointer
+    // For each attribute add it to the attribute list of the current element
     for(uint16_t i = 0;i < element_start_p->attribute_count;i++) {
-      ParseAttribute(attribute_p + i);
+      current_element_p->attribute_list.push_back(attribute_p + i);
     }
-    
-    // After all other attributes, next print name space start
-    PrintNameSpaceStart(&buffer);
-    
-    // To eliminate the tailing space character which is always present
-    buffer.Rewind(1UL);
-    
-    // Then close the tag and new line
-    buffer.AppendByte('>');
-    buffer.AppendByte('\n');
     
     return;
   }
   
   /*
-   * ParseAttribute() - Parses attribute and print to the buffer
+   * ParseElementStart() - Parse the start of element
    *
-   * This function assumes attributes are of fixed length
+   * This function explicitly adds name spaces as well as attributes to a 
+   * newly created element node. Children nodes are added non-explicitly
+   * by repeated call of this function
    */
-  void ParseAttribute(Attribute *attr_p) {
+  void ParseElementStart(CommonHeader *header_p) {
+    assert(header_p->type == ChunkType::ELEMENT_START);
+    
+    // Create a new instance and then switch pointer after pushing
+    // the current one into the stack
+    Element *new_element_p = new Element{}; 
+    current_element_p->child_list.push_back(new_element_p);
+    
+    // Save the current one
+    element_stack.push_back(current_element_p);
+    // And then switch pointer
+    current_element_p = new_element_p;
+    
+    // Add name space to the newly created element
+    AddNameSpace();
+    // Add attributes
+    AddAttribute(header_p);
+    
+    return;
+  }
+  
+  /*
+   * PrintAttribute() - Prints attribute value into a buffer object
+   *
+   */
+  void PrintAttribute(Attribute *attr_p, Buffer *buffer_p) {
     // This prints the optional ns with a colon after it
-    PrintOptionalNameSpace(attr_p->name_space);
+    PrintOptionalNameSpace(attr_p->name_space, buffer_p);
     
-    string_pool.AppendToBuffer(attr_p->name, &buffer);
-    buffer.AppendByte('=');
+    string_pool.AppendToBuffer(attr_p->name, buffer_p);
+    buffer_p->Append('=');
     
-    buffer.AppendByte('\"');
+    buffer_p->Append('\"');
     if(attr_p->raw_value != INVALID_STRING) {
-      string_pool.AppendToBuffer(attr_p->raw_value, &buffer);
+      string_pool.AppendToBuffer(attr_p->raw_value, buffer_p);
     } else {
       // Otherwise the value is typed and the type needs to be considered
-      ParseResourceValue(&attr_p->resource_value);  
+      //ParseResourceValue(&attr_p->resource_value);  
     }
     
-    buffer.AppendByte('\"');
-    buffer.AppendByte(' ');
+    buffer_p->Append('\"');
+    buffer_p->Append(' ');
     
     return;
   }
-  
-  /*
-   * ParseResourceValue() - Parse the typed value and print it in a 
-   *                        correct format
-   *
-   * For unsupported types we simply raise an exception about unsupported
-   * resource type
-   */
-  void ParseResourceValue(ResourceValue *res_value_p) {
-    if(res_value_p->length != 8) {
-      ReportError(UNEXPECTED_RESOURCE_VALUE_LENGTH, 
-                  static_cast<uint16_t>(res_value_p->length)); 
-    }
-    
-    switch(res_value_p->type) {
-      case ResourceValue::DataType::INT_DEC: {
-        buffer.Printf("%d", static_cast<int32_t>(res_value_p->data));
-        break;
-      }
-      case ResourceValue::DataType::INT_HEX: {
-        buffer.Printf("0x%X", res_value_p->data);
-        break;
-      }
-      case ResourceValue::DataType::INT_BOOLEAN: {
-        if(res_value_p->data == 0) {
-          buffer.Append("false", 5);
-        } else {
-          buffer.Append("true", 4); 
-        } 
-        
-        break;
-      }
-      default: {
-        ReportError(UNSUPPORTED_RESOURCE_VALUE_TYPE, 
-                    static_cast<uint32_t>(res_value_p->type),
-                    res_value_p->data); 
-      }
-    } // switch
-  };
   
   /*
    * ParseNext() - Central scheduling function that acts as a state machine and 
@@ -622,11 +586,7 @@ class BinaryXml : public ResourceBase {
         ParseElementStart(next_header_p);
         break; 
       }
-      default: {
-        dbg_printf("The content of the buffer:\n");
-        buffer.WriteToFile(stderr);
-        dbg_printf("==========\n");
-        
+      default: {        
         ReportError(UNKNOWN_CHUNK_TYPE, 
                     static_cast<uint32_t>(next_header_p->type),
                     (size_t)next_header_p - (size_t)raw_data_p); 
