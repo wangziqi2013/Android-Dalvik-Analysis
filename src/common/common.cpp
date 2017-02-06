@@ -102,6 +102,11 @@ const char *error_str_table[] = {
   "Unexpected end of a name space that does not exist\n",
   "There is at least one unclosed element after parsing\n",
   "There is at least one unclosed name space after parsing\n",
+  
+  // 70
+  "Invaid path for writing XML file\n",
+  "Multiple XML root node encountered\n"
+  "Missing XML root node\n",
 };
 
 /*
