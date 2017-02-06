@@ -169,6 +169,17 @@ class BinaryXml : public ResourceBase {
       cdata_list{}
     {}
     
+    // Since it is allocated on the heap most likely, we should also
+    // free the memory
+    ~Element() {
+      // It is a recursive process
+      for(Element *child : child_list) {
+        delete child; 
+      }
+      
+      return;
+    }
+    
     /*
      * Default Constructor
      *

@@ -19,8 +19,8 @@ $(BIN)/buffer_test: $(TEST)/buffer_test.cpp $(TEST)/test_suite.h $(BUILD)/test_s
 	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/buffer_test.cpp $(BUILD)/common.o -o $(BIN)/buffer_test
 	ln -sf $(BIN)/buffer_test ./buffer_test-bin
 
-$(BIN)/res_table_test: $(TEST)/res_table_test.cpp $(BUILD)/test_suite.o $(BUILD)/common.o $(BUILD)/res_table.o $(BUILD)/res_base.o $(BUILD)/package_group.o
-	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/res_table_test.cpp $(BUILD)/common.o $(BUILD)/res_base.o $(BUILD)/res_table.o $(BUILD)/package_group.o -o $(BIN)/res_table_test
+$(BIN)/res_table_test: $(TEST)/res_table_test.cpp $(BUILD)/test_suite.o $(BUILD)/common.o $(BUILD)/res_table.o $(BUILD)/res_base.o $(BUILD)/package_group.o $(BUILD)/xml.o
+	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/res_table_test.cpp $(BUILD)/common.o $(BUILD)/res_base.o $(BUILD)/res_table.o $(BUILD)/package_group.o $(BUILD)/xml.o -o $(BIN)/res_table_test
 	ln -sf $(BIN)/res_table_test ./res_table_test-bin
 
 apk_test: $(BIN)/apk_test
