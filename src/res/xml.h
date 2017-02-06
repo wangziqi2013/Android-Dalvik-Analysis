@@ -160,6 +160,18 @@ class BinaryXml : public ResourceBase {
     /*
      * Constructor
      */
+    Element(CommonHeader *p_header_p) :
+      header_p{reinterpret_cast<ElementStartHeader *>(p_header_p)},
+      child_list{},
+      name_space_list{},
+      attribute_list{}
+    {}
+    
+    /*
+     * Default Constructor
+     *
+     * This is used by the embedded "fake root" instance
+     */
     Element() :
       header_p{nullptr},
       child_list{},
@@ -503,7 +515,8 @@ class BinaryXml : public ResourceBase {
     
     // Create a new instance and then switch pointer after pushing
     // the current one into the stack
-    Element *new_element_p = new Element{}; 
+    Element *new_element_p = new Element{header_p};
+    
     current_element_p->child_list.push_back(new_element_p);
     
     // Save the current one
