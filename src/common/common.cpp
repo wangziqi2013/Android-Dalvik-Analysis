@@ -94,6 +94,7 @@ const char *error_str_table[] = {
   "Invalid integer entry (index: %lu)\n",
   "Invalid fraction entry (index: %lu)\n",
   "Invalid plurals entry (index: %lu)\n",
+  "Name space (URI ID = %u) already exists!\n",
 };
 
 /*

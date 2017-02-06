@@ -128,6 +128,7 @@ enum ErrorCode : uint64_t {
   INVALID_INTEGER_ENTRY, 
   INVALID_FRACTION_ENTRY,
   INVALID_PLURALS_ENTRY,
+  NAME_SPACE_ALREADY_EXIST, 
 };
 
 // Error string table

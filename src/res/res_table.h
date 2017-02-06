@@ -5,8 +5,8 @@
 #define _RES_TBALE_H
 
 #include "common.h"
-#include "res_base.h"
 #include "package_group.h"
+#include "res_base.h"
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 

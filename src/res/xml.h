@@ -7,7 +7,7 @@
 #include "common.h"
 #include "res_base.h"
 
-#include <list>
+#include <unordered_map>
 #include <cstddef>
 
 namespace wangziqi2013 {
@@ -138,12 +138,14 @@ class BinaryXml : public ResourceBase {
   // Pointer to the first element of the resource map array
   ResourceId *resource_map_p;
   
-  // A list of namespaces we are currently in. 
-  // These will be stored until they are exited
-  std::list<NameSpaceStatus> name_space_list;
+  // This maps from URI to the name space status structure that contains meta
+  // information about namespaces
+  // Note that this stores all namespaces we have seen. Only those not
+  // associated with element tag are marked as not printed and will be 
+  // printed the next time we encounter an element tag
+  std::unordered_map<uint32_t, NameSpaceStatus> name_space_map;
   
-  // Number of name spaces not yet printed on the most recent element begin
-  // This is an optimization to avoid searching the list on every element start
+  // This is the number of namespaces that have not been printed
   size_t unprinted_name_space_count;
   
   // Always keep this the last object
@@ -153,7 +155,8 @@ class BinaryXml : public ResourceBase {
  public:
   
   /*
-   * Constructor
+   * Constructor - Inside the constructor we will try to print everything
+   *               into the buffer as parsing proceeds
    */
   BinaryXml(unsigned char *p_raw_data_p, 
             size_t p_length, 
@@ -163,9 +166,11 @@ class BinaryXml : public ResourceBase {
     resource_map_header_p{nullptr},
     resource_map_entry_count{0UL},
     resource_map_p{nullptr},
-    name_space_list{},
+    name_space_map{},
     unprinted_name_space_count{0UL} {
     
+    // This sets up xml_header_p, and also verifies basic
+    // properties of the bianry file
     CommonHeader *next_header_p = VerifyXmlHeader();  
     if(next_header_p == nullptr) {
       xml_header_p = nullptr;
@@ -173,12 +178,11 @@ class BinaryXml : public ResourceBase {
       return; 
     }
     
+    // Loop until ParseNext() declares the end of parsing stage
     while(next_header_p != nullptr) {
       next_header_p = ParseNext(next_header_p);
     }
-    
-    assert(string_pool_header_p != nullptr);
-    
+        
     return;  
   }
   
@@ -200,6 +204,13 @@ class BinaryXml : public ResourceBase {
    */
   inline bool IsValidXml() {
     return xml_header_p != nullptr;
+  }
+  
+  /*
+   * GetBuffer() - Returns the buffer inside the object
+   */
+  inline Buffer *GetBuffer() {
+    return &buffer; 
   }
   
   /*
@@ -281,6 +292,11 @@ class BinaryXml : public ResourceBase {
   
   /*
    * ParseNameSpaceStart() - Parse the start of namespace
+   *
+   * This function does not explciitly print the namespace at once because name
+   * space is associated with element tags. However it pushes name space into
+   * a list, and whenever we see an element tag we check whether the list is
+   * empty, and if it is then just print the associated namespace
    */
   void ParseNameSpaceStart(CommonHeader *header_p) {
     assert(header_p->type == ChunkType::NAME_SPACE_START);
@@ -288,11 +304,21 @@ class BinaryXml : public ResourceBase {
     NameSpaceStartHeader *name_space_start_p = \
       reinterpret_cast<NameSpaceStartHeader *>(header_p);
     
-    // We have seen a new ns and it is not printed yet
+    // The new name space must not be printed here
     unprinted_name_space_count++;
+    
+    uint32_t uri = name_space_start_p->uri;
     // Construct a name space status object and then put that into the list
     // and also the namespace is initialized to be not printed
-    name_space_list.emplace_back(name_space_start_p);
+    auto ret = \
+      name_space_map.insert( \
+        std::make_pair(uri, NameSpaceStatus{name_space_start_p}));
+    
+    // If there is already the URI then we declare error because name spaces
+    // could not clash in one file                   
+    if(ret.second == false) {
+      ReportError(NAME_SPACE_ALREADY_EXIST, uri); 
+    }
     
     return;
   }
@@ -308,21 +334,19 @@ class BinaryXml : public ResourceBase {
    * not have to actually do string comparison
    */
   uint32_t UriToNameSpacePrefix(uint32_t uri) {
-    for(const NameSpaceStatus &ns_stat : name_space_list) {
-      if(ns_stat.uri == uri) {
-        return ns_stat.prefix; 
-      }
+    auto it = name_space_map.find(uri);
+    if(it != name_space_map.end()) {
+      return it->second.prefix; 
     }
     
     // If debug mode is ON we need to print the URI here for debugging
 #ifndef NDEBUG
     Buffer buffer{};
     string_pool.AppendToBuffer(uri, &buffer);
+    buffer.Append('\n');
     
-    dbg_printf("URI: ");
+    dbg_printf("prefix for not found. URI = ");
     buffer.WriteToFile(stderr);
-    
-    fputc('\n', stderr);
 #endif
 
     ReportError(NAME_SPACE_URI_NOT_FOUND);
@@ -353,6 +377,48 @@ class BinaryXml : public ResourceBase {
   }
   
   /*
+   * PrintNameSpaceStart() - Prints all name spaces that have not been printed
+   *                         yet to the body of the element tag
+   *
+   * Note that after printing all name spaces this function will leave an
+   * extra space character in the buffer. In some cases this is not necessary
+   * and the caller is resopnsible for calling Rewind() to eat back
+   */
+  void PrintNameSpaceStart(Buffer *buffer_p) {
+    // As an optimization, we first check whether there is any
+    // unprinted name spaces. If not then return directly without 
+    // looping through all items
+    if(unprinted_name_space_count == 0UL) {
+      return; 
+    }
+    
+    // Loop through all emlements in the hash table
+    for(auto &it : name_space_map) {
+      NameSpaceStatus &ns_status = it.second;
+      
+      // Print it as 
+      if(ns_status.printed == false) {
+        buffer_p->Append("xmlns:");
+        string_pool.AppendToBuffer(ns_status.prefix, &buffer);
+        
+        buffer_p->Append("=\"");
+        
+        string_pool.AppendToBuffer(ns_status.uri, &buffer); 
+        buffer_p->Append("\" ");
+        
+        // Set the mark to avoid it from being printed in the next tag
+        ns_status.printed = true;
+        
+        // This could not be negative
+        assert(unprinted_name_space_count != 0UL);
+        unprinted_name_space_count--;
+      } // if not printed yet
+    } // for it in all elements
+    
+    return;
+  }
+  
+  /*
    * ParseElementStart() - Parse the start of element
    */
   void ParseElementStart(CommonHeader *header_p) {
@@ -362,14 +428,14 @@ class BinaryXml : public ResourceBase {
       reinterpret_cast<ElementStartHeader *>(header_p);
     
     // Element opening character
-    buffer.AppendByte('<');
+    buffer.Append('<');
     
     // Prints the optional name space string with a colon
     PrintOptionalNameSpace(element_start_p->name_space);
     
     // Then output the tag name
     string_pool.AppendToBuffer(element_start_p->name, &buffer);
-    buffer.AppendByte(' ');
+    buffer.Append(' ');
     
     // It is attribute offset + relative offset of name_space field inside 
     // the structure
@@ -385,21 +451,8 @@ class BinaryXml : public ResourceBase {
       ParseAttribute(attribute_p + i);
     }
     
-    for(NameSpaceStatus &ns_stat : name_space_list) {
-      if(ns_stat.printed == false) {
-        buffer.Append("xmlns:", 6);
-        string_pool.AppendToBuffer(ns_stat.prefix, &buffer);
-        
-        buffer.Append("=\"", 2);
-        
-        string_pool.AppendToBuffer(ns_stat.uri, &buffer); 
-        buffer.AppendByte('\"');
-        buffer.AppendByte(' ');
-        
-        // Set the mark to avoid it from being printed in the next tag
-        ns_stat.printed = true;
-      }
-    }
+    // After all other attributes, next print name space start
+    PrintNameSpaceStart(&buffer);
     
     // To eliminate the tailing space character which is always present
     buffer.Rewind(1UL);

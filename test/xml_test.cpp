@@ -14,7 +14,7 @@ using namespace android_dalvik_analysis;
  * TestStringPool() - Tests whether StringPool works and whether we could
  *                    print strings correctly
  */
-void TestStringPool(const char *file_name) {
+BinaryXml *TestStringPool(const char *file_name) {
   _PrintTestName();
   
   size_t length;
@@ -23,21 +23,39 @@ void TestStringPool(const char *file_name) {
   dbg_printf("File %s opened. Length = %lu\n", file_name, length);
   
   // Bind the file data to an object and transfer ownership to the object
-  BinaryXml xml{data, length, true};
-  assert(xml.IsValidXml() == true);
+  BinaryXml *xml_p = new BinaryXml{data, length, true};
+  assert(xml_p->IsValidXml() == true);
   
-  xml.DebugPrintAllStrings();
+  xml_p->DebugPrintAllStrings();
   
-  return;
+  return xml_p;
+}
+
+/*
+ * TestOutputXml() - Tests whether XML could be correctly decoded
+ *
+ * Since the XML file is already decoded 
+ */
+void TestOutputXml(BinaryXml *xml_p, const char *file_name) {
+  _PrintTestName();
+  
+  FILE *fp = FileUtility::OpenFile(file_name, "wb");
+  xml_p->GetBuffer()->WriteToFile(fp);
+  FileUtility::CloseFile(fp);
+  
+  return; 
 }
  
 int main() {
   EnterTestDir();
   
   // This is UTF-16
-  //TestStringPool("AndroidManifest.xml");
-  // This is UTF-8
-  TestStringPool("fragment_edit_dns.xml");
+  BinaryXml *xml_p = TestStringPool("AndroidManifest.xml");
+  
+  TestOutputXml(xml_p, "AndroidManifest-decoded.xml");
+  
+  // Frees memory and the data array since the xml object has ownership
+  delete xml_p;
   
   return 0; 
 }
