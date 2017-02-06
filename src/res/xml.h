@@ -517,7 +517,6 @@ class BinaryXml : public ResourceBase {
   
   /*
    * PrintAttribute() - Prints attribute value into a buffer object
-   *
    */
   void PrintAttribute(Attribute *attr_p, Buffer *buffer_p) {
     // This prints the optional ns with a colon after it
@@ -537,6 +536,18 @@ class BinaryXml : public ResourceBase {
     buffer_p->Append('\"');
     buffer_p->Append(' ');
     
+    return;
+  }
+  
+  /*
+   * ParseNameSpaceEnd() - Parses name space end tag
+   *
+   * Currently this function is empty because there is nothing we need to do
+   * regarding name space end, since we keep all name spaces in a centralized 
+   * map
+   */
+  void ParseNameSpaceEnd(CommonHeader *header_p) {
+    (void)header_p;
     return;
   }
   
@@ -584,6 +595,10 @@ class BinaryXml : public ResourceBase {
       }
       case ChunkType::ELEMENT_START: {
         ParseElementStart(next_header_p);
+        break; 
+      }
+      case ChunkType::NAME_SPACE_END: {
+        ParseNameSpaceEnd(next_header_p);
         break; 
       }
       default: {        

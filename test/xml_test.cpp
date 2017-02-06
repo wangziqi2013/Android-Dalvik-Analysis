@@ -39,9 +39,9 @@ BinaryXml *TestStringPool(const char *file_name) {
 void TestOutputXml(BinaryXml *xml_p, const char *file_name) {
   _PrintTestName();
   
-  FILE *fp = FileUtility::OpenFile(file_name, "wb");
+  //FILE *fp = FileUtility::OpenFile(file_name, "wb");
   //xml_p->GetBuffer()->WriteToFile(fp);
-  FileUtility::CloseFile(fp);
+  //FileUtility::CloseFile(fp);
   
   return; 
 }
