@@ -458,6 +458,17 @@ class FileUtility {
   }
   
   /*
+   * CreateOrEnterPath() - Overloaded version that assumeds path_p being 
+   *                       null terminated C string
+   */
+  static FILE *CreateOrEnterPath(const char *path_p, 
+                                 const char *mode=nullptr) {
+    // Since the length parameter is the logical length
+    // we just use strlen() here
+    return CreateOrEnterPath(path_p, strlen(path_p), mode);
+  }
+  
+  /*
    * CreateOrEnterPath() - Creates all directories in a given path
    *                       and then opens the file
    *
@@ -467,14 +478,18 @@ class FileUtility {
    *
    * If the path is a directory then mode could be nullptr
    *
-   * Note that path_p must be null terminated, and could be const. We always
-   * alloctae a buffer inside this function in order to modify the path
+   * Note that path_p may not be null terminated, and we always use length
+   * to denote its length. There is an overloaded version of this function
+   * that assumes path_p being null terminated
    */
-  static FILE *CreateOrEnterPath(char *path_p, 
+  static FILE *CreateOrEnterPath(const char *path_p, 
+                                 size_t length,
                                  const char *mode=nullptr) {
-    // Allocate it on the heap and copy the path to the buffer
-    char *data_p = new char[strlen(path_p) + 1];
-    strcpy(data_p, path_p);
+    // Allocate it on the heap and copy the path to the buffer and append
+    // null byte after it
+    char *data_p = new char[length + 1];
+    memcpy(data_p, path_p, length);
+    data_p[length] = '\0';
     
     // We use this as the beginning of the current path component
     char *p = data_p;
