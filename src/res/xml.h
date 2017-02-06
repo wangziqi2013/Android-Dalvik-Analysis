@@ -83,13 +83,17 @@ class BinaryXml : public ResourceBase {
     // into an Element instance
     bool printed;
     
+    // If the name space end tag is encountered this is set to true
+    bool ended;
+    
     /*
      * Constructor
      */
     NameSpaceStatus(NameSpaceStartHeader *start_p) :
       prefix{start_p->prefix},
       uri{start_p->uri},
-      printed{false}
+      printed{false},
+      ended{false}
     {}
   };
   
@@ -125,10 +129,10 @@ class BinaryXml : public ResourceBase {
   } BYTE_ALIGNED;
   
   /*
-   * class ElementEnd - The end of an element which only has its name space
-   *                    and element tag 
+   * class ElementEndHeader - The end of an element which only has its name 
+   *                          space and element tag 
    */
-  class ElementEnd {
+  class ElementEndHeader {
    public:
     CommonHeader common_header;
     ElementHeader element_header;
@@ -547,7 +551,45 @@ class BinaryXml : public ResourceBase {
    * map
    */
   void ParseNameSpaceEnd(CommonHeader *header_p) {
-    (void)header_p;
+    NameSpaceEndHeader *end_header_p = \
+      reinterpret_cast<NameSpaceEndHeader *>(header_p);
+      
+    auto it = name_space_map.find(end_header_p->uri);
+    if(it == name_space_map.end()) {
+      ReportError(UNMATCHED_NAME_SPACE_END);
+    }
+    
+    // The name space has been ended
+    it->second.ended = true;
+      
+    return;
+  }
+  
+  /*
+   * ParseElementEnd() - Parses the end of an element
+   *
+   * When we see an end of element, just pop it out of the stack and 
+   * switch to it. This allows us working on the parent node
+   */
+  void ParseElementEnd(CommonHeader *header_p) {
+    ElementEndHeader *end_header_p = \
+      reinterpret_cast<ElementEndHeader *>(header_p);
+    
+    if(element_stack.size() == 0UL) {
+      ReportError(UNEXPECTED_ELEMENT_END);
+    }
+    
+    // If the end tag does not match previous begin tag then we are in trouble
+    if(end_header_p->name != current_element_p->header_p->name || \
+       end_header_p->name_space != current_element_p->header_p->name_space) {
+      ReportError(UNMATCHED_ELEMENT_END);
+    }
+    
+    // Switch to the upper level parent element object by popping from
+    // the back
+    current_element_p = element_stack.back();
+    element_stack.pop_back();
+    
     return;
   }
   
@@ -599,6 +641,10 @@ class BinaryXml : public ResourceBase {
       }
       case ChunkType::NAME_SPACE_END: {
         ParseNameSpaceEnd(next_header_p);
+        break; 
+      }
+      case ChunkType::ELEMENT_END: {
+        ParseElementEnd(next_header_p);
         break; 
       }
       default: {        

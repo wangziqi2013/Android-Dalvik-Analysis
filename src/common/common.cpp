@@ -95,6 +95,11 @@ const char *error_str_table[] = {
   "Invalid fraction entry (index: %lu)\n",
   "Invalid plurals entry (index: %lu)\n",
   "Name space (URI ID = %u) already exists!\n",
+  
+  // 65
+  "Unexpected end of XML element node (stack empty)\n",
+  "Element end tag and start tag does not match\n",
+  "Unexpected end of a name space that does not exist\n",
 };
 
 /*
