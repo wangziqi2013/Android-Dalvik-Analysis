@@ -25,6 +25,21 @@ class BinaryXml : public ResourceBase {
   using ResourceId = uint32_t;
   
   /*
+   * class Attribute - Represents XML attribute structure
+   */
+  class Attribute {
+   public:
+    uint32_t name_space;
+    uint32_t name;
+    
+    // This is a reference to the string pool. 0xFFFFFFFF if not available
+    uint32_t raw_value;
+    
+    // This describes typed value
+    ResourceValue resource_value;
+  } BYTE_ALIGNED;
+  
+  /*
    * class ElementHeader - This is the header for all general XML headers
    */
   class ElementHeader {
@@ -121,6 +136,28 @@ class BinaryXml : public ResourceBase {
     uint32_t name_space;
     uint32_t name;
   } BYTE_ALIGNED;
+  
+  /*
+   * class Element - The class that describes XML element
+   *
+   * We build a tree of XML elements, so each element has a 
+   */
+  class Element {
+   public:
+    // These three describes the element
+    std::vector<Element *> child_list;
+    std::vector<NameSpaceStatus> name_space_list;
+    std::vector<Attribute *> attribute_list;
+    
+    /*
+     * Constructor
+     */
+    Element() :
+      child_list{},
+      name_space_list{},
+      attribute_list{}
+    {}
+  };
   
  // Private data memver
  private: 
@@ -476,15 +513,16 @@ class BinaryXml : public ResourceBase {
     string_pool.AppendToBuffer(attr_p->name, &buffer);
     buffer.AppendByte('=');
     
+    buffer.AppendByte('\"');
     if(attr_p->raw_value != INVALID_STRING) {
       string_pool.AppendToBuffer(attr_p->raw_value, &buffer);
     } else {
-      buffer.AppendByte('\"');
       // Otherwise the value is typed and the type needs to be considered
-      ParseResourceValue(&attr_p->resource_value);
-      buffer.AppendByte('\"');
-      buffer.AppendByte(' ');
+      ParseResourceValue(&attr_p->resource_value);  
     }
+    
+    buffer.AppendByte('\"');
+    buffer.AppendByte(' ');
     
     return;
   }

@@ -246,21 +246,6 @@ class ResourceBase {
   // This is the first line of any XML file we are outputting
   static const char XML_HEADER_LINE[];
   static const char RESOURCE_END_TAG[];
-  
-  /*
-   * class Attribute - Represents XML attribute structure
-   */
-  class Attribute {
-   public:
-    uint32_t name_space;
-    uint32_t name;
-    
-    // This is a reference to the string pool. 0xFFFFFFFF if not available
-    uint32_t raw_value;
-    
-    // This describes typed value
-    ResourceValue resource_value;
-  } BYTE_ALIGNED;
  
  // Protected data member
  protected: 
