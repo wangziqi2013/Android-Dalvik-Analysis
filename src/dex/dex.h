@@ -189,7 +189,12 @@ class DexFile {
    */
   class FieldIdItem {
    public:
-     
+    // Type of the containing class
+    ShortTypeId class_type_id;
+    // Type of the field
+    ShortTypeId field_type_id;
+    // Sting of the name of the field
+    StringId name_id;
   } BYTE_ALIGNED;
   
   // This is defined by the header itself
@@ -221,6 +226,9 @@ class DexFile {
   
   // This is an array of prototypes
   ProtoIdItem *proto_list;
+  
+  // An array of class FieldIdItem
+  FieldIdItem *field_list;
   
  public: 
   /*
@@ -304,6 +312,34 @@ class DexFile {
   }
   
   /*
+   * GetStringCount() - Returns the number of strings
+   */
+  inline size_t GetStringCount() const {
+    return header_p->string_ids_size; 
+  }
+  
+  /*
+   * GetTypeCount() - Returns the number of strings
+   */
+  inline size_t GetTypeCount() const {
+    return header_p->type_ids_size; 
+  }
+  
+  /*
+   * GetProtoCount() - Returns the number of strings
+   */
+  inline size_t GetProtoCount() const {
+    return header_p->proto_ids_size; 
+  }
+  
+  /*
+   * GetFieldCount() - Returns the number of strings
+   */
+  inline size_t GetFieldCount() const {
+    return header_p->field_ids_size; 
+  }
+  
+  /*
    * ParseStringIds() - Parses the string pool and stores the starting address
    *                    of strings in the list
    *
@@ -356,6 +392,17 @@ class DexFile {
   }
   
   /*
+   * ParseFieldIds() - Sets the pointer pointing to field list
+   */
+  inline void ParseFieldIds() {
+    field_list = \
+      reinterpret_cast<FieldIdItem *>(header_p->start + 
+                                      header_p->field_ids_offset);
+
+    return;
+  }
+  
+  /*
    * DebugPrintString() - Prints string into a buffer
    */
   inline void DebugPrintString(uint32_t index, Buffer *buffer_p) {
@@ -398,7 +445,7 @@ class DexFile {
    */
   void DebugPrintAllTypes() {
     Buffer buffer;
-    for(TypeId i = 0;i < header_p->type_ids_size;i++) {
+    for(TypeId i = 0;i < GetTypeCount();i++) {
       uint32_t id = type_list[i];
       
       dbg_printf("Type %u: \"", i);
@@ -415,7 +462,7 @@ class DexFile {
   void DebugPrintAllProtos() {
     Buffer buffer;
     
-    for(ProtoId i = 0;i < header_p->proto_ids_size;i++) {
+    for(ProtoId i = 0;i < GetProtoCount();i++) {
       ProtoIdItem *item_p = &proto_list[i];
       
       dbg_printf("Proto: \"");
@@ -437,6 +484,28 @@ class DexFile {
         DebugPrintTypeString(item_p->GetArgumentType(j, header_p), &buffer);
         buffer.Append(' ');
       }
+      
+      buffer.WriteLineReset(stderr);
+    }
+    
+    return;
+  }
+  
+  /*
+   * DebugPrintAllFields() - Prints all fields
+   */
+  void DebugPrintAllFields() {
+    Buffer buffer;
+    
+    for(uint32_t i = 0;i < GetFieldCount();i++) {
+      FieldIdItem *item_p = field_list + i;
+      
+      dbg_printf("Field %d: ");
+      DebugPrintTypeString(item_p->field_type_id, &buffer);
+      buffer.Append(' ');
+      DebugPrintTypeString(item_p->class_type_id, &buffer);
+      buffer.Append("::");
+      DebugPrintString(item_p->name_id, &buffer);
       
       buffer.WriteLineReset(stderr);
     }
