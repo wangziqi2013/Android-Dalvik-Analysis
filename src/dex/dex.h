@@ -79,7 +79,11 @@ class DexFile {
   // This is defined by the header itself
   static constexpr size_t FILE_HEADER_LENGTH = 0x70UL; 
   static constexpr uint32_t LITTLE_ENDIAN_TAG = 0x12345678; 
-  static constexpr const char FILE_SIGNATURE[] = "dex\n037\0";
+  
+  static const char FILE_SIGNATURE_037[8];
+  static const char FILE_SIGNATURE_035[8];
+  
+  static const char *FILE_SIGNATURE_LIST[2];
   
  public:
   
@@ -87,7 +91,6 @@ class DexFile {
   size_t length;
   bool own_data;
   
-  // If the file is invalid this is set to nullptr
   FileHeader *header_p;
   
  public: 
@@ -99,8 +102,11 @@ class DexFile {
           bool p_own_data) :
     data_p{p_data_p},
     length{p_length},
-    data_p{p_data_p}
-  {}  
+    own_data{p_own_data} {
+    VerifyFileHeader();
+    
+    return;
+  }  
   
   /*
    * Destructor
@@ -120,7 +126,7 @@ class DexFile {
    * VerifyFileHeader() - Verifies the file header for some consistency 
    *                      conditions
    */
-  bool VerifyFileHeader() {
+  void VerifyFileHeader() {
     header_p = reinterpret_cast<FileHeader *>(data_p);
     
     // File size in the header and actual size must match
@@ -136,8 +142,18 @@ class DexFile {
       ReportError(WRONG_DEX_HEADER, "Unknown endian tag"); 
     }
     
-    if(memcmp(FILE_SIGNATURE, header_p->magic, sizeof(FILE_SIGNATURE)) != 0) {
-      ReportError(WRONG_DEX_HEADER, "Invalid file signature"); 
+    // Since there are many possible signatures we need to enumerate
+    bool magic_verified = false;
+    for(size_t i = 0;i < sizeof(FILE_SIGNATURE_LIST) / sizeof(void *);i++) {
+      if(memcmp(FILE_SIGNATURE_LIST[i], 
+                header_p->magic, 
+                sizeof(header_p->magic)) == 0) {
+        magic_verified = true;
+      }  
+    }
+    
+    if(magic_verified == false) {
+      ReportError(WRONG_DEX_HEADER, "Invalid file signature");  
     }
     
     return;

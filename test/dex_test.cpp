@@ -7,6 +7,9 @@
 #include "common.h"
 #include "dex.h"
 
+using namespace wangziqi2013;
+using namespace android_dalvik_analysis;
+
 /*
  * TestDexBasic() - Tests basic structural parsing of DEX file
  */
@@ -22,6 +25,8 @@ void TestDexBasic() {
 }
 
 int main() {
+  EnterTestDir();
+  
   TestDexBasic();
   
   return 0; 
