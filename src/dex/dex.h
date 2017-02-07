@@ -18,6 +18,53 @@ namespace android_dalvik_analysis {
 class DexFile {
  private:
   
+  /* 
+   * enum class FileMapItemType - The item type inside file map
+   */
+  enum class FileMapItemType : uint16_t {
+    DEX_HEADER = 0x0,
+    STRING_ID,
+    TYPE_ID,
+    PROTOTYPE_ID,
+    FIELD_ID,
+    METHOD_ID,
+    CLASS_DEF,
+    MAP_LIST = 0x1000,
+    TYPE_LIST,
+    ANNOTATION_LIST,
+    ANNOTATION_REF,
+    CLASS_DATA_ITEM = 0x2000,
+    CODE,
+    STRING_DATA,
+    DEBUG_INFO,
+    ANNOTATION,
+    ENCODED_ARRAY,
+    ANNOTATION_DIR,
+  };
+  
+  /*
+   * FileMapItem - An entry in file map
+   */
+  class FileMapItem {
+   public:
+    FileMapItemType type;
+    uint16_t unused;
+    
+    uint32_t length;
+    uint32_t offset;
+  } BYTE_ALIGNED;
+  
+  /*
+   * FileMap - A map of the structure of the file
+   */
+  class FileMap {
+   public: 
+    uint32_t entry_count;
+    
+    // This points to the first element of items
+    FileMapItem item_list[0];
+  } BYTE_ALIGNED;
+  
   /*
    * class FileHeader - Describes the general information about the file
    */ 
@@ -49,7 +96,8 @@ class DexFile {
     //   "offset" is the offset from the beginning of the header (i.e. also
     //      from the beginning of the file)
     
-    uint32_t link_size;
+    // This is never presented in normal APKs, so do not need to worry about it
+    uint32_t link_length;
     uint32_t link_offset;
     
     uint32_t map_offset;
@@ -92,6 +140,12 @@ class DexFile {
   bool own_data;
   
   FileHeader *header_p;
+  FileMap *file_map_p;
+  
+  // This is a list of strings that are represented in a special form of
+  // UTF-8
+  // For now we only support ASCII string
+  std::vector<char *> string_list;
   
  public: 
   /*
@@ -125,6 +179,8 @@ class DexFile {
   /*
    * VerifyFileHeader() - Verifies the file header for some consistency 
    *                      conditions
+   *
+   * This function also sets up multiple pointers for later use
    */
   void VerifyFileHeader() {
     header_p = reinterpret_cast<FileHeader *>(data_p);
@@ -155,6 +211,15 @@ class DexFile {
     if(magic_verified == false) {
       ReportError(WRONG_DEX_HEADER, "Invalid file signature");  
     }
+    
+    // Link section should not be present in a normal DEX file
+    if(header_p->link_length != 0 || header_p->link_offset != 0) {
+      ReportError(WRONG_DEX_HEADER, "Do not support link section");
+    }
+    
+    // Assign pointer to file map 
+    file_map_p = \
+      reinterpret_cast<FileMap *>(header_p->start + header_p->map_offset);
     
     return;
   }
