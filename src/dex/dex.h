@@ -147,6 +147,10 @@ class DexFile {
   // For now we only support ASCII string
   std::vector<MUtf8String> string_list;
   
+  // This is an array of uint32_t offsets into the string table for denoting 
+  // types. We could just use the ID as the type's identity
+  uint32_t *type_list;
+  
  public: 
   /*
    * Constructor
@@ -160,6 +164,7 @@ class DexFile {
     VerifyFileHeader();
     
     ParseStringIds();
+    ParseTypeIds();
     
     return;
   }  
@@ -257,9 +262,29 @@ class DexFile {
   }
   
   /*
-   * DebugPrintString() - Prints out all strings inside the DEX
+   * ParseTypeIds() - Parse type list
    */
-  void DebugPrintString() {
+  void ParseTypeIds() {
+    type_list = \
+      reinterpret_cast<uint32_t *>(header_p->start + 
+                                   header_p->type_ids_offset);
+                                   
+    return;
+  }
+  
+  /*
+   * DebugPrintString() - Prints string into a buffer
+   */
+  inline void DebugPrintString(uint32_t index, Buffer *buffer_p) {
+    string_list[index].PrintAscii(buffer_p);
+    
+    return;
+  }
+  
+  /*
+   * DebugPrinAlltStrings() - Prints out all strings inside the DEX
+   */
+  void DebugPrintAllStrings() {
     Buffer buffer; 
     
     int i = 0;
@@ -272,6 +297,24 @@ class DexFile {
       buffer.Reset();
       
       i++;
+    }
+    
+    return;
+  }
+  
+  /*
+   * DebugPrintAllTypes() - Prints all types
+   */
+  void DebugPrintAllTypes() {
+    Buffer buffer;
+    for(uint32_t i = 0;i < header_p->type_ids_size;i++) {
+      uint32_t id = type_list[i];
+      
+      dbg_printf("Type %u: \"", i);
+      DebugPrintString(id, &buffer);
+      buffer.Append("\"\n");
+      buffer.WriteToFile(stderr);
+      buffer.Reset();
     }
     
     return;

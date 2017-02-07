@@ -20,7 +20,18 @@ void TestDexBasic() {
   unsigned char *data_p = FileUtility::LoadFile("classes.dex", &length);
   
   DexFile dex_file{data_p, length, true};
-  dex_file.DebugPrintString();
+  
+  dbg_printf("==============================\n")
+  dbg_printf("String List")
+  dbg_printf("==============================\n")
+  
+  dex_file.DebugPrintAllStrings();
+  
+  dbg_printf("==============================\n")
+  dbg_printf("Type List")
+  dbg_printf("==============================\n")
+  
+  dex_file.DebugPrintAllTypes();
   
   return; 
 }
