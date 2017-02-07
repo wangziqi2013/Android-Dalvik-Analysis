@@ -23,10 +23,15 @@ $(BIN)/res_table_test: $(TEST)/res_table_test.cpp $(BUILD)/test_suite.o $(BUILD)
 	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/res_table_test.cpp $(BUILD)/common.o $(BUILD)/res_base.o $(BUILD)/res_table.o $(BUILD)/package_group.o $(BUILD)/xml.o -o $(BIN)/res_table_test
 	ln -sf $(BIN)/res_table_test ./res_table_test-bin
 
+$(BIN)/dex_test: $(TEST)/dex_test.cpp $(TEST)/test_suite.h $(BUILD)/test_suite.o $(BUILD)/common.o $(BUILD)/dex.o
+	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/dex_test.cpp $(BUILD)/common.o $(BUILD)/dex.o -o $(BIN)/dex_test
+	ln -sf $(BIN)/dex_test ./dex_test-bin
+
 apk_test: $(BIN)/apk_test
 xml_test: $(BIN)/xml_test
 buffer_test: $(BIN)/buffer_test
 res_table_test: $(BIN)/res_table_test
+dex_test: $(BIN)/dex_test
 
 $(BUILD)/common.o: $(SRC)/common/common.cpp $(SRC)/common/common.h $(SRC)/common/utf.h $(SRC)/common/buffer.h
 	g++ -c $(CXX_FLAG) $(SRC)/common/common.cpp -o $(BUILD)/common.o
@@ -48,6 +53,9 @@ $(BUILD)/package_group.o: $(SRC)/res/package_group.cpp $(SRC)/res/package_group.
 
 $(BUILD)/res_base.o: $(SRC)/res/res_base.cpp $(SRC)/res/res_base.h $(SRC)/res/res_value.h $(SRC)/res/type_config.h $(SRC)/common/utf.h
 	g++ -c $(CXX_FLAG) $(SRC)/res/res_base.cpp -o $(BUILD)/res_base.o
+
+$(BUILD)/dex.o: $(SRC)/dex/dex.h $(SRC)/dex/dex.cpp $(BUILD)/common.o 
+	g++ -c $(CXX_FLAG) $(SRC)/dex/dex.cpp -o $(BUILD)/dex.o
 
 prepare:
 	mkdir -p bin
