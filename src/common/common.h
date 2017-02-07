@@ -139,6 +139,7 @@ enum ErrorCode : uint64_t {
   INVALID_XML_PATH = 70,
   MULTIPLE_ROOT_NODE,
   MISSING_ROOT_NODE,
+  WRONG_DEX_HEADER,
 };
 
 // Error string table

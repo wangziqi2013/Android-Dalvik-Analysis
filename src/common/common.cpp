@@ -107,6 +107,7 @@ const char *error_str_table[] = {
   "Invaid path for writing XML file\n",
   "Multiple XML root node encountered\n"
   "Missing XML root node\n",
+  "The header of DEX file is incorrect: %s\n",
 };
 
 /*

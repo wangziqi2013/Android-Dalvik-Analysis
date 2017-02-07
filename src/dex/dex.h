@@ -23,6 +23,7 @@ class DexFile {
    */ 
   class FileHeader {
    public:
+     
     // This serves as the starting address of the array
     unsigned char start[0];
     
@@ -36,9 +37,9 @@ class DexFile {
     uint8_t signature[20];
     
     // Must equal actual file size
-    uint32_t file_size;
+    uint32_t file_length;
     // Must equal 0x70 because header is of fixed length
-    uint32_t header_size;
+    uint32_t header_length;
     // For little-endian it should be 0x12345678
     uint32_t endian_tag;
     
@@ -74,9 +75,22 @@ class DexFile {
     uint32_t data_length;
     uint32_t data_offset;
   } BYTE_ALIGNED;
-   
+  
+  // This is defined by the header itself
+  static constexpr size_t FILE_HEADER_LENGTH = 0x70UL; 
+  static constexpr uint32_t LITTLE_ENDIAN_TAG = 0x12345678; 
+  static constexpr const char FILE_SIGNATURE[] = "dex\n037\0";
+  
  public:
   
+  unsigned char *data_p;
+  size_t length;
+  bool own_data;
+  
+  // If the file is invalid this is set to nullptr
+  FileHeader *header_p;
+  
+ public: 
   /*
    * Constructor
    */
@@ -97,6 +111,33 @@ class DexFile {
   ~DexFile() {
     if(own_data == true) {
       delete[] data_p;
+    }
+    
+    return;
+  }
+  
+  /*
+   * VerifyFileHeader() - Verifies the file header for some consistency 
+   *                      conditions
+   */
+  bool VerifyFileHeader() {
+    header_p = reinterpret_cast<FileHeader *>(data_p);
+    
+    // File size in the header and actual size must match
+    if(header_p->file_length != length) {
+      ReportError(WRONG_DEX_HEADER, "Inconsistent file size"); 
+    }
+    
+    if(header_p->header_length != FILE_HEADER_LENGTH) {
+      ReportError(WRONG_DEX_HEADER, "Inconsistent DEX header size"); 
+    }
+    
+    if(header_p->endian_tag != LITTLE_ENDIAN_TAG) {
+      ReportError(WRONG_DEX_HEADER, "Unknown endian tag"); 
+    }
+    
+    if(memcmp(FILE_SIGNATURE, header_p->magic, sizeof(FILE_SIGNATURE)) != 0) {
+      ReportError(WRONG_DEX_HEADER, "Invalid file signature"); 
     }
     
     return;
