@@ -68,6 +68,8 @@ class DexFile {
   // This is the ID of a run time type
   using StringId = uint32_t;
   using TypeId = uint32_t;
+  // In the type list, ID is short int
+  using ShortTypeId = uint16_t;
   using ProtoId = uint32_t;
   
   /*
@@ -138,7 +140,7 @@ class DexFile {
    public: 
     // Number of entries 
     uint32_t entry_count;
-    TypeId type_list[0]; 
+    ShortTypeId type_list[0]; 
   } BYTE_ALIGNED;
   
   /*
@@ -155,11 +157,30 @@ class DexFile {
     uint32_t type_list_offset;
     
     /*
+     * HasTypeList() - Whether there is a type list as parameter list
+     */
+    inline bool HasTypeList() const {
+      return type_list_offset != 0;
+    }
+    
+    /*
      * GetTypeList() - Returns a pointer to the type list representing the 
      *                 parameter list
      */
     inline TypeList *GetTypeList(FileHeader *header_p) {
+      assert(HasTypeList() == true);
+      
       return reinterpret_cast<TypeList *>(header_p->start + type_list_offset);
+    }
+    
+    /*
+     * GetatgumentType() - Returns the type of a certain argument
+     */
+    inline TypeId GetArgumentType(uint32_t index, FileHeader *header_p) {
+      TypeList *type_list_p = GetTypeList(header_p);
+      assert(index < type_list_p->entry_count);
+      
+      return type_list_p->type_list[index];
     }
   } BYTE_ALIGNED;
   
@@ -397,10 +418,15 @@ class DexFile {
       DebugPrintTypeString(item_p->return_type, &buffer);
       buffer.WriteLineReset(stderr);
       
+      // There is no argument
+      if(item_p->HasTypeList() == false) {
+        continue; 
+      }
+      
       dbg_printf("    Arguments: ");
       TypeList *type_list_p = item_p->GetTypeList(header_p);
       for(uint32_t j = 0;j < type_list_p->entry_count;j++) {
-        DebugPrintTypeString(type_list_p->type_list[j], &buffer);
+        DebugPrintTypeString(item_p->GetArgumentType(j, header_p), &buffer);
         buffer.Append(' ');
       }
       
