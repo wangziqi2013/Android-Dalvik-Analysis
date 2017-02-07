@@ -144,9 +144,9 @@ class DexFile {
   } BYTE_ALIGNED;
   
   /*
-   * class ProtoItem - Prototype items
+   * class ProtoIdItem - Prototype items
    */
-  class ProtoItem {
+  class ProtoIdItem {
    public:
     // Shortened form of the prototype
     StringId short_desciptor;  
@@ -184,6 +184,14 @@ class DexFile {
     }
   } BYTE_ALIGNED;
   
+  /*
+   * class FieldIdItem - Field information
+   */
+  class FieldIdItem {
+   public:
+     
+  } BYTE_ALIGNED;
+  
   // This is defined by the header itself
   static constexpr size_t FILE_HEADER_LENGTH = 0x70UL; 
   static constexpr uint32_t LITTLE_ENDIAN_TAG = 0x12345678; 
@@ -212,7 +220,7 @@ class DexFile {
   TypeId *type_list;
   
   // This is an array of prototypes
-  ProtoItem *proto_list;
+  ProtoIdItem *proto_list;
   
  public: 
   /*
@@ -341,8 +349,8 @@ class DexFile {
    */
   inline void ParseProtoIds() {
     proto_list = \
-      reinterpret_cast<ProtoItem *>(header_p->start + 
-                                    header_p->proto_ids_offset);
+      reinterpret_cast<ProtoIdItem *>(header_p->start + 
+                                      header_p->proto_ids_offset);
                                     
     return;
   }
@@ -408,7 +416,7 @@ class DexFile {
     Buffer buffer;
     
     for(ProtoId i = 0;i < header_p->proto_ids_size;i++) {
-      ProtoItem *item_p = &proto_list[i];
+      ProtoIdItem *item_p = &proto_list[i];
       
       dbg_printf("Proto: \"");
       DebugPrintString(item_p->short_desciptor, &buffer);
