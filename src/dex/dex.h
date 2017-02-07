@@ -145,7 +145,7 @@ class DexFile {
   // This is a list of strings that are represented in a special form of
   // UTF-8
   // For now we only support ASCII string
-  std::vector<char *> string_list;
+  std::vector<MUtf8String> string_list;
   
  public: 
   /*
@@ -158,6 +158,8 @@ class DexFile {
     length{p_length},
     own_data{p_own_data} {
     VerifyFileHeader();
+    
+    ParseStringPool();
     
     return;
   }  
@@ -220,6 +222,57 @@ class DexFile {
     // Assign pointer to file map 
     file_map_p = \
       reinterpret_cast<FileMap *>(header_p->start + header_p->map_offset);
+    
+    return;
+  }
+  
+  /*
+   * ParseStringPool() - Parses the string pool and stores the starting address
+   *                     of strings in the list
+   *
+   * This function for now only supports ASCII strings, which happens to be 
+   * the case for DEX if only normal characters are used.
+   *
+   * All strings are compatible to C string if this function passes. Otherwise
+   * we have an abnormal case and may need human intervention
+   */
+  void ParseStringPool() {
+    uint32_t *string_ids_p = \
+      reinterpret_cast<uint32_t *>(header_p->start + 
+                                   header_p->string_ids_offset);
+    
+    // reserve that many slots for MUtf8 instance
+    string_list.reserve(header_p->string_ids_size);
+    
+    for(uint32_t i = 0;i < header_p->string_ids_size;i++) {
+      uint32_t offset = string_ids_p[i];
+      
+      // Use the string offset to construct a MUtf8String instance
+      // The instance will decode ULEB128 length field and adjust
+      // the pointer to the correct location
+      string_list.emplace_back(MUtf8String{header_p->start + offset});
+    }
+    
+    return;
+  }
+  
+  /*
+   * DebugPrintString() - Prints out all strings inside the DEX
+   */
+  void DebugPrintString() {
+    Buffer buffer; 
+    
+    int i = 0;
+    for(MUtf8String &s : string_list) {
+      dbg_printf("String %d: ", i);
+      
+      s.PrintUtf8(&buffer);
+      buffer.Append('\n');
+      buffer.WriteToFile(stderr);
+      buffer.Reset();
+      
+      i++;
+    }
     
     return;
   }

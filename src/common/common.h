@@ -628,6 +628,61 @@ class TypeUtility {
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 
+/*
+ * class EncodingUtility - Contains functions to process common encoding schemes
+ */
+class EncodingUtility {
+ public: 
+  /*
+   * ReadLEB128() - Read a 32-bit unsigned value encoded in LEB128 or ULEB128
+   *
+   * Read 1 byte, check whether highest bit is 0, if not then continue
+   * the LSB 7 bits are treated as payload
+   *
+   * Argument sign_extension is used to instruct whether sign extension
+   * should be enforced. The second MSB of the last byte is sign bit
+   * and should be propagated to the remaining bits
+   */
+  static uint32_t ReadLEB128(uint8_t **data_p_p, 
+                             bool sign_extension=false) {
+    uint8_t *ptr = reinterpret_cast<uint8_t *>(*data_p_p);
+    uint32_t value = 0x00000000;
+    
+    uint8_t byte;
+    do {
+        byte = *ptr;
+
+        // Mask off MSB, shift 7N bits, and ORed into the value
+        value |= ((byte & 0x7F) << ((ptr - *data_p_p) * 7));
+        ptr++;
+        (*data_p_p)++;
+    } while(byte & 0x80);
+    
+    // When we are here, byte is the last byte we have read
+    // whose MSB must be 0, LSB must be sign bit
+    // and ptr is the next byte potentially to be read
+    if(sign_extension && (byte & 0x40)) {
+      // Number of bytes we have read
+      // ptr has already been increased by 1 so no need to +1
+      int byte_num = ptr - *data_p_p;
+      // The index of the most significant bit
+      int msb_index = byte_num * 7 - 1;
+      // Number of "1"s we need to fill to the high bits
+      int shift_num = msb_index > 31 ? 0 : 31 - msb_index;
+      // Cast to signed int for arithmetic shift, and then cast back
+      // for bitwise operation
+      uint32_t mask = (uint32_t)((uint32_t)0x80000000 >> shift_num);
+      value |= mask;
+    }
+    
+    return value;
+  }
+};
+
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+
 }
 }
 

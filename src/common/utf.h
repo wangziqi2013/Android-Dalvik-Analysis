@@ -207,7 +207,86 @@ class Utf8String : public UtfString {
 /////////////////////////////////////////////////////////////////////
 
 /*
- * Utf16String - UTF-8 encoded string
+ * class MUtf8String - This class represents length and character encoding
+ *                     of the MUTF-8 format
+ *
+ * Note that the length is decoded length. For ASCII characters it does not 
+ * matter. But for UTF-16 surrogate pairs there will be problems
+ */
+class MUtf8String : public UtfString {
+ public:
+  MUtf8String(unsigned char *p_data_p) : 
+    UtfString{p_data_p} {
+    // Decode the length in ULEB128 form
+    DecodeLength();
+    
+    return;
+  }
+   
+  /*
+   * DecodeLength() - Decode length field stored together with string
+   *
+   * This function targets at UTF8 string's length field, which could be 
+   * either 1 byte or 2 bytes, depending on the highest bit on the low byte
+   *
+   * Return value is next unused byte
+   */
+  void DecodeLength() {
+    // This will also move the data pointer to point to the 
+    // actual character data
+    length = EncodingUtility::ReadLEB128(&data_p);
+    
+    return;
+  } 
+  
+  /*
+   * ScanForLength() - Not implemented
+   */
+  void ScanForLength() {
+    assert(false);
+    
+    return;
+  }
+  
+  /*
+   * PrintAscii() - Prints ASCII into a buffer
+   *
+   * This function ignores the length prefix and only uses terminating 0 
+   * to print
+   */
+  void PrintAscii(Buffer *buffer_p) {
+    int i = 0;
+    while(data_p[i] != 0x00) {
+      // It must be ASCII
+      assert(data_p[i] < 128);
+      
+      buffer_p->Append(data_p[i]);
+      i++; 
+    }
+    
+    return;
+  }
+  
+  /*
+   * PrintUtf8() - Prints the UTF-8 to buffer without any modification
+   *
+   * Since the string itself is UTF-8 what we need to do is just to get
+   * it to the buffer using memcpy
+   */
+  inline void PrintUtf8(Buffer *buffer_p) {
+    // We assume it is already UTF-8
+    buffer_p->Append(data_p, length);
+    
+    return;
+  }
+};
+
+///////////////////////////////////////////////////////////////////// 
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+
+/*
+ * Utf16String - UTF-16 encoded string
  */
 class Utf16String : public UtfString {
  public:

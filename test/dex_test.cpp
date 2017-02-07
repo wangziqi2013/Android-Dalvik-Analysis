@@ -20,6 +20,7 @@ void TestDexBasic() {
   unsigned char *data_p = FileUtility::LoadFile("classes.dex", &length);
   
   DexFile dex_file{data_p, length, true};
+  dex_file.DebugPrintString();
   
   return; 
 }
