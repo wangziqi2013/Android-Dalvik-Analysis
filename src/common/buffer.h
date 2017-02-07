@@ -335,6 +335,23 @@ class Buffer {
     va_end (args);
     return;
   }
+  
+  /*
+   * WriteLineReset() - Writes a buffer and new line character, and then
+   *                    resets the buffer
+   */
+  void WriteLineReset(FILE *fp, const char *prefix=nullptr) {
+    // If there is a prefix specified
+    if(prefix != nullptr) {
+      Append(prefix);
+    }
+    
+    WriteToFile(fp);
+    fputc('\n', fp);
+    Reset();
+    
+    return;
+  }
 };
 
 }

@@ -21,17 +21,23 @@ void TestDexBasic() {
   
   DexFile dex_file{data_p, length, true};
   
-  dbg_printf("==============================\n")
-  dbg_printf("String List")
-  dbg_printf("==============================\n")
+  dbg_printf("==============================\n");
+  dbg_printf("String List\n");
+  dbg_printf("==============================\n");
   
   dex_file.DebugPrintAllStrings();
   
-  dbg_printf("==============================\n")
-  dbg_printf("Type List")
-  dbg_printf("==============================\n")
+  dbg_printf("==============================\n");
+  dbg_printf("Type List\n");
+  dbg_printf("==============================\n");
   
   dex_file.DebugPrintAllTypes();
+  
+  dbg_printf("==============================\n");
+  dbg_printf("Proto List\n");
+  dbg_printf("==============================\n");
+  
+  dex_file.DebugPrintAllProtos();
   
   return; 
 }

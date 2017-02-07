@@ -65,6 +65,11 @@ class DexFile {
     FileMapItem item_list[0];
   } BYTE_ALIGNED;
   
+  // This is the ID of a run time type
+  using StringId = uint32_t;
+  using TypeId = uint32_t;
+  using ProtoId = uint32_t;
+  
   /*
    * class FileHeader - Describes the general information about the file
    */ 
@@ -124,6 +129,40 @@ class DexFile {
     uint32_t data_offset;
   } BYTE_ALIGNED;
   
+  /* 
+   * class TypeList - Records a list of types
+   *
+   * This is used to represent function parameters
+   */
+  class TypeList {
+   public: 
+    // Number of entries 
+    uint32_t entry_count;
+    TypeId type_list[0]; 
+  } BYTE_ALIGNED;
+  
+  /*
+   * class ProtoItem - Prototype items
+   */
+  class ProtoItem {
+   public:
+    // Shortened form of the prototype
+    StringId short_desciptor;  
+    TypeId return_type;
+    
+    // This is an offset to the file header, and the target is a 
+    // TypeList instance
+    uint32_t type_list_offset;
+    
+    /*
+     * GetTypeList() - Returns a pointer to the type list representing the 
+     *                 parameter list
+     */
+    inline TypeList *GetTypeList(FileHeader *header_p) {
+      return reinterpret_cast<TypeList *>(header_p->start + type_list_offset);
+    }
+  } BYTE_ALIGNED;
+  
   // This is defined by the header itself
   static constexpr size_t FILE_HEADER_LENGTH = 0x70UL; 
   static constexpr uint32_t LITTLE_ENDIAN_TAG = 0x12345678; 
@@ -149,7 +188,10 @@ class DexFile {
   
   // This is an array of uint32_t offsets into the string table for denoting 
   // types. We could just use the ID as the type's identity
-  uint32_t *type_list;
+  TypeId *type_list;
+  
+  // This is an array of prototypes
+  ProtoItem *proto_list;
   
  public: 
   /*
@@ -165,6 +207,7 @@ class DexFile {
     
     ParseStringIds();
     ParseTypeIds();
+    ParseProtoIds();
     
     return;
   }  
@@ -264,11 +307,22 @@ class DexFile {
   /*
    * ParseTypeIds() - Parse type list
    */
-  void ParseTypeIds() {
+  inline void ParseTypeIds() {
     type_list = \
-      reinterpret_cast<uint32_t *>(header_p->start + 
-                                   header_p->type_ids_offset);
+      reinterpret_cast<TypeId *>(header_p->start + 
+                                 header_p->type_ids_offset);
                                    
+    return;
+  }
+  
+  /*
+   * ParseProtoIds() - Sets the pointer pointing to the proto list
+   */
+  inline void ParseProtoIds() {
+    proto_list = \
+      reinterpret_cast<ProtoItem *>(header_p->start + 
+                                    header_p->proto_ids_offset);
+                                    
     return;
   }
   
@@ -282,19 +336,27 @@ class DexFile {
   }
   
   /*
+   * DebugPrintTypeString() - Prints the string representation of a type
+   *
+   * The index argument refers to the type list
+   */
+  inline void DebugPrintTypeString(uint32_t index, Buffer *buffer_p) {
+    DebugPrintString(type_list[index], buffer_p);
+    return;
+  }
+  
+  /*
    * DebugPrinAlltStrings() - Prints out all strings inside the DEX
    */
   void DebugPrintAllStrings() {
     Buffer buffer; 
     
-    int i = 0;
+    StringId i = 0;
     for(MUtf8String &s : string_list) {
-      dbg_printf("String %d: ", i);
+      dbg_printf("String %u: ", i);
       
       s.PrintAscii(&buffer);
-      buffer.Append('\n');
-      buffer.WriteToFile(stderr);
-      buffer.Reset();
+      buffer.WriteLineReset(stderr);
       
       i++;
     }
@@ -307,14 +369,42 @@ class DexFile {
    */
   void DebugPrintAllTypes() {
     Buffer buffer;
-    for(uint32_t i = 0;i < header_p->type_ids_size;i++) {
+    for(TypeId i = 0;i < header_p->type_ids_size;i++) {
       uint32_t id = type_list[i];
       
       dbg_printf("Type %u: \"", i);
       DebugPrintString(id, &buffer);
-      buffer.Append("\"\n");
-      buffer.WriteToFile(stderr);
-      buffer.Reset();
+      buffer.WriteLineReset(stderr, "\"");
+    }
+    
+    return;
+  }
+  
+  /*
+   * DebugPrintAllProtos() - Prints all prototypes
+   */
+  void DebugPrintAllProtos() {
+    Buffer buffer;
+    
+    for(ProtoId i = 0;i < header_p->proto_ids_size;i++) {
+      ProtoItem *item_p = &proto_list[i];
+      
+      dbg_printf("Proto: \"");
+      DebugPrintString(item_p->short_desciptor, &buffer);
+      buffer.WriteLineReset(stderr, "\"");
+      
+      dbg_printf("    Return type: ");
+      DebugPrintTypeString(item_p->return_type, &buffer);
+      buffer.WriteLineReset(stderr);
+      
+      dbg_printf("    Arguments: ");
+      TypeList *type_list_p = item_p->GetTypeList(header_p);
+      for(uint32_t j = 0;j < type_list_p->entry_count;j++) {
+        DebugPrintTypeString(type_list_p->type_list[j], &buffer);
+        buffer.Append(' ');
+      }
+      
+      buffer.WriteLineReset(stderr);
     }
     
     return;
