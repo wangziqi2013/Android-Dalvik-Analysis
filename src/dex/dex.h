@@ -159,7 +159,7 @@ class DexFile {
     own_data{p_own_data} {
     VerifyFileHeader();
     
-    ParseStringPool();
+    ParseStringIds();
     
     return;
   }  
@@ -227,8 +227,8 @@ class DexFile {
   }
   
   /*
-   * ParseStringPool() - Parses the string pool and stores the starting address
-   *                     of strings in the list
+   * ParseStringIds() - Parses the string pool and stores the starting address
+   *                    of strings in the list
    *
    * This function for now only supports ASCII strings, which happens to be 
    * the case for DEX if only normal characters are used.
@@ -236,7 +236,7 @@ class DexFile {
    * All strings are compatible to C string if this function passes. Otherwise
    * we have an abnormal case and may need human intervention
    */
-  void ParseStringPool() {
+  void ParseStringIds() {
     uint32_t *string_ids_p = \
       reinterpret_cast<uint32_t *>(header_p->start + 
                                    header_p->string_ids_offset);
@@ -266,7 +266,7 @@ class DexFile {
     for(MUtf8String &s : string_list) {
       dbg_printf("String %d: ", i);
       
-      s.PrintUtf8(&buffer);
+      s.PrintAscii(&buffer);
       buffer.Append('\n');
       buffer.WriteToFile(stderr);
       buffer.Reset();

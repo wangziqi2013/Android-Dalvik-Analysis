@@ -253,13 +253,13 @@ class MUtf8String : public UtfString {
    *
    * This function ignores the length prefix and only uses terminating 0 
    * to print
+   *
+   * Note that this function works gracefully also with UTF-8 because the
+   * internal representation is almost the same with UTF-8
    */
   void PrintAscii(Buffer *buffer_p) {
     int i = 0;
-    while(data_p[i] != 0x00) {
-      // It must be ASCII
-      assert(data_p[i] < 128);
-      
+    while(data_p[i] != 0x00) {      
       buffer_p->Append(data_p[i]);
       i++; 
     }
