@@ -1,13 +1,14 @@
 
 #pragma once
 
-#ifndef _XML_H
-#define _XML_H
+#ifndef _DEX_H
+#define _DEX_H
 
-#include "common.h"
+#include "dex_common.h"
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 
+namespace dex {
 
 /*
  * class DexFile - The Dalvik bytecode container file
@@ -64,15 +65,6 @@ class DexFile {
     // This points to the first element of items
     FileMapItem item_list[0];
   } BYTE_ALIGNED;
-  
-  // This is the ID of a run time type
-  using StringId = uint32_t;
-  using TypeId = uint32_t;
-  // In the type list, ID is short int
-  using ShortTypeId = uint16_t;
-  using ProtoId = uint32_t;
-  // In method id item the proto ID is short
-  using ShortProtoId = uint16_t;
   
   /*
    * class FileHeader - Describes the general information about the file
@@ -173,6 +165,11 @@ class DexFile {
     }
   } BYTE_ALIGNED;
   
+  // For offset values if they are 0x0 then it means None
+  static constexpr uint32_t NO_OFFSET = 0x00000000;
+  // This denotes the case where an index is not available
+  static constexpr uint32_t NO_INDEX = 0xFFFFFFFF;
+  
   /*
    * class ProtoIdItem - Prototype items
    */
@@ -182,15 +179,17 @@ class DexFile {
     StringId name_id;  
     TypeId return_type_id;
     
+   private: 
     // This is an offset to the file header, and the target is a 
     // TypeList instance
     uint32_t type_list_offset;
     
+   public: 
     /*
      * HasTypeList() - Whether there is a type list as parameter list
      */
     inline bool HasTypeList() const {
-      return type_list_offset != 0;
+      return type_list_offset != NO_OFFSET;
     }
     
     /*
@@ -238,9 +237,6 @@ class DexFile {
     StringId name_id; 
   } BYTE_ALIGNED;
   
-  // This denotes the case where an index is not available
-  static constexpr uint32_t NO_INDEX = 0xFFFFFFFF;
-  
   /*
    * class ClassDefItem - Class definition
    */
@@ -252,16 +248,70 @@ class DexFile {
     // This is a bit mask about the access status of the class
     uint32_t access_flags;
     
-    // Super class's type ID
+   // The following is declared as private to 
+   private:  
+    // Super class's type ID; could be NO_INDEX if it has no parent type ID
     TypeId parent_type_id;
-    
+   
     // Offset from the beginning of the file to a list of
-    // interfaces
+    // interfaces (class TypeList instance)
+    // If equals 0 then this class does not have any interface
     uint32_t interface_offset;
+    
+    // A string about the source file's file name. Could be NO_INDEX
     StringId source_file_id;
+    
+    // Offset from the file header to annotations for this class
     uint32_t annotation_offset;
+    
+    // Offset to class data
     uint32_t data_offset;
+    
+    // Offset to class static value
     uint32_t static_value_offset;
+    
+   public:
+     
+    /*
+     * HasParentType() - Whether the class has a parent class
+     */
+    inline bool HasParentTypeId() const {
+      return parent_type_id != NO_INDEX;
+    }
+    
+    /*
+     * GetParentTypeId() - Returns the parent ID if there is one
+     */
+    inline TypeId GetParentTypeId() const {
+      assert(HasParentTypeId() == true);
+      
+      return parent_type_id; 
+    }
+    
+    /*
+     * HasInterfaceTypeList() - Returns whether there is an interface list
+     */
+    inline bool HasInterfaceTypeList() const {
+      return interface_offset != NO_OFFSET; 
+    }
+    
+    /*
+     * GetInterfaceTypeList() - Returns the interface type list
+     */
+    TypeList *GetInterfaceTypeList(FileHeader *header_p) {
+      assert(HasInterfaceTypeList() == true);
+      
+      return reinterpret_cast<TypeList *>(header_p->start + interface_offset);
+    }
+    
+    /*
+     * HasData() - Whether the class has any class data
+     */
+    inline bool HasData() const {
+      return data_offset != NO_OFFSET;
+    }
+    
+    //inline void *
   } BYTE_ALIGNED;
   
   // This is defined by the header itself
@@ -633,6 +683,7 @@ class DexFile {
   }
 };
 
+} // namespace dex
 } // namespace android_dalvik_analysis
 } // namespace wangziqi2013
 

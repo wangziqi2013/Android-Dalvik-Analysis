@@ -3,6 +3,7 @@
 
 using namespace wangziqi2013;
 using namespace android_dalvik_analysis;
+using namespace dex;
 
 const char DexFile::FILE_SIGNATURE_037[8] = "dex\n037";
 const char DexFile::FILE_SIGNATURE_035[8] = "dex\n035";
