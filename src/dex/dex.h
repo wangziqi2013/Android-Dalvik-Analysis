@@ -374,6 +374,7 @@ class DexFile {
     ParseProtoIds();
     ParseFieldIds();
     ParseMethodIds();
+    ParseClassDefs();
     
     return;
   }  
@@ -475,6 +476,10 @@ class DexFile {
     return header_p->method_ids_size;
   }
   
+  inline size_t GetClassCount() const {
+    return header_p->class_defs_size; 
+  }
+  
   /*
    * ParseStringIds() - Parses the string pool and stores the starting address
    *                    of strings in the list
@@ -554,7 +559,7 @@ class DexFile {
    *                    them into class ClassInfo
    */
   void ParseClassData(ClassInfo *class_p, unsigned char *class_data_p) {
-    
+    return;
   }
   
   /*
@@ -567,14 +572,13 @@ class DexFile {
     
     // To avoid excessive memory allocation because we already know the 
     // size of this array
-    class_list.reserve(header_p->class_defs_size);
+    class_list.reserve(GetClassCount());
      
     // Go over all class defs and then parse each part                                  
-    for(uint32_t i = 0;i < header_p->class_defs_size;i++) {
+    for(uint32_t i = 0;i < GetClassCount();i++) {
       class_list.emplace_back();
       ClassInfo *class_p = &class_list.back();
       
-      class_p->item_p = item_p;
       class_p->id = item_p->type_id;
       
       // Assign parent type ID if there is one
@@ -586,13 +590,18 @@ class DexFile {
       // If there is an interface type list then we just copy it to
       // the class also
       if(item_p->HasInterfaceTypeList() == true) {
-        TypeList *type_list_p = item_p->GetInterfaceTypeList();
+        TypeList *type_list_p = item_p->GetInterfaceTypeList(header_p);
         class_p->interface_list.reserve(type_list_p->entry_count);
         
         // then push all type IDs into the vector
         for(ShortTypeId id : *type_list_p) {
           class_p->interface_list.push_back(id); 
         }
+      }
+      
+      // If there is class data defined then parse them
+      if(item_p->HasData() == true) {
+        ParseClassData(class_p, item_p->GetData(header_p)); 
       }
       
       // Move to the next class item for parsing

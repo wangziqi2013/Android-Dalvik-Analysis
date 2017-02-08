@@ -26,8 +26,6 @@ static constexpr uint32_t NO_OFFSET = 0x00000000;
 // This denotes the case where an index is not available
 static constexpr uint32_t NO_INDEX = 0xFFFFFFFF;
 
-class ClassDefItem;
-
 /*
  * class FieldInfo - stores decoded field metadata
  */
@@ -69,11 +67,7 @@ class MethodInfo {
  *                   extra dependencies)
  */
 class ClassInfo {
- public:
-  // This is a pointer to the raw data - we just do not access any of it in
-  // this header
-  ClassDefItem *item_p; 
-   
+ public:   
   TypeId id; 
   uint32_t access_flags;
   
@@ -94,7 +88,7 @@ class ClassInfo {
   std::vector<MethodInfo> virtual_method_list;
   
   // Need static data here
-} BYTE_ALIGNED;
+};
 
 
 } // namespace dex
