@@ -20,47 +20,57 @@ void TestDexBasic() {
   unsigned char *data_p = FileUtility::LoadFile("classes.dex", &length);
   
   DexFile dex_file{data_p, length, true};
-  FILE *fp = nullptr;
+  FILE *fp = stderr;
   
   dbg_printf("==============================\n");
   dbg_printf("String List\n");
   dbg_printf("==============================\n");
   
   fp = FileUtility::OpenFile("string.log", "wb");
+  FileUtility::RedirectStderrTo(fp);
   dex_file.DebugPrintAllStrings(fp);
   FileUtility::CloseFile(fp);
+  FileUtility::RestoreStderr();
   
   dbg_printf("==============================\n");
   dbg_printf("Type List\n");
   dbg_printf("==============================\n");
   
   fp = FileUtility::OpenFile("type.log", "wb");
+  FileUtility::RedirectStderrTo(fp);
   dex_file.DebugPrintAllTypes(fp);
   FileUtility::CloseFile(fp);
+  FileUtility::RestoreStderr();
   
   dbg_printf("==============================\n");
   dbg_printf("Proto List\n");
   dbg_printf("==============================\n");
   
   fp = FileUtility::OpenFile("proto.log", "wb");
+  FileUtility::RedirectStderrTo(fp);
   dex_file.DebugPrintAllProtos(fp);
   FileUtility::CloseFile(fp);
+  FileUtility::RestoreStderr();
   
   dbg_printf("==============================\n");
   dbg_printf("Field List\n");
   dbg_printf("==============================\n");
   
   fp = FileUtility::OpenFile("field.log", "wb");
+  FileUtility::RedirectStderrTo(fp);
   dex_file.DebugPrintAllFields(fp);
   FileUtility::CloseFile(fp);
+  FileUtility::RestoreStderr();
   
   dbg_printf("==============================\n");
   dbg_printf("Method List\n");
   dbg_printf("==============================\n");
   
   fp = FileUtility::OpenFile("method.log", "wb");
+  FileUtility::RedirectStderrTo(fp);
   dex_file.DebugPrintAllMethods(fp);
   FileUtility::CloseFile(fp);
+  FileUtility::RestoreStderr();
   
   return; 
 }
