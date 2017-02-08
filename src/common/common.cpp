@@ -115,6 +115,7 @@ const char *error_str_table[] = {
   
   // 75
   "Erorr obtaining the file handler\n",
+  "There is no stderr file handler saved while restoring it\n",
 };
 
 /*

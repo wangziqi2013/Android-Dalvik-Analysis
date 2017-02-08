@@ -143,6 +143,7 @@ enum ErrorCode : uint64_t {
   ERROR_DUP_FILE,
   
   ERROR_FILENO = 75,
+  NO_SAVED_STDERR,
 };
 
 // Error string table
@@ -597,18 +598,17 @@ class FileUtility {
    * is restored. Otherwise the stderr will not be restored to the initial
    * state
    */
-  void RedirectStderrTo(FILE *fp) {
+  static void RedirectStderrTo(FILE *fp) {
     assert(fp != nullptr);
+    int ret;
     
     // Warn the user of such a risk
     if(saved_stderr != -1) {
       dbg_printf("WARNING: Redirecting stderr without restoring\n"); 
     }
     
-    int ret;
-    
     // Save stderr befor redirecting it to a file
-    int saved_stderr = dup(STDERR_FILENO);
+    saved_stderr = dup(STDERR_FILENO);
     if(saved_stderr == -1) {
       dbg_printf("Reason: %s\n", strerror(errno));
       ReportError(ERROR_DUP_FILE, STDERR_FILENO);
@@ -632,6 +632,38 @@ class FileUtility {
       dbg_printf("Reason: %s\n", strerror(errno));
       ReportError(ERROR_DUP_FILE, STDERR_FILENO);
     }
+    
+    return;
+  }
+  
+  /*
+   * RestoreStderr() - Restores stderr using saved value
+   *
+   * If the stderr has not been saved before then an exception will be thrown
+   */
+  static void RestoreStderr() {
+    int ret;
+    if(saved_stderr == -1) {
+      ReportError(NO_SAVED_STDERR);
+    }
+    
+    // This will close the current stderr implicitly
+    ret = dup2(saved_stderr, STDERR_FILENO);
+    if(ret == -1) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      ReportError(ERROR_DUP_FILE, STDERR_FILENO);
+    }
+    
+    // Now the stderr object has two references, one from stderr's file no
+    // and another from this file no. We close this file no to free resources
+    ret = close(saved_stderr);
+    if(ret == -1) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      ReportError(ERROR_CLOSE_FILE);  
+    }
+    
+     // Inform the next call that we could redirect it again
+    saved_stderr = -1;
     
     return;
   }
