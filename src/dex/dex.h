@@ -143,6 +143,34 @@ class DexFile {
     // Number of entries 
     uint32_t entry_count;
     ShortTypeId type_list[0]; 
+    
+    /*
+     * begin() - Returns begin iterator
+     */
+    inline ShortTypeId *begin() {
+      return type_list;  
+    }
+    
+    /*
+     * begin() - Returns end iterator
+     */
+    inline ShortTypeId *end() {
+      return type_list + entry_count;
+    }
+    
+    /*
+     * begin() - Returns constant begin iterator
+     */
+    inline const ShortTypeId *begin() const {
+      return type_list; 
+    }
+    
+    /*
+     * begin() - Returns constant end iterator
+     */
+    inline const ShortTypeId *end() const {
+      return type_list + entry_count;
+    }
   } BYTE_ALIGNED;
   
   /*
@@ -220,9 +248,13 @@ class DexFile {
    public:
     // The type ID of the current class
     TypeId type_id;
+    
+    // This is a bit mask about the access status of the class
     uint32_t access_flags;
+    
     // Super class's type ID
     TypeId parent_type_id;
+    
     // Offset from the beginning of the file to a list of
     // interfaces
     uint32_t interface_offset;
@@ -538,8 +570,8 @@ class DexFile {
       
       dbg_printf("    Arguments: ");
       TypeList *type_list_p = item_p->GetTypeList(header_p);
-      for(uint32_t j = 0;j < type_list_p->entry_count;j++) {
-        DebugPrintTypeString(item_p->GetArgumentType(j, header_p), &buffer);
+      for(ShortTypeId type_id : *type_list_p) {
+        DebugPrintTypeString(type_id, &buffer);
         buffer.Append(' ');
       }
       
