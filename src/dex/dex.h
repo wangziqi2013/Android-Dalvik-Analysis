@@ -555,10 +555,54 @@ class DexFile {
   }
   
   /*
+   * ParseEncodedFieldList() - Parses encoded field list
+   *
+   * This function returns the data pointer after parsing the list
+   */
+  uint8_t *ParseEncodedFieldList(std::vector<FieldInfo> *field_list_p, 
+                                 uint8_t *p, 
+                                 uint32_t count) {
+    // Since type ID is encoded in a differntial fomat we need
+    // to accumulate it on a counter each time
+    TypeId type_id = 0x00000000;
+    for(uint32_t i = 0;i < count;i++) {
+      FieldInfo *info_p = &field_list_p->at(i);
+      
+      info_p->id = (type_id += EncodingUtility::ReadLEB128(&p));
+      info_p->access_flags = EncodingUtility::ReadLEB128(&p);
+    }
+    
+    return p;
+  }
+  
+  /*
    * ParseClassData() - Parses class field and method metadata and store
    *                    them into class ClassInfo
    */
-  void ParseClassData(ClassInfo *class_p, unsigned char *class_data_p) {
+  void ParseClassData(ClassInfo *class_p, uint8_t *class_data_p) {
+    // It will move class data pointer
+    uint32_t static_field_count = EncodingUtility::ReadLEB128(&class_data_p); 
+    uint32_t instance_field_count = EncodingUtility::ReadLEB128(&class_data_p);
+    uint32_t direct_method_count = EncodingUtility::ReadLEB128(&class_data_p);
+    uint32_t virtual_method_count = EncodingUtility::ReadLEB128(&class_data_p);
+    
+    // Optimization: Allocate a chunk of memory and extend the vector first
+    // Such that we could directly access internal data using index
+    class_p->static_field_list.resize(static_field_count);
+    class_p->instance_field_list.resize(instance_field_count);
+    class_p->direct_method_list.resize(direct_method_count);
+    class_p->virtual_method_list.resize(virtual_method_count);
+    
+    class_data_p = \
+      ParseEncodedFieldList(&class_p->static_field_list, 
+                            class_data_p, 
+                            static_field_count);
+                            
+    class_data_p = \
+      ParseEncodedFieldList(&class_p->instance_field_list, 
+                            class_data_p, 
+                            instance_field_count);
+    
     return;
   }
   
@@ -603,6 +647,8 @@ class DexFile {
       if(item_p->HasData() == true) {
         ParseClassData(class_p, item_p->GetData(header_p)); 
       }
+      
+      // TODO: PARSE ANNOTATION AND STATIC DATA
       
       // Move to the next class item for parsing
       item_p++;

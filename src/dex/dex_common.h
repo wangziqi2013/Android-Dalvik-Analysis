@@ -33,14 +33,6 @@ class FieldInfo {
  public: 
   FieldId id;
   uint32_t access_flags;
-  
-  /*
-   * Constructor
-   */
-  FieldInfo(FieldId p_id, uint32_t p_access_flags) :
-    id{p_id},
-    access_flags{p_access_flags}
-  {}
 };
 
 /*
