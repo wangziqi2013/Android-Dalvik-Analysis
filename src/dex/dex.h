@@ -71,6 +71,8 @@ class DexFile {
   // In the type list, ID is short int
   using ShortTypeId = uint16_t;
   using ProtoId = uint32_t;
+  // In method id item the proto ID is short
+  using ShortProtoId = uint16_t;
   
   /*
    * class FileHeader - Describes the general information about the file
@@ -149,8 +151,8 @@ class DexFile {
   class ProtoIdItem {
    public:
     // Shortened form of the prototype
-    StringId short_desciptor;  
-    TypeId return_type;
+    StringId name_id;  
+    TypeId return_type_id;
     
     // This is an offset to the file header, and the target is a 
     // TypeList instance
@@ -197,6 +199,17 @@ class DexFile {
     StringId name_id;
   } BYTE_ALIGNED;
   
+  /*
+   * class MethodIdItem - Represents a method
+   */
+  class MethodIdItem {
+   public:
+    ShortTypeId class_type_id;
+    ShortProtoId proto_id;
+    
+    StringId name_id; 
+  } BYTE_ALIGNED;
+  
   // This is defined by the header itself
   static constexpr size_t FILE_HEADER_LENGTH = 0x70UL; 
   static constexpr uint32_t LITTLE_ENDIAN_TAG = 0x12345678; 
@@ -230,6 +243,9 @@ class DexFile {
   // An array of class FieldIdItem
   FieldIdItem *field_list;
   
+  // An array of class MethodIdItem
+  MethodIdItem *method_list;
+  
  public: 
   /*
    * Constructor
@@ -245,6 +261,8 @@ class DexFile {
     ParseStringIds();
     ParseTypeIds();
     ParseProtoIds();
+    ParseFieldIds();
+    ParseMethodIds();
     
     return;
   }  
@@ -319,24 +337,31 @@ class DexFile {
   }
   
   /*
-   * GetTypeCount() - Returns the number of strings
+   * GetTypeCount() - Returns the number of types
    */
   inline size_t GetTypeCount() const {
     return header_p->type_ids_size; 
   }
   
   /*
-   * GetProtoCount() - Returns the number of strings
+   * GetProtoCount() - Returns the number of protos
    */
   inline size_t GetProtoCount() const {
     return header_p->proto_ids_size; 
   }
   
   /*
-   * GetFieldCount() - Returns the number of strings
+   * GetFieldCount() - Returns the number of fields
    */
   inline size_t GetFieldCount() const {
     return header_p->field_ids_size; 
+  }
+  
+  /*
+   * GetMethodCount() - Returns the number of methods
+   */
+  inline size_t GetMethodCount() const {
+    return header_p->method_ids_size;
   }
   
   /*
@@ -398,6 +423,17 @@ class DexFile {
     field_list = \
       reinterpret_cast<FieldIdItem *>(header_p->start + 
                                       header_p->field_ids_offset);
+
+    return;
+  }
+  
+  /*
+   * ParseMethodIds() - Sets the pointer pointing to method list
+   */
+  inline void ParseMethodIds() {
+    method_list = \
+      reinterpret_cast<MethodIdItem *>(header_p->start + 
+                                       header_p->method_ids_offset);
 
     return;
   }
@@ -466,11 +502,11 @@ class DexFile {
       ProtoIdItem *item_p = &proto_list[i];
       
       dbg_printf("Proto: \"");
-      DebugPrintString(item_p->short_desciptor, &buffer);
+      DebugPrintString(item_p->name_id, &buffer);
       buffer.WriteLineReset(stderr, "\"");
       
       dbg_printf("    Return type: ");
-      DebugPrintTypeString(item_p->return_type, &buffer);
+      DebugPrintTypeString(item_p->return_type_id, &buffer);
       buffer.WriteLineReset(stderr);
       
       // There is no argument
@@ -500,17 +536,47 @@ class DexFile {
     for(uint32_t i = 0;i < GetFieldCount();i++) {
       FieldIdItem *item_p = field_list + i;
       
-      dbg_printf("Field %d: ");
+      dbg_printf("Field %u: type = \"", i);
       DebugPrintTypeString(item_p->field_type_id, &buffer);
-      buffer.Append(' ');
+      buffer.Append("\" class = \"");
       DebugPrintTypeString(item_p->class_type_id, &buffer);
-      buffer.Append("::");
+      buffer.Append("\" name = \"");
       DebugPrintString(item_p->name_id, &buffer);
       
-      buffer.WriteLineReset(stderr);
+      buffer.WriteLineReset(stderr, "\"");
     }
     
     return;
+  }
+  
+  /*
+   * DebugPrintAllMethods() - Prints methods
+   */
+  void DebugPrintAllMethods() {
+    Buffer buffer;
+    
+    for(uint32_t i = 0;i < GetMethodCount();i++) {
+      MethodIdItem *item_p = method_list + i;
+      
+      dbg_printf("Method %u: class = \"", i);
+      DebugPrintTypeString(item_p->class_type_id, &buffer);
+      buffer.Append("\" name = \"");
+      DebugPrintString(item_p->name_id, &buffer);
+      buffer.WriteLineReset(stderr, "\"");
+      
+      dbg_printf("    ");
+      assert(item_p->proto_id < GetProtoCount());
+      ProtoIdItem *proto_p = proto_list + item_p->proto_id;
+      buffer.Append("rtype = \"");
+      DebugPrintTypeString(proto_p->return_type_id, &buffer);
+      buffer.Append("\" Short name = \"");
+      DebugPrintString(proto_p->name_id, &buffer);
+      
+      buffer.WriteLineReset(stderr, "\"");
+    }
+    
+    return;
+     
   }
 };
 

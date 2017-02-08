@@ -39,6 +39,18 @@ void TestDexBasic() {
   
   dex_file.DebugPrintAllProtos();
   
+  dbg_printf("==============================\n");
+  dbg_printf("Field List\n");
+  dbg_printf("==============================\n");
+  
+  dex_file.DebugPrintAllFields();
+  
+  dbg_printf("==============================\n");
+  dbg_printf("Method List\n");
+  dbg_printf("==============================\n");
+  
+  dex_file.DebugPrintAllMethods();
+  
   return; 
 }
 
