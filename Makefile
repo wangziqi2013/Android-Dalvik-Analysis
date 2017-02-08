@@ -54,7 +54,7 @@ $(BUILD)/package_group.o: $(SRC)/res/package_group.cpp $(SRC)/res/package_group.
 $(BUILD)/res_base.o: $(SRC)/res/res_base.cpp $(SRC)/res/res_base.h $(SRC)/res/res_value.h $(SRC)/res/type_config.h $(SRC)/common/utf.h
 	g++ -c $(CXX_FLAG) $(SRC)/res/res_base.cpp -o $(BUILD)/res_base.o
 
-$(BUILD)/dex.o: $(SRC)/dex/dex.h $(SRC)/dex/dex.cpp $(BUILD)/common.o 
+$(BUILD)/dex.o: $(SRC)/dex/dex.h $(SRC)/dex/dex.cpp $(SRC)/dex/dex_common.h $(BUILD)/common.o 
 	g++ -c $(CXX_FLAG) $(SRC)/dex/dex.cpp -o $(BUILD)/dex.o
 
 prepare:
