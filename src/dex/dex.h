@@ -165,11 +165,6 @@ class DexFile {
     }
   } BYTE_ALIGNED;
   
-  // For offset values if they are 0x0 then it means None
-  static constexpr uint32_t NO_OFFSET = 0x00000000;
-  // This denotes the case where an index is not available
-  static constexpr uint32_t NO_INDEX = 0xFFFFFFFF;
-  
   /*
    * class ProtoIdItem - Prototype items
    */
@@ -311,7 +306,14 @@ class DexFile {
       return data_offset != NO_OFFSET;
     }
     
-    //inline void *
+    /*
+     * GetData() - Returns a pointer to class data field
+     */
+    inline uint8_t *GetData(FileHeader *header_p) {
+      assert(HasData() == true);
+      
+      return header_p->start + data_offset;
+    }
   } BYTE_ALIGNED;
   
   // This is defined by the header itself
@@ -349,6 +351,11 @@ class DexFile {
   
   // An array of class MethodIdItem
   MethodIdItem *method_list;
+  
+  // A list of decoded class instances that store class metadata
+  // This is different from the wrapper class becuase it contains
+  // all data in a class in an easy to use manner
+  std::vector<ClassInfo> class_list;
   
  public: 
   /*
@@ -539,6 +546,59 @@ class DexFile {
       reinterpret_cast<MethodIdItem *>(header_p->start + 
                                        header_p->method_ids_offset);
 
+    return;
+  }
+  
+  /*
+   * ParseClassData() - Parses class field and method metadata and store
+   *                    them into class ClassInfo
+   */
+  void ParseClassData(ClassInfo *class_p, unsigned char *class_data_p) {
+    
+  }
+  
+  /*
+   * ParseClassDefs() - Parse class definition and stores class object
+   */
+  void ParseClassDefs() {
+    ClassDefItem *item_p = \
+      reinterpret_cast<ClassDefItem *>(header_p->start + \
+                                       header_p->class_defs_offset);
+    
+    // To avoid excessive memory allocation because we already know the 
+    // size of this array
+    class_list.reserve(header_p->class_defs_size);
+     
+    // Go over all class defs and then parse each part                                  
+    for(uint32_t i = 0;i < header_p->class_defs_size;i++) {
+      class_list.emplace_back();
+      ClassInfo *class_p = &class_list.back();
+      
+      class_p->item_p = item_p;
+      class_p->id = item_p->type_id;
+      
+      // Assign parent type ID if there is one
+      class_p->has_parent = item_p->HasParentTypeId();
+      if(class_p->has_parent == true) {
+        class_p->parent_id = item_p->GetParentTypeId();
+      }
+      
+      // If there is an interface type list then we just copy it to
+      // the class also
+      if(item_p->HasInterfaceTypeList() == true) {
+        TypeList *type_list_p = item_p->GetInterfaceTypeList();
+        class_p->interface_list.reserve(type_list_p->entry_count);
+        
+        // then push all type IDs into the vector
+        for(ShortTypeId id : *type_list_p) {
+          class_p->interface_list.push_back(id); 
+        }
+      }
+      
+      // Move to the next class item for parsing
+      item_p++;
+    }
+    
     return;
   }
   

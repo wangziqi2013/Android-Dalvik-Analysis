@@ -21,37 +21,81 @@ using ShortProtoId = uint16_t;
 using FieldId = uint32_t;
 using MethodId = uint32_t;
 
+// For offset values if they are 0x0 then it means None
+static constexpr uint32_t NO_OFFSET = 0x00000000;
+// This denotes the case where an index is not available
+static constexpr uint32_t NO_INDEX = 0xFFFFFFFF;
+
+class ClassDefItem;
+
 /*
  * class FieldInfo - stores decoded field metadata
  */
 class FieldInfo {
  public: 
   FieldId id;
-  uint32_t access_flag;
+  uint32_t access_flags;
   
   /*
    * Constructor
    */
-  FieldInfo(FieldId p_id, uint32_t p_access_flag) :
+  FieldInfo(FieldId p_id, uint32_t p_access_flags) :
     id{p_id},
-    access_flag{p_access_flag}
+    access_flags{p_access_flags}
   {}
+};
+
+/*
+ * class CodeInfo - The metadata about code for a function
+ */
+class CodeInfo {
+ public:
+   // TO BE ADDED
 };
 
 /*
  * class MethodInfo - Stores metadata about methods
  */
 class MethodInfo {
+ public:
+  MethodId id;
   
+  uint32_t access_flags;
+  CodeInfo code;
 };
 
 /*
- * class ClassDataInfo - Stored decoded filed information about a class
+ * class ClassInfo - Decoded class metadata in a standalone module (i.e. no
+ *                   extra dependencies)
  */
-class ClassDataInfo {
+class ClassInfo {
  public:
+  // This is a pointer to the raw data - we just do not access any of it in
+  // this header
+  ClassDefItem *item_p; 
+   
+  TypeId id; 
+  uint32_t access_flags;
   
+  // Whether there is a super class defined
+  bool has_parent;
+  // This is undefined if there is no super class
+  TypeId parent_id;
+  
+  // A list of interfaces this class uses
+  std::vector<TypeId> interface_list;
+  
+  // Need an annotation list here
+   
+  std::vector<FieldInfo> static_field_list;
+  std::vector<FieldInfo> instance_field_list;
+  
+  std::vector<MethodInfo> direct_method_list;
+  std::vector<MethodInfo> virtual_method_list;
+  
+  // Need static data here
 } BYTE_ALIGNED;
+
 
 } // namespace dex
 } // namespace android_dalvik_analysis
