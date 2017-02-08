@@ -597,6 +597,12 @@ class FileUtility {
    * Please note that this function can only be called once before stderr
    * is restored. Otherwise the stderr will not be restored to the initial
    * state
+   *
+   * NOTE: Multiple fp and multiple fileno will result in multiple buffers run
+   * simultaneously. In this case, printed contents from different fileno
+   * will be mixed together in a wield manner. To avoid this please flush the
+   * buffer once finished printing from a fileno and before switching to
+   * another fileno
    */
   static void RedirectStderrTo(FILE *fp) {
     assert(fp != nullptr);

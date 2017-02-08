@@ -268,7 +268,7 @@ class Buffer {
    *
    * This function will flush the buffer, so it is relatively slow
    */
-  void WriteToFile(FILE *fp) const {
+  void WriteToFile(FILE *fp, bool do_flush=true) const {
     assert(fp != nullptr);
     
     size_t ret = fwrite(data_p, 1, current_length, fp);
@@ -276,10 +276,12 @@ class Buffer {
       ReportError(ERROR_WRITE_FILE); 
     }
     
-    // Make sure we could see the content immediately
-    ret = fflush(fp);
-    if(ret != 0) {
-      ReportError(ERROR_FLUSH_FILE, "(unknown)"); 
+    if(do_flush == true) {
+      // Make sure we could see the content immediately
+      ret = fflush(fp);
+      if(ret != 0) {
+        ReportError(ERROR_FLUSH_FILE, "(unknown)"); 
+      }
     }
     
     return;
@@ -346,8 +348,15 @@ class Buffer {
       Append(prefix);
     }
     
-    WriteToFile(fp);
+    WriteToFile(fp, false);
     fputc('\n', fp);
+    
+    // Need to flush here to make sure '\n' reaches the file
+    int ret = fflush(fp);
+    if(ret != 0) {
+      ReportError(ERROR_FLUSH_FILE); 
+    }
+    
     Reset();
     
     return;
