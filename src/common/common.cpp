@@ -4,6 +4,9 @@
 namespace wangziqi2013 {
 namespace android_dalvik_analysis {
 
+// This is the static variable that saves stderr
+int FileUtility::saved_stderr = -1;
+
 // This is used to reduce duplicated and scattered error messages
 const char *error_str_table[] = {
   // 0
@@ -108,6 +111,10 @@ const char *error_str_table[] = {
   "Multiple XML root node encountered\n"
   "Missing XML root node\n",
   "The header of DEX file is incorrect: %s\n",
+  "Error duplicating a file descriptor: %d\n",
+  
+  // 75
+  "Erorr obtaining the file handler\n",
 };
 
 /*

@@ -140,6 +140,9 @@ enum ErrorCode : uint64_t {
   MULTIPLE_ROOT_NODE,
   MISSING_ROOT_NODE,
   WRONG_DEX_HEADER,
+  ERROR_DUP_FILE,
+  
+  ERROR_FILENO = 75,
 };
 
 // Error string table
@@ -579,6 +582,58 @@ class FileUtility {
     delete[] data_p;
     
     return fp;
+  }
+  
+  // We use this to keep a backup of stderr
+  static int saved_stderr;
+  
+  /*
+   * RedirectStderrTo() - Rediurects stderr to an opened file
+   *
+   * This function calls dup() to create a backup of stderr first and then
+   * direct stderr to the fp to make them refer to the same file
+   *
+   * Please note that this function can only be called once before stderr
+   * is restored. Otherwise the stderr will not be restored to the initial
+   * state
+   */
+  void RedirectStderrTo(FILE *fp) {
+    assert(fp != nullptr);
+    
+    // Warn the user of such a risk
+    if(saved_stderr != -1) {
+      dbg_printf("WARNING: Redirecting stderr without restoring\n"); 
+    }
+    
+    int ret;
+    
+    // Save stderr befor redirecting it to a file
+    int saved_stderr = dup(STDERR_FILENO);
+    if(saved_stderr == -1) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      ReportError(ERROR_DUP_FILE, STDERR_FILENO);
+    }
+    
+    ret = fflush(fp);
+    if(ret != 0) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      ReportError(ERROR_FLUSH_FILE);
+    }
+    
+    int target_fd = fileno(fp);
+    if(target_fd == -1) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      ReportError(ERROR_FILENO); 
+    }
+    
+    // Then close stderr and then open it to duplicate target fd
+    ret = dup2(target_fd, STDERR_FILENO);
+    if(ret == -1) {
+      dbg_printf("Reason: %s\n", strerror(errno));
+      ReportError(ERROR_DUP_FILE, STDERR_FILENO);
+    }
+    
+    return;
   }
 };
 

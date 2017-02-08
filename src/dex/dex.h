@@ -210,6 +210,28 @@ class DexFile {
     StringId name_id; 
   } BYTE_ALIGNED;
   
+  // This denotes the case where an index is not available
+  static constexpr uint32_t NO_INDEX = 0xFFFFFFFF;
+  
+  /*
+   * class ClassDefItem - Class definition
+   */
+  class ClassDefItem {
+   public:
+    // The type ID of the current class
+    TypeId type_id;
+    uint32_t access_flags;
+    // Super class's type ID
+    TypeId parent_type_id;
+    // Offset from the beginning of the file to a list of
+    // interfaces
+    uint32_t interface_offset;
+    StringId source_file_id;
+    uint32_t annotation_offset;
+    uint32_t data_offset;
+    uint32_t static_value_offset;
+  } BYTE_ALIGNED;
+  
   // This is defined by the header itself
   static constexpr size_t FILE_HEADER_LENGTH = 0x70UL; 
   static constexpr uint32_t LITTLE_ENDIAN_TAG = 0x12345678; 
@@ -460,7 +482,7 @@ class DexFile {
   /*
    * DebugPrinAlltStrings() - Prints out all strings inside the DEX
    */
-  void DebugPrintAllStrings() {
+  void DebugPrintAllStrings(FILE *fp) {
     Buffer buffer; 
     
     StringId i = 0;
@@ -468,7 +490,7 @@ class DexFile {
       dbg_printf("String %u: ", i);
       
       s.PrintAscii(&buffer);
-      buffer.WriteLineReset(stderr);
+      buffer.WriteLineReset(fp);
       
       i++;
     }
@@ -479,14 +501,14 @@ class DexFile {
   /*
    * DebugPrintAllTypes() - Prints all types
    */
-  void DebugPrintAllTypes() {
+  void DebugPrintAllTypes(FILE *fp) {
     Buffer buffer;
     for(TypeId i = 0;i < GetTypeCount();i++) {
       uint32_t id = type_list[i];
       
       dbg_printf("Type %u: \"", i);
       DebugPrintString(id, &buffer);
-      buffer.WriteLineReset(stderr, "\"");
+      buffer.WriteLineReset(fp, "\"");
     }
     
     return;
@@ -495,7 +517,7 @@ class DexFile {
   /*
    * DebugPrintAllProtos() - Prints all prototypes
    */
-  void DebugPrintAllProtos() {
+  void DebugPrintAllProtos(FILE *fp) {
     Buffer buffer;
     
     for(ProtoId i = 0;i < GetProtoCount();i++) {
@@ -503,11 +525,11 @@ class DexFile {
       
       dbg_printf("Proto: \"");
       DebugPrintString(item_p->name_id, &buffer);
-      buffer.WriteLineReset(stderr, "\"");
+      buffer.WriteLineReset(fp, "\"");
       
       dbg_printf("    Return type: ");
       DebugPrintTypeString(item_p->return_type_id, &buffer);
-      buffer.WriteLineReset(stderr);
+      buffer.WriteLineReset(fp);
       
       // There is no argument
       if(item_p->HasTypeList() == false) {
@@ -521,7 +543,7 @@ class DexFile {
         buffer.Append(' ');
       }
       
-      buffer.WriteLineReset(stderr);
+      buffer.WriteLineReset(fp);
     }
     
     return;
@@ -530,7 +552,7 @@ class DexFile {
   /*
    * DebugPrintAllFields() - Prints all fields
    */
-  void DebugPrintAllFields() {
+  void DebugPrintAllFields(FILE *fp) {
     Buffer buffer;
     
     for(uint32_t i = 0;i < GetFieldCount();i++) {
@@ -543,7 +565,7 @@ class DexFile {
       buffer.Append("\" name = \"");
       DebugPrintString(item_p->name_id, &buffer);
       
-      buffer.WriteLineReset(stderr, "\"");
+      buffer.WriteLineReset(fp, "\"");
     }
     
     return;
@@ -552,7 +574,7 @@ class DexFile {
   /*
    * DebugPrintAllMethods() - Prints methods
    */
-  void DebugPrintAllMethods() {
+  void DebugPrintAllMethods(FILE *fp) {
     Buffer buffer;
     
     for(uint32_t i = 0;i < GetMethodCount();i++) {
@@ -562,7 +584,7 @@ class DexFile {
       DebugPrintTypeString(item_p->class_type_id, &buffer);
       buffer.Append("\" name = \"");
       DebugPrintString(item_p->name_id, &buffer);
-      buffer.WriteLineReset(stderr, "\"");
+      buffer.WriteLineReset(fp, "\"");
       
       dbg_printf("    ");
       assert(item_p->proto_id < GetProtoCount());
@@ -572,11 +594,10 @@ class DexFile {
       buffer.Append("\" Short name = \"");
       DebugPrintString(proto_p->name_id, &buffer);
       
-      buffer.WriteLineReset(stderr, "\"");
+      buffer.WriteLineReset(fp, "\"");
     }
     
     return;
-     
   }
 };
 
