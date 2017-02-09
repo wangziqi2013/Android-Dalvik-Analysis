@@ -169,6 +169,10 @@ class %s {
 };
     """ % (ARG_PACK_CLASS_NAME, ))
 
+    fp.write("// Jump table declaration\n")
+    fp.write("extern uint8_t *(*op_jump_table[%d])(%s *, uint8_t *);\n" %
+             (len(name_desc_list), ARG_PACK_CLASS_NAME, ))
+
     fp.write("""
 } // namespace dex
 } // namespace android_dalvik_analysis
@@ -287,7 +291,7 @@ def write_cpp_file(name_desc_list):
  * %s() - Parses using format %s
  */
 """ % (func_name, i))
-        fp.write("inline uint8_t *%s(%s *arg_pack_p, uint8_t *data_p) {\n" %
+        fp.write("uint8_t *%s(%s *arg_pack_p, uint8_t *data_p) {\n" %
                  (func_name, ARG_PACK_CLASS_NAME))
 
         # Here we generate function body

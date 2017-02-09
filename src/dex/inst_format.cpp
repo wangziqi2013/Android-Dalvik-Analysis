@@ -16,7 +16,7 @@ using namespace dex;
 /*
  * AA_op_BBBBBBBBBBBBBBBB() - Parses using format AA op BBBBBBBBBBBBBBBB
  */
-inline uint8_t *AA_op_BBBBBBBBBBBBBBBB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
+uint8_t *AA_op_BBBBBBBBBBBBBBBB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
   arg_pack_p->A = EncodingUtility::Get8Bit(data_p);
@@ -30,7 +30,7 @@ inline uint8_t *AA_op_BBBBBBBBBBBBBBBB(ArgumentPack *arg_pack_p, uint8_t *data_p
 /*
  * xx_op() - Parses using format ?? op
  */
-inline uint8_t *xx_op(ArgumentPack *arg_pack_p, uint8_t *data_p) {
+uint8_t *xx_op(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
   data_p++;
@@ -41,7 +41,7 @@ inline uint8_t *xx_op(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 /*
  * B_A_op_CCCC() - Parses using format B A op CCCC
  */
-inline uint8_t *B_A_op_CCCC(ArgumentPack *arg_pack_p, uint8_t *data_p) {
+uint8_t *B_A_op_CCCC(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
   arg_pack_p->A = EncodingUtility::GetLow4Bit(data_p);
@@ -56,7 +56,7 @@ inline uint8_t *B_A_op_CCCC(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 /*
  * AA_op_BBBBBBBB() - Parses using format AA op BBBBBBBB
  */
-inline uint8_t *AA_op_BBBBBBBB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
+uint8_t *AA_op_BBBBBBBB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
   arg_pack_p->A = EncodingUtility::Get8Bit(data_p);
@@ -70,7 +70,7 @@ inline uint8_t *AA_op_BBBBBBBB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 /*
  * AA_op() - Parses using format AA op
  */
-inline uint8_t *AA_op(ArgumentPack *arg_pack_p, uint8_t *data_p) {
+uint8_t *AA_op(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
   arg_pack_p->A = EncodingUtility::Get8Bit(data_p);
@@ -82,7 +82,7 @@ inline uint8_t *AA_op(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 /*
  * AA_op_CC_BB() - Parses using format AA op CC BB
  */
-inline uint8_t *AA_op_CC_BB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
+uint8_t *AA_op_CC_BB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
   arg_pack_p->A = EncodingUtility::Get8Bit(data_p);
@@ -98,7 +98,7 @@ inline uint8_t *AA_op_CC_BB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 /*
  * xx_op_AAAAAAAA() - Parses using format ?? op AAAAAAAA
  */
-inline uint8_t *xx_op_AAAAAAAA(ArgumentPack *arg_pack_p, uint8_t *data_p) {
+uint8_t *xx_op_AAAAAAAA(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
   data_p++;
@@ -111,7 +111,7 @@ inline uint8_t *xx_op_AAAAAAAA(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 /*
  * AA_op_BBBB_CCCC() - Parses using format AA op BBBB CCCC
  */
-inline uint8_t *AA_op_BBBB_CCCC(ArgumentPack *arg_pack_p, uint8_t *data_p) {
+uint8_t *AA_op_BBBB_CCCC(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
   arg_pack_p->A = EncodingUtility::Get8Bit(data_p);
@@ -127,7 +127,7 @@ inline uint8_t *AA_op_BBBB_CCCC(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 /*
  * B_A_op() - Parses using format B A op
  */
-inline uint8_t *B_A_op(ArgumentPack *arg_pack_p, uint8_t *data_p) {
+uint8_t *B_A_op(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
   arg_pack_p->A = EncodingUtility::GetLow4Bit(data_p);
@@ -140,7 +140,7 @@ inline uint8_t *B_A_op(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 /*
  * xx_op_AAAA() - Parses using format ?? op AAAA
  */
-inline uint8_t *xx_op_AAAA(ArgumentPack *arg_pack_p, uint8_t *data_p) {
+uint8_t *xx_op_AAAA(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
   data_p++;
@@ -153,7 +153,7 @@ inline uint8_t *xx_op_AAAA(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 /*
  * xx_op_AAAA_BBBB() - Parses using format ?? op AAAA BBBB
  */
-inline uint8_t *xx_op_AAAA_BBBB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
+uint8_t *xx_op_AAAA_BBBB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
   data_p++;
@@ -168,7 +168,7 @@ inline uint8_t *xx_op_AAAA_BBBB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 /*
  * A_G_op_BBBB_F_E_D_C() - Parses using format A G op BBBB F E D C
  */
-inline uint8_t *A_G_op_BBBB_F_E_D_C(ArgumentPack *arg_pack_p, uint8_t *data_p) {
+uint8_t *A_G_op_BBBB_F_E_D_C(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
   arg_pack_p->G = EncodingUtility::GetLow4Bit(data_p);
@@ -189,7 +189,7 @@ inline uint8_t *A_G_op_BBBB_F_E_D_C(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 /*
  * AA_op_BBBB() - Parses using format AA op BBBB
  */
-inline uint8_t *AA_op_BBBB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
+uint8_t *AA_op_BBBB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
   arg_pack_p->A = EncodingUtility::Get8Bit(data_p);
