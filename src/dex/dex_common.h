@@ -5,6 +5,7 @@
 #define _DEX_COMMON_H
 
 #include "common.h"
+#include "inst.h"
 
 namespace wangziqi2013 {
 namespace android_dalvik_analysis { 

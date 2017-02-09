@@ -9,9 +9,9 @@
 #include "common.h"
 #include "inst_format.h"
 
-using namespace wangziqi2013;
-using namespace android_dalvik_analysis;
-using namespace dex;
+namespace wangziqi2013 {
+namespace android_dalvik_analysis {
+namespace dex {
 
 /*
  * AA_op_BBBBBBBBBBBBBBBB() - Parses using format AA op BBBBBBBBBBBBBBBB
@@ -499,3 +499,7 @@ InstFormat bytecode_type_list[] = {
   [254] = i10x, /* 0xfe */
   [255] = i10x, /* 0xff */
 };
+
+}
+}
+}

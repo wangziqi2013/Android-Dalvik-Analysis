@@ -277,9 +277,9 @@ def write_cpp_file(name_desc_list):
     fp.write("\n")
     fp.write("#include \"common.h\"\n")
     fp.write("#include \"inst_format.h\"\n\n")
-    fp.write("using namespace wangziqi2013;\n")
-    fp.write("using namespace android_dalvik_analysis;\n")
-    fp.write("using namespace dex;\n")
+    fp.write("namespace wangziqi2013 {\n")
+    fp.write("namespace android_dalvik_analysis {\n")
+    fp.write("namespace dex {\n")
 
     desc_set = set()
     for i in name_desc_list:
@@ -332,7 +332,7 @@ def write_bytecode_file(fp):
     Writes the bytecode mapping (from bytecode to instruction format)
 
     :param fp: Opened file pointer for writing the bytecode
-    :return: None
+    :return: file pointer
     """
     fp2 = open(BYTECODE_HTML_FILE_NAME, "r")
     s = fp2.read()
@@ -370,10 +370,21 @@ def write_bytecode_file(fp):
 
     fp.write("};\n")
 
-    return
+    return fp
+
+def finish_cpp_file(fp):
+    """
+    Finishes the cpp file
+
+    :param fp: File pointer
+    :return: None
+    """
+    fp.write("\n}\n}\n}\n")
 
 if __name__ == "__main__":
     name_desc_list = write_header_file()
     fp = write_cpp_file(name_desc_list)
     # Bytecode reside in the same file as the parser
-    write_bytecode_file(fp)
+    fp = write_bytecode_file(fp)
+    finish_cpp_file(fp)
+
