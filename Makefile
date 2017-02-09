@@ -29,8 +29,8 @@ $(BIN)/res_table_test: $(TEST)/res_table_test.cpp $(BUILD)/test_suite.o $(BUILD)
 	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/res_table_test.cpp $(BUILD)/common.o $(BUILD)/res_base.o $(BUILD)/res_table.o $(BUILD)/package_group.o $(BUILD)/xml.o -o $(BIN)/res_table_test
 	ln -sf $(BIN)/res_table_test ./res_table_test-bin
 
-$(BIN)/dex_test: $(TEST)/dex_test.cpp $(TEST)/test_suite.h $(BUILD)/test_suite.o $(BUILD)/common.o $(BUILD)/dex.o
-	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/dex_test.cpp $(BUILD)/common.o $(BUILD)/dex.o -o $(BIN)/dex_test
+$(BIN)/dex_test: $(TEST)/dex_test.cpp $(TEST)/test_suite.h $(BUILD)/test_suite.o $(BUILD)/common.o $(BUILD)/dex.o $(BUILD)/inst_format.o $(BUILD)/inst.o
+	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/dex_test.cpp $(BUILD)/common.o $(BUILD)/dex.o $(BUILD)/inst_format.o $(BUILD)/inst.o -o $(BIN)/dex_test
 	ln -sf $(BIN)/dex_test ./dex_test-bin
 
 apk_test: $(BIN)/apk_test
@@ -63,6 +63,13 @@ $(BUILD)/res_base.o: $(SRC)/res/res_base.cpp $(SRC)/res/res_base.h $(SRC)/res/re
 
 $(BUILD)/dex.o: $(SRC)/dex/dex.h $(SRC)/dex/dex.cpp $(SRC)/dex/dex_common.h $(BUILD)/common.o 
 	g++ -c $(CXX_FLAG) $(SRC)/dex/dex.cpp -o $(BUILD)/dex.o
+
+$(BUILD)/inst_format.o: $(SRC)/dex/inst_format.h $(SRC)/dex/inst_format.cpp $(BUILD)/common.o $(SRC)/dex/inst_format.py
+	cd ./src/dex && python inst_format.py && cd ../../
+	g++ -c $(CXX_FLAG) $(SRC)/dex/inst_format.cpp -o $(BUILD)/inst_format.o
+
+$(BUILD)/inst.o: $(SRC)/dex/inst.h $(SRC)/dex/inst.cpp $(BUILD)/common.o $(BUILD)/inst_format.o
+	g++ -c $(CXX_FLAG) $(SRC)/dex/inst.cpp -o $(BUILD)/inst.o
 
 prepare:
 	mkdir -p bin
