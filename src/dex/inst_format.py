@@ -9,6 +9,8 @@ HTML_FILE_NAME = "./html/inst_format.html"
 CPP_FILE_NAME = "./inst_format.cpp"
 HEADER_FILE_NAME = "./inst_format.h"
 
+ARG_PACK_CLASS_NAME = "ArgumentPack"
+
 DISCLAIMER = \
     """
 //
@@ -60,18 +62,41 @@ def transform_format_string(desc):
             prev = i
             desc += (" " + i)
 
+    desc = desc.strip()
+
     return desc
+
+def transform_desc_to_function_name(s):
+    """
+    Transforms a desc into valid C function name
+
+    :param s: Input desc parsed from HTML
+    :return: str
+    """
+    s = s.replace(' ', '_')
+    s = s.replace('?', 'x')
+
+    return s
+
+
 
 def write_header_file():
     fp = open(HEADER_FILE_NAME, "w")
 
-    write_disclaimer(fp, CPP_FILE_NAME)
+    write_disclaimer(fp, HEADER_FILE_NAME)
 
-    fp.write("\n")
-    fp.write("#include \"common.h\"\n\n")
-    fp.write("using namespace wangziqi2013;\n")
-    fp.write("using namespace android_dalvik_analysis;\n")
-    fp.write("using namespace dex;\n")
+    fp.write("""
+#pragma once
+
+#ifndef _INST_FORMAT_H
+#define _INST_FORMAT_H
+
+#include "common.h"
+
+namespace wangziqi2013 {
+namespace android_dalvik_analysis {
+namespace dex {
+""")
 
     fp.write(
         """
@@ -125,25 +150,102 @@ def write_header_file():
  * of the byte code. In the case where the member is larger than the actual
  * number, only zero-extension is performed
  */
-class ArgumentPack {
+class %s {
  public:
   uint64_t B;
   uint32_t A;
   uing16_t C;
 
+  // This is the opcode
+  uint8_t op;
   // This is to main the correct alignment
-  uint16_t padding;
+  uint8_t padding;
 
   uint8_t D;
   uint8_t E;
   uint8_t F;
   uint8_t G;
 };
+    """ % (ARG_PACK_CLASS_NAME, ))
+
+    fp.write("""
+} // namespace dex
+} // namespace android_dalvik_analysis
+} // namespace wangziqi2013
+
+#endif
     """)
 
     fp.close()
     return name_desc_list
 
+def generate_function_body(token_list, fp):
+    """
+    This function generates the function body for the specified format
+
+    :param token_list:
+    :param fp:
+    :return:
+    """
+    print "old: " + str(token_list)
+    # Reverse the byte prder first
+    new_token_list = []
+    total_length = 0
+    buffer = []
+    for token in token_list:
+        length = len(token)
+        buffer.append(token)
+
+        total_length += length
+        if total_length >= 4:
+            buffer.reverse()
+            new_token_list += buffer
+            buffer = []
+            total_length = 0
+
+    token_list = new_token_list
+    print "new: " + str(token_list)
+
+    half_byte = False
+    for token in token_list:
+        length = len(token)
+        dest = token[0]
+
+        # Deal with special cases
+        if token == "op":
+            dest = token
+        elif token == "??":
+            fp.write("  data_p++;\n")
+            continue
+
+        if length == 1:
+            if half_byte is False:
+                fp.write("  arg_pack_p->%s = EncodingUtility::GetLow4Bit(data_p);\n" % (dest, ))
+                half_byte = True
+            else:
+                fp.write("  arg_pack_p->%s = EncodingUtility::GetHigh4Bit(data_p);\n" % (dest, ))
+                fp.write("  data_p++;\n")
+                half_byte = False
+        elif length == 2:
+            assert(half_byte is False)
+            fp.write("  arg_pack_p->%s = EncodingUtility::Get8Bit(data_p);\n" % (dest, ))
+            fp.write("  data_p++;\n")
+        elif length == 4:
+            assert (half_byte is False)
+            fp.write("  arg_pack_p->%s = EncodingUtility::Get16Bit(data_p);\n" % (dest, ))
+            fp.write("  data_p += 2;\n")
+        elif length == 8:
+            assert (half_byte is False)
+            fp.write("  arg_pack_p->%s = EncodingUtility::Get32Bit(data_p);\n" % (dest, ))
+            fp.write("  data_p += 4;\n")
+        elif length == 16:
+            assert (half_byte is False)
+            fp.write("  arg_pack_p->%s = EncodingUtility::Get64Bit(data_p);\n" % (dest, ))
+            fp.write("  data_p += 8;\n")
+        else:
+            raise ValueError("Invalid length = %d" % (length, ))
+
+    return
 
 def write_cpp_file(name_desc_list):
     """
@@ -153,6 +255,49 @@ def write_cpp_file(name_desc_list):
     :param name_desc_list:
     :return:
     """
+    fp = open(CPP_FILE_NAME, "w")
+
+    write_disclaimer(fp, CPP_FILE_NAME)
+
+    fp.write("\n")
+    fp.write("#include \"common.h\"\n")
+    fp.write("#include \"inst_format.h\"\n\n")
+    fp.write("using namespace wangziqi2013;\n")
+    fp.write("using namespace android_dalvik_analysis;\n")
+    fp.write("using namespace dex;\n")
+
+    desc_set = set()
+    for i in name_desc_list:
+        desc_set.add(i[1])
+
+    for i in desc_set:
+        # This is the only invalid one
+        if i == "N/A":
+            continue
+
+        # This is the name of the function
+        func_name = transform_desc_to_function_name(i)
+        # This is the internal stucture we use to analyze the
+        # argument structure
+        token_list = i.split()
+
+        fp.write("""
+/*
+ * %s() - Parses using format %s
+ */
+""" % (func_name, i))
+        fp.write("inline uint8_t *%s(%s *arg_pack_p, uint8_t *data_p) {\n" %
+                 (func_name, ARG_PACK_CLASS_NAME))
+
+        # Here we generate function body
+        generate_function_body(token_list, fp)
+
+        fp.write("\n")
+        fp.write("  return data_p;\n}\n")
+
+    fp.close()
+
+    return
 
 if __name__ == "__main__":
     name_desc_list = write_header_file()
