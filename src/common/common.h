@@ -144,6 +144,8 @@ enum ErrorCode : uint64_t {
   
   ERROR_FILENO = 75,
   NO_SAVED_STDERR,
+  INCORRECT_FIELD_DATA,
+  INCORRECT_METHOD_DATA,
 };
 
 // Error string table
@@ -727,6 +729,49 @@ class TypeUtility {
 class EncodingUtility {
  public: 
   /*
+   * ReadULEB128() - Reads ULEB 128 representation
+   */
+  static uint32_t ReadULEB128(uint8_t **data_p_p) {
+    static int length_table[16] = {
+      1, 2, 1, 3, 
+      1, 2, 1, 4, 
+      1, 2, 1, 3, 
+      1, 2, 1, 5,
+    };
+    
+    uint32_t word = *reinterpret_cast<uint32_t *>(*data_p_p);
+    uint32_t index = ((word & 0x00000080) >> 7) | \
+                     ((word & 0x00008000) >> 14) | \
+                     ((word & 0x00800000) >> 21) | \
+                     ((word & 0x80000000) >> 28);
+    assert(index < 16);
+    int length = length_table[index];
+    
+    uint32_t value = 0x00000000;
+    switch(length) {
+      case 5:
+        value |= (((*data_p_p)[5] & 0x7F) << 28);
+      case 4:
+        value |= ((word & 0x7F000000) >> 3);
+      case 3:
+        value |= ((word & 0x007F0000) >> 2);
+      case 2:
+        value |= ((word & 0x00007F00) >> 1);
+      case 1:
+        value |= (word & 0x0000007F);
+        break;
+      default:
+        // We don't report error because this could not happen
+        assert(false);
+        break;
+    }
+    
+    (*data_p_p) += length;
+    
+    return value;
+  }
+ 
+  /*
    * ReadLEB128() - Read a 32-bit unsigned value encoded in LEB128 or ULEB128
    *
    * Read 1 byte, check whether highest bit is 0, if not then continue
@@ -741,15 +786,20 @@ class EncodingUtility {
     uint8_t *ptr = reinterpret_cast<uint8_t *>(*data_p_p);
     uint32_t value = 0x00000000;
     
+    int byte_count = 0;
     uint8_t byte;
     do {
         byte = *ptr;
 
         // Mask off MSB, shift 7N bits, and ORed into the value
-        value |= ((byte & 0x7F) << ((ptr - *data_p_p) * 7));
+        value |= ((byte & 0x7F) << (byte_count * 7));
+        
         ptr++;
-        (*data_p_p)++;
+        byte_count++;
     } while(byte & 0x80);
+    
+    // Write back
+    *data_p_p = ptr;
     
     // When we are here, byte is the last byte we have read
     // whose MSB must be 0, LSB must be sign bit

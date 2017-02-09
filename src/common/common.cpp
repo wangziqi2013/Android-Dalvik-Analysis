@@ -22,6 +22,7 @@ const char *error_str_table[] = {
   // This is general error message and carries a more specific reason string
   "Corrupted archive: %s\n", 
   "Iterator has passed the end of iteration\n",
+  
   // 10
   "Failed to initialize zlib\n",
   "Error decompressing data using zlib (errno: %d; reason: %s)\n",
@@ -108,7 +109,7 @@ const char *error_str_table[] = {
   
   // 70
   "Invaid path for writing XML file\n",
-  "Multiple XML root node encountered\n"
+  "Multiple XML root node encountered\n",
   "Missing XML root node\n",
   "The header of DEX file is incorrect: %s\n",
   "Error duplicating a file descriptor: %d\n",
@@ -116,6 +117,8 @@ const char *error_str_table[] = {
   // 75
   "Erorr obtaining the file handler\n",
   "There is no stderr file handler saved while restoring it\n",
+  "Validation fails: Incorrect field data\n",
+  "Validation fails: Incorrect method data\n",
 };
 
 /*
