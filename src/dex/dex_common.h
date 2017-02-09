@@ -36,11 +36,24 @@ class FieldInfo {
 };
 
 /*
+ * class TryInfo - Try block metadata
+ */
+class TryInfo {
+ public:
+  // TO BE ADDED 
+};
+
+/*
  * class CodeInfo - The metadata about code for a function
  */
 class CodeInfo {
  public:
-   // TO BE ADDED
+  uint16_t register_count;
+  uint16_t input_word_count;
+  uint16_t output_word_count;
+  // Add a list of try items and thus its number could be 
+  // implicitly expressed
+  std::vector<TryInfo> try_list;
 };
 
 /*
@@ -49,11 +62,19 @@ class CodeInfo {
 class MethodInfo {
  public:
   MethodId id;
-  
   uint32_t access_flags;
   
-  uint8_t *code_p;
-  CodeInfo code;
+  // nullptr means there is no code section
+  CodeInfo *code_p;
+  
+  /*
+   * Destructor
+   */
+  ~MethodInfo() {
+    if(code_p != nullptr) {
+      delete code_p; 
+    }
+  }
 };
 
 /*

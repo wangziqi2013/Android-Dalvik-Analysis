@@ -3,9 +3,11 @@ SRC=./src
 BIN=./bin
 BUILD=./build
 TEST=./test
-CXX_FLAG=-g -Wl,--no-as-needed -lz -I$(SRC)/dex/ -I$(SRC)/apk/ -I$(SRC)/common/ -I$(SRC)/res/ -std=c++11 -Wall -Wextra 
+CXX_FLAG=-g -Wl,--no-as-needed -lz -I$(SRC)/dex/ -I$(SRC)/apk/ -I$(SRC)/common/ -I$(SRC)/res/ -std=c++11 -Wall -Wextra
+OPT_FLAG= 
+CXX_FLAG+=$(OPT_FLAG)
 
-all: apk_test xml_test buffer_test res_table_test
+all: apk_test xml_test buffer_test res_table_test encoding_test dex_test
 
 $(BIN)/apk_test: $(BUILD)/apk.o $(TEST)/apk_test.cpp $(TEST)/test_suite.h $(BUILD)/test_suite.o $(BUILD)/common.o $(BUILD)/res_base.o 
 	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(BUILD)/apk.o $(TEST)/apk_test.cpp $(BUILD)/common.o $(BUILD)/res_base.o -o $(BIN)/apk_test

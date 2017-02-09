@@ -555,6 +555,21 @@ class DexFile {
   }
   
   /*
+   * ParseCodeInfo() - Parses method byte code and assocoiated metadata
+   */
+  void ParseCodeInfo(CodeInfo *code_p, uint8_t *p) {
+    uint16_t *p1 = reinterpret_cast<uint16_t *>(p);
+    code_p->register_count = p1[0];
+    code_p->input_word_count = p1[1];
+    code_p->output_word_count = p1[2];
+    
+    uint16_t try_count = p1[3];
+    code_p->try_list.resize(try_count);
+    
+    return; 
+  }
+  
+  /*
    * ParseEncodedFieldList() - Parses encoded field list
    *
    * This function returns the data pointer after parsing the list
@@ -590,13 +605,17 @@ class DexFile {
       
       // Stores an absolute pointer to the code section
       uint32_t code_offset = EncodingUtility::ReadULEB128(&p);
+      
+      // Native and abstract method does not have code section
       if(code_offset == NO_OFFSET) {
         info_p->code_p = nullptr;
       } else {
-        info_p->code_p = header_p->start + code_offset;
+        // Create a new code info object, and then call the parsing function
+        info_p->code_p = new CodeInfo{};
+        
+        // Use the code offset and code info object to parse code info
+        ParseCodeInfo(info_p->code_p, header_p->start + code_offset);
       }
-      
-      // TODO: PARSE CODE SECTION HERE
     }
     
     return p;
