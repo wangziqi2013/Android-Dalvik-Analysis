@@ -1,0 +1,1158 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<meta name="Description" content="This document lists the instruction formats used by the Dalvik Executable format and Dalvik bytecode. It is meant to be used in conjunction with the bytecode reference document . The first column in the format table lists the bitwise layout of the format…">
+
+<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+<title>Dalvik Executable instruction formats | Android Open Source Project</title>
+
+<!-- STYLESHEETS -->
+<link rel="stylesheet"
+href="//fonts.googleapis.com/css?family=Roboto:regular,medium,thin,italic,mediumitalic,bold" title="roboto">
+<link href="/assets/css/default.css" rel="stylesheet" type="text/css">
+
+
+
+<!-- JAVASCRIPT -->
+<script src="//www.google.com/jsapi" type="text/javascript"></script>
+<script src="/assets/js/android_3p-bundle.js" type="text/javascript"></script>
+<script type="text/javascript">
+  var toRoot = "/";
+  
+  var devsite = false;
+  
+</script>
+<script src="/assets/js/docs.js" type="text/javascript"></script>
+
+<script src="/navtree_data.js" type="text/javascript"></script>
+
+
+<script type="text/javascript" src="//www.gstatic.com/feedback/api.js"></script>
+
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-45455297-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</head>
+
+<body class="gc-documentation 
+  " itemscope itemtype="http://schema.org/Article">
+<a name="top"></a>
+
+  
+    <!-- Header -->
+    <div id="header">
+        <div class="wrap" id="header-wrap">
+          <div class="col-3 saclogo">
+          <a href="/index.html">
+            <img src="/assets/images/sac_logo.png"
+                srcset="/assets/images/sac_logo@2x.png 2x"
+                width="123" height="25" alt="Android Open Source Project" />
+          </a>
+          </div>
+            <ul class="nav-x col-9">
+                <li class="source">
+                  <a href="/source/index.html" 
+                  >Source</a></li>
+                <li class="devices"><a href="/devices/index.html" class="selected"
+                  >Devices</a></li>
+                <li class="security"><a href="/security/index.html" 
+                  >Security</a></li>
+                <li class="compatibility last"><a href="/compatibility/index.html" 
+                  >Compatibility</a></li>
+            </ul>
+            <!-- New Search -->
+            <div class="menu-container">
+            <div class="moremenu">
+    <div id="more-btn"></div>
+  </div>
+  <div class="morehover" id="moremenu">
+    <div class="top"></div>
+    <div class="mid">
+      <div class="header">Android Sites</div>
+      <ul>
+        <li class="active"><a>Android Open Source Project</a></li>
+        <li><a href="http://www.android.com">Android.com</a></li>
+        <li><a href="http://developer.android.com">Android Developers</a></li>
+      </ul>
+      <!-- <div class="header">Support</div>
+      <ul>
+        <li><a href="/support.html">Developer Support</a></li>
+      </ul> -->
+      <br class="clearfix" />
+    </div>
+    <div class="bottom"></div>
+  </div>
+
+  <div class="search" id="search-container">
+    <div class="search-inner">
+      <div id="search-btn"></div>
+      <div class="left"></div>
+      <form onsubmit="return submit_search()">
+        <input id="search_autocomplete" type="text" value="" autocomplete="off" name="q"
+onfocus="search_focus_changed(this, true)" onblur="search_focus_changed(this, false)"
+onkeydown="return search_changed(event, true, '/')"
+onkeyup="return search_changed(event, false, '/')" />
+      </form>
+      <div class="right"></div>
+        <a class="close hide">close</a>
+        <div class="left"></div>
+        <div class="right"></div>
+    </div>
+  </div>
+  <div id="search_filtered_wrapper">
+    <div id="search_filtered_div" class="no-display">
+        <ul id="search_filtered">
+        </ul>
+    </div>
+  </div>
+
+  </div>
+  <!-- /New Search> -->
+        </div>
+    </div>
+    <!-- /Header -->
+
+  <div id="searchResults" class="wrap" style="display:none;">
+          <h2 id="searchTitle">Results</h2>
+          <div id="leftSearchControl" class="search-control">Loading...</div>
+  </div>
+
+  
+  
+  
+    
+  <div class="wrap clearfix" id="body-content">
+    <div class="col-4" id="side-nav" itemscope itemtype="http://schema.org/SiteNavigationElement">
+      <div id="devdoc-nav" class="scroll-pane">
+<a class="totop" href="#top" data-g-event="left-nav-top">to top</a>
+
+<!--
+    Copyright 2015 The Android Open Source Project
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<ul id="nav">
+  <li class="nav-section">  <!-- Begin nav section, Device Interfaces -->
+    <div class="nav-section-header">
+      <a href="/devices/index.html">
+        <span class="en">Interfaces</span>
+      </a>
+    </div>
+    <ul>
+  <li class="nav-section">
+  <div class="nav-section-header">
+      <a href="/devices/accessories/index.html">
+        <span class="en">Accessories</span>
+      </a>
+    </div>
+    <ul>
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/accessories/audio.html">
+            <span class="en">Audio Accessories</span>
+          </a>
+        </div>
+        <ul>
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/accessories/headset/index.html">
+            <span class="en">Headset</span>
+          </a>
+        </div>
+        <ul>
+          <li><a href="/devices/accessories/headset/specification.html">Specification</a></li>
+          <li><a href="/devices/accessories/headset/requirements.html">Requirements</a></li>
+          <li><a href="/devices/accessories/headset/testing.html">Testing</a></li>
+        </ul>
+      </li>
+        </ul>
+      </li>
+  <li class="nav-section">
+  <div class="nav-section-header">
+      <a href="/devices/accessories/custom.html">
+        <span class="en">Custom Accessories</span>
+      </a>
+    </div>
+    <ul>
+      <li class="nav-section">
+        <div class="nav-section-header"><a href="/devices/accessories/protocol.html"><span class="en">AOA</span>
+        </a>
+        </div>
+        <ul>
+          <li><a href="/devices/accessories/aoa2.html">AOA 2.0</a></li>
+          <li><a href="/devices/accessories/aoa.html">AOA 1.0</a></li>
+        </ul>
+        </li>
+        <div class="nav-section-header"><a href="/devices/accessories/stylus.html"><span class="en">Stylus</span>
+        </a>
+        </div>
+       </ul>
+     </li>
+    </ul>
+      <li class="nav-section">
+      <div class="nav-section-header">
+        <a href="/devices/audio/index.html">
+          <span class="en">Audio</span>
+        </a>
+      </div>
+        <ul>
+          <li><a href="/devices/audio/terminology.html">Terminology</a></li>
+          <li class="nav-section">
+            <div class="nav-section-header">
+              <a href="/devices/audio/implement.html">
+                <span class="en">Implementation</span>
+              </a>
+            </div>
+            <ul>
+              <li><a href="/devices/audio/implement-policy.html">Policy Configuration</a></li>
+              <li><a href="/devices/audio/implement-shared-library.html">Shared Library</a></li>
+              <li><a href="/devices/audio/implement-pre-processing.html">Pre-processing Effects</a></li>
+            </ul>
+         </li>
+          <li><a href="/devices/audio/data_formats.html">Data Formats</a></li>
+          <li><a href="/devices/audio/attributes.html">Attributes</a></li>
+          <li><a href="/devices/audio/warmup.html">Warmup</a></li>
+          <li class="nav-section">
+            <div class="nav-section-header">
+              <a href="/devices/audio/latency.html">
+                <span class="en">Latency</span>
+              </a>
+            </div>
+            <ul>
+              <li><a href="/devices/audio/latency_contrib.html">Contributors</a></li>
+              <li><a href="/devices/audio/latency_design.html">Design</a></li>
+              <li><a href="/devices/audio/latency_measure.html">Measure</a></li>
+              <li><a href="/devices/audio/testing_circuit.html">Light Testing Circuit</a></li>
+              <li><a href="/devices/audio/loopback.html">Audio Loopback Dongle</a></li>
+              <li><a href="/devices/audio/latency_measurements.html">Measurements</a></li>
+              <li><a href="/devices/audio/latency_app.html">Applications</a></li>
+            </ul>
+          </li>
+          <li><a href="/devices/audio/avoiding_pi.html">Priority Inversion</a></li>
+          <li><a href="/devices/audio/src.html">Sample Rate Conversion</a></li>
+          <li><a href="/devices/audio/debugging.html">Debugging</a></li>
+          <li class="nav-section">
+            <div class="nav-section-header">
+              <a href="/devices/audio/midi.html">
+                <span class="em">MIDI</span>
+              </a>
+            </div>
+            <ul>
+              <li><a href="/devices/audio/midi_arch.html">MIDI Architecture</a></li>
+              <li><a href="/devices/audio/midi_test.html">MIDI Test Procedure</a></li>
+            </ul>
+          <li><a href="/devices/audio/usb.html">USB Digital Audio</a></li>
+          <li><a href="/devices/audio/tv.html">TV Audio</a></li>
+        </ul>
+      </li>
+      <li><a href="/devices/automotive.html">Automotive</a></li>
+      <li><a href="/devices/bluetooth.html">Bluetooth</a></li>
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/camera/index.html">
+            <span class="en">Camera</span>
+          </a>
+        </div>
+        <ul>
+          <li><a href="/devices/camera/camera3.html">Camera HAL3</a></li>
+          <li><a href="/devices/camera/camera3_requests_hal.html">HAL Subsystem</a></li>
+          <li><a href="/devices/camera/camera3_metadata.html">Metadata and Controls</a></li>
+          <li><a href="/devices/camera/camera3_3Amodes.html">3A Modes and State</a></li>
+          <li><a href="/devices/camera/camera3_crop_reprocess.html">Output and Cropping</a></li>
+          <li><a href="/devices/camera/camera3_error_stream.html">Errors and Streams</a></li>
+          <li><a href="/devices/camera/camera3_requests_methods.html">Request Creation</a></li>
+          <li><a href="/devices/camera/versioning.html">Version Support</a></li>
+        </ul>
+      </li>
+
+      <li><a href="/devices/drm.html">DRM</a></li>
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/graphics/index.html">
+            <span class="en">Graphics</span>
+          </a>
+        </div>
+        <ul>
+         <li class="nav-section">
+            <div class="nav-section-header">
+              <a href="/devices/graphics/architecture.html">
+                <span class="en">Architecture</span>
+              </a>
+            </div>
+            <ul>
+              <li><a href="/devices/graphics/arch-bq-gralloc.html">BufferQueue</a></li>
+              <li><a href="/devices/graphics/arch-sf-hwc.html">SurfaceFlinger and HWC</a></li>
+              <li><a href="/devices/graphics/arch-sh.html">Surface and SurfaceHolder</a></li>
+              <li><a href="/devices/graphics/arch-egl-opengl.html">OpenGL ES</a></li>
+              <li><a href="/devices/graphics/arch-vulkan.html">Vulkan</a></li>
+              <li><a href="/devices/graphics/arch-sv-glsv.html">SurfaceView</a></li>
+              <li><a href="/devices/graphics/arch-st.html">SurfaceTexture</a></li>
+              <li><a href="/devices/graphics/arch-tv.html">TextureView</a></li>
+              <li><a href="/devices/graphics/arch-gameloops.html">Game Loops</a></li>
+            </ul>
+         </li>
+         <li class="nav-section">
+            <div class="nav-section-header">
+              <a href="/devices/graphics/implement.html">
+                <span class="en">Implementing</span>
+              </a>
+            </div>
+            <ul>
+              <li><a href="/devices/graphics/implement-hwc.html">Hardware Composer HAL</a></li>
+              <li><a href="/devices/graphics/implement-vsync.html">VSYNC</a></li>
+              <li><a href="/devices/graphics/implement-vulkan.html">Vulkan</a></li>
+              <li><a href="/devices/graphics/implement-vdisplays.html">Virtual Displays</a></li>
+            </ul>
+         </li>
+         <li class="nav-section">
+            <div class="nav-section-header">
+              <a href="/devices/graphics/testing.html">
+                <span class="en">OpenGL ES Testing</span>
+              </a>
+            </div>
+            <ul>
+              <li><a href="/devices/graphics/build-tests.html">Building test programs</a></li>
+              <li><a href="/devices/graphics/port-tests.html">Porting the test framework</a></li>
+              <li><a href="/devices/graphics/run-tests.html">Running the tests</a></li>
+              <li><a href="/devices/graphics/automate-tests.html">Automating the tests</a></li>
+              <li><a href="/devices/graphics/test-groups.html">Using special test groups</a></li>
+              <li><a href="/devices/graphics/cts-integration.html">Integrating with Android CTS</a></li>
+            </ul>
+         </li>
+        </ul> </li>
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/input/index.html">
+            <span class="en">Input</span>
+          </a>
+        </div>
+        <ul>
+          <li><a href="/devices/input/overview.html">Overview</a></li>
+          <li><a href="/devices/input/key-layout-files.html">Key Layout Files</a></li>
+          <li><a href="/devices/input/key-character-map-files.html">Key Character Map Files</a></li>
+          <li><a href="/devices/input/input-device-configuration-files.html">Input Device Configuration Files</a></li>
+          <li><a href="/devices/input/migration-guide.html">Migration Guide</a></li>
+          <li><a href="/devices/input/keyboard-devices.html">Keyboard Devices</a></li>
+          <li><a href="/devices/input/touch-devices.html">Touch Devices</a></li>
+          <li><a href="/devices/input/diagnostics.html">Diagnostics</a></li>
+          <li><a href="/devices/input/getevent.html">Getevent</a></li>
+          <li><a href="/devices/input/validate-keymaps.html">Validate Keymaps</a></li>
+        </ul>
+      </li>
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/media/index.html">
+            <span class="en">Media</span>
+          </a>
+        </div>
+        <ul>
+          <li><a href="/devices/media/framework-hardening.html">Framework
+          Hardening</a></li>
+          <li><a href="/devices/media/soc.html">SoC Dependencies</a></li>
+          <li><a href="/devices/media/oem.html">OEM Dependencies</a></li>
+        </ul>
+      </li>
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/sensors/index.html">
+            <span class="en">Sensors</span>
+          </a>
+        </div>
+        <ul>
+          <li><a href="/devices/sensors/sensor-stack.html">Sensor stack</a></li>
+          <li><a href="/devices/sensors/report-modes.html">Reporting modes</a></li>
+          <li><a href="/devices/sensors/suspend-mode.html">Suspend mode</a></li>
+          <li><a href="/devices/sensors/power-use.html">Power consumption</a></li>
+          <li><a href="/devices/sensors/interaction.html">Interaction</span></a></li>
+          <li><a href="/devices/sensors/hal-interface.html">HAL interface</a></li>
+          <li><a href="/devices/sensors/batching.html">Batching</a></li>
+          <li><a href="/devices/sensors/sensor-types.html">Sensor types</a></li>
+          <li><a href="/devices/sensors/versioning.html">Version deprecation</a></li>
+        </ul>
+      </li>
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/storage/index.html">
+            <span class="en">Storage</span>
+          </a>
+        </div>
+        <ul>
+          <li><a href="/devices/storage/traditional.html">Traditional Storage</a></li>
+          <li><a href="/devices/storage/adoptable.html">Adoptable Storage</a></li>
+          <li><a href="/devices/storage/config.html">Device Configuration</a></li>
+          <li><a href="/devices/storage/config-example.html">Configuration Examples</a></li>
+        </ul>
+      </li>
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/tv/index.html">
+            <span class="en">TV</span>
+          </a>
+        </div>
+        <ul>
+          <li><a href="/devices/tv/HDMI-CEC.html">HDMI-CEC control service</a></li>
+          <li><a href="/devices/tv/reference-tv-app.html">Reference TV App</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li> <!-- End nav-section, Device Interfaces-->
+
+
+  <li class="nav-section"> <!--Begin nav-section, Core Technologies-->
+    <div class="nav-section-header">
+      <a href="/devices/tech/index.html">
+        <span class="en">Core Technologies</span>
+      </a>
+    </div>
+
+    <ul>
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/tech/dalvik/index.html">
+          <span class="en">ART and Dalvik</span></a>
+        </div>
+        <ul>
+          <li><a href="/devices/tech/dalvik/dalvik-bytecode.html">Bytecode Format</a></li>
+          <li><a href="/devices/tech/dalvik/dex-format.html">.Dex Format</a></li>
+          <li><a href="/devices/tech/dalvik/instruction-formats.html">Instruction Formats</a></li>
+          <li><a href="/devices/tech/dalvik/constraints.html">Constraints</a></li>
+          <li><a href="/devices/tech/dalvik/configure.html">Configuration</a></li>
+          <li><a href="/devices/tech/dalvik/gc-debug.html">Garbage Collection</a></li>
+          <li><a href="/devices/tech/dalvik/jit-compiler.html">JIT Compilation</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-section">
+        <div class="nav-section-header">
+            <a href="/devices/tech/config/index.html">
+              <span class="en">Configuration</span>
+            </a>
+        </div>
+        <ul>
+          <li><a href="/devices/tech/config/carrier.html">Carrier Customization</a></li>
+          <li><a href="/devices/tech/config/connect_tests.html">Connectivity Tests</a></li>
+          <li><a href="/devices/tech/config/filesystem.html">File System</a></li>
+          <li><a href="/devices/tech/config/kernel.html">Kernel Configuration</a></li>
+          <li><a href="/devices/tech/config/kernel_network_tests.html">Kernel Network Tests</a></li>
+          <li><a href="/devices/tech/config/low-ram.html">Low RAM</a></li>
+          <li><a href="/devices/tech/config/namespaces_libraries.html">Namespaces for Libraries</a></li>
+          <li><a href="/devices/tech/config/renderer.html">OpenGLRenderer</a></li>
+          <li><a href="/devices/tech/config/runtime_perms.html">Runtime Permissions</a></li>
+          <li><a href="/devices/tech/config/uicc.html">UICC</a></li>
+          <li><a href="/devices/tech/config/voicemail.html">Visual Voicemail</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-section">
+        <div class="nav-section-header">
+            <a href="/devices/tech/connect/index.html">
+              <span class="en">Connectivity</span>
+            </a>
+        </div>
+        <ul>
+          <li><a href="/devices/tech/connect/block-numbers.html">Block Phone Numbers</a></li>
+          <li><a href="/devices/tech/connect/call-notification.html">Call Notifications</a></li>
+          <li><a href="/devices/tech/connect/data-saver.html">Data Saver Mode</a></li>
+          <li><a href="/devices/tech/connect/felica.html">Host Card Emulation of FeliCa</a></li>
+          <li><a href="/devices/tech/connect/ril.html">Radio Interface Layer (RIL)</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/tech/datausage/index.html">
+            <span class="en">Data Usage</span>
+          </a>
+        </div>
+        <ul>
+          <li><a href="/devices/tech/datausage/iface-overview.html">Network interface statistics overview</a></li>
+          <li><a href="/devices/tech/datausage/excluding-network-types.html">Excluding Network Types from Data Usage</a></li>
+          <li><a href="/devices/tech/datausage/tethering-data.html">Tethering Data</a></li>
+          <li><a href="/devices/tech/datausage/usage-cycle-resets-dates.html">Usage Cycle Reset Dates</a></li>
+          <li><a href="/devices/tech/datausage/kernel-overview.html">Kernel Overview</a></li>
+          <li><a href="/devices/tech/datausage/tags-explained.html">Data Usage Tags Explained</a></li>
+          <li><a href="/devices/tech/datausage/kernel-changes.html">Kernel Changes</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/tech/debug/index.html">
+            <span class="en">Debugging</span>
+          </a>
+        </div>
+        <ul>
+          <li><a href="/devices/tech/debug/asan.html">AddressSanitizer</a></li>
+          <li><a href="/devices/tech/debug/dumpsys.html">Dumpsys</a></li>
+          <li><a href="/devices/tech/debug/native-memory.html">Native Memory Use</a></li>
+          <li><a href="/devices/tech/debug/netstats.html">Network Use</a></li>
+          <li><a href="/devices/tech/debug/procstats.html">RAM Use</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/tech/admin/index.html">
+          <span class="en">Device Administration</span></a>
+        </div>
+        <ul>
+          <li><a href="/devices/tech/admin/implement.html">Implementation</a></li>
+          <li><a href="/devices/tech/admin/multi-user.html">Multiple Users</a></li>
+          <li><a href="/devices/tech/admin/managed-profiles.html">Managed Profiles</a></li>
+          <li><a href="/devices/tech/admin/provision.html">Provisioning</a></li>
+          <li><a href="/devices/tech/admin/multiuser-apps.html">Multiuser Apps</a></li>
+          <li><a href="/devices/tech/admin/enterprise-telephony.html">Enterprise Telephony</a></li>
+          <li><a href="/devices/tech/admin/testing-provision.html">Testing Device Provisioning</a></li>
+          <li><a href="/devices/tech/admin/testing-setup.html">Testing Device Administration</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-section">
+        <div class="nav-section-header">
+            <a href="/devices/tech/display/index.html">
+              <span class="en">Display Settings</span></a>
+        </div>
+        <ul>
+          <li><a href="/devices/tech/display/dnd.html">Do Not Disturb</a></li>
+          <li><a href="/devices/tech/display/multi-window.html">Multi-Window</a></li>
+          <li><a href="/devices/tech/display/hdr.html">HDR Video</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-section">
+        <div class="nav-section-header empty">
+          <a href="/devices/halref/index.html">
+            <span class="en">HAL File Reference</span>
+          </a>
+        </div>
+      </li>
+
+      <li class="nav-section">
+        <div class="nav-section-header">
+            <a href="/devices/tech/ota/index.html">
+              <span class="en">OTA Updates</span>
+            </a>
+        </div>
+        <ul>
+          <li><a href="/devices/tech/ota/tools.html">OTA Tools</a></li>
+          <li><a href="/devices/tech/ota/block.html">Block-based OTA</a></li>
+          <li><a href="/devices/tech/ota/inside_packages.html">Inside OTA Packages</a></li>
+          <li><a href="/devices/tech/ota/device_code.html">Device-Specific Code</a></li>
+          <li><a href="/devices/tech/ota/reduce_size.html">Reducing OTA Size</a></li>
+          <li><a href="/devices/tech/ota/sign_builds.html">Signing Builds for Release</a></li>
+        </ul>
+      </li>
+
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/tech/power/index.html"><span class="en">Power</span></a>
+        </div>
+        <ul>
+          <li><a href="/devices/tech/power/mgmt.html">Power Management</a></li>
+          <li><a href="/devices/tech/power/performance.html">Performance Management</a></li>
+          <li><a href="/devices/tech/power/component.html">Component Power</a></li>
+          <li><a href="/devices/tech/power/device.html">Device Power</a></li>
+          <li><a href="/devices/tech/power/values.html">Power Values</a></li>
+          <li><a href="/devices/tech/power/batterystats.html">Battery Use</a>
+          </li>
+        </ul>
+      </li>
+      <li class="nav-section">
+        <div class="nav-section-header">
+          <a href="/devices/tech/test_infra/tradefed/index.html">
+            <span class="en">Testing Infrastructure</span>
+          </a>
+        </div>
+        <ul>
+          <li><a href="/devices/tech/test_infra/tradefed/fundamentals/index.html">Start Here</a></li>
+          <li><a href="/devices/tech/test_infra/tradefed/fundamentals/machine_setup.html">Machine Setup</a></li>
+          <li><a href="/devices/tech/test_infra/tradefed/fundamentals/devices.html">Working with Devices</a></li>
+          <li><a href="/devices/tech/test_infra/tradefed/fundamentals/lifecycle.html">Test Lifecycle</a></li>
+          <li><a href="/devices/tech/test_infra/tradefed/fundamentals/options.html">Option Handling</a></li>
+          <li><a href="/devices/tech/test_infra/tradefed/full_example.html">An End-to-End Example</a></li>
+          <li id="tradefed-tree-list" class="nav-section">
+            <div class="nav-section-header">
+              <a href="/reference/packages.html">
+                <span class="en">Package Index</span>
+              </a>
+            </div>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li> <!-- End nav-section, Core Technologies -->
+</ul> 
+
+
+      </div>
+      <script type="text/javascript">
+        showTradefedRefTree();
+      </script>
+    </div> <!-- end side-nav -->
+    <script>
+      $(document).ready(function() {
+        scrollIntoView("devdoc-nav");
+        });
+    </script>
+
+  
+
+
+
+
+<div class="col-12" id="doc-col" >
+
+
+  
+    
+      
+        <h1 itemprop="name" >Dalvik Executable instruction formats</h1>
+      
+    
+  
+
+
+  
+  <div id="jd-content">
+
+    <div class="jd-descr" itemprop="articleBody">
+    <!--
+    Copyright 2014 The Android Open Source Project
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<div id="qv-wrapper">
+  <div id="qv">
+    <h2>In this document</h2>
+    <ol id="auto-toc">
+    </ol>
+  </div>
+</div>
+
+<h2 id="intro">Introduction</h2>
+
+<p>This document lists the instruction formats used by the Dalvik Executable
+format and Dalvik bytecode. It is meant to be used in conjunction with the
+<a href="dalvik-bytecode.html">bytecode reference document</a>.</p>
+
+<h2 id="bitwise">Bitwise descriptions</h2>
+
+<p>The first column in the format table lists the bitwise layout of
+the format. It consists of one or more space-separated "words" each of
+which describes a 16-bit code unit. Each character in a word
+represents four bits, read from high bits to low, with vertical bars
+("<code>|</code>") interspersed to aid in reading. Uppercase letters
+in sequence from "<code>A</code>" are used to indicate fields within
+the format (which then get defined further by the syntax column). The term
+"<code>op</code>" is used to indicate the position of an eight-bit
+opcode within the format. A slashed zero
+("<code>&Oslash;</code>") is used to indicate that all bits must be
+zero in the indicated position.</p>
+
+<p>For the most part, lettering proceeds from earlier code units to
+later code units, and low-order to high-order within a code unit.
+However, there are a few exceptions to this general rule, which are
+done in order to make the naming of similar-meaning parts be the same
+across different instruction formats. These cases are noted explicitly
+in the format descriptions.</p>
+
+<p>For example, the format "<code>B|A|<i>op</i> CCCC</code>" indicates
+that the format consists of two 16-bit code units. The first word
+consists of the opcode in the low eight bits and a pair of four-bit
+values in the high eight bits; and the second word consists of a single
+16-bit value.</p>
+
+<h2 id="format-ids">Format IDs</h2>
+
+<p>The second column in the format table indicates the short identifier
+for the format, which is used in other documents and in code to identify
+the format.</p>
+
+<p>Most format IDs consist of three characters, two digits followed by a
+letter. The first digit indicates the number of 16-bit code units in the
+format. The second digit indicates the maximum number of registers that the
+format contains (maximum, since some formats can accommodate a variable
+number of registers), with the special designation "<code>r</code>" indicating
+that a range of registers is encoded. The final letter semi-mnemonically
+indicates the type of any extra data encoded by the format. For example,
+format "<code>21t</code>" is of length two, contains one register reference,
+and additionally contains a branch target.</p>
+
+<p>Suggested static linking formats have an additional
+"<code>s</code>" suffix, making them four characters total. Similarly,
+suggested "inline" linking formats have an additional "<code>i</code>"
+suffix. (In this context, inline linking is like static linking,
+except with more direct ties into a machine's implementation.)
+Finally, a couple oddball suggested formats (e.g.,
+"<code>20bc</code>") include two pieces of data which are both
+represented in its format ID.</p>
+
+<p>The full list of typecode letters are as follows. Note that some
+forms have different sizes, depending on the format:</p>
+
+<table class="letters">
+<thead>
+<tr>
+  <th>Mnemonic</th>
+  <th>Bit Sizes</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>b</td>
+  <td>8</td>
+  <td>immediate signed <b>b</b>yte</td>
+</tr>
+<tr>
+  <td>c</td>
+  <td>16, 32</td>
+  <td><b>c</b>onstant pool index</td>
+</tr>
+<tr>
+  <td>f</td>
+  <td>16</td>
+  <td>inter<b>f</b>ace constants (only used in statically linked formats)
+  </td>
+</tr>
+<tr>
+  <td>h</td>
+  <td>16</td>
+  <td>immediate signed <b>h</b>at (high-order bits of a 32- or 64-bit
+    value; low-order bits are all <code>0</code>)
+  </td>
+</tr>
+<tr>
+  <td>i</td>
+  <td>32</td>
+  <td>immediate signed <b>i</b>nt, or 32-bit float</td>
+</tr>
+<tr>
+  <td>l</td>
+  <td>64</td>
+  <td>immediate signed <b>l</b>ong, or 64-bit double</td>
+</tr>
+<tr>
+  <td>m</td>
+  <td>16</td>
+  <td><b>m</b>ethod constants (only used in statically linked formats)</td>
+</tr>
+<tr>
+  <td>n</td>
+  <td>4</td>
+  <td>immediate signed <b>n</b>ibble</td>
+</tr>
+<tr>
+  <td>s</td>
+  <td>16</td>
+  <td>immediate signed <b>s</b>hort</td>
+</tr>
+<tr>
+  <td>t</td>
+  <td>8, 16, 32</td>
+  <td>branch <b>t</b>arget</td>
+</tr>
+<tr>
+  <td>x</td>
+  <td>0</td>
+  <td>no additional data</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="syntax">Syntax</h2>
+
+<p>The third column of the format table indicates the human-oriented
+syntax for instructions which use the indicated format. Each instruction
+starts with the named opcode and is optionally followed by one or
+more arguments, themselves separated with commas.</p>
+
+<p>Wherever an argument refers to a field from the first column, the
+letter for that field is indicated in the syntax, repeated once for
+each four bits of the field. For example, an eight-bit field labeled
+"<code>BB</code>" in the first column would also be labeled
+"<code>BB</code>" in the syntax column.</p>
+
+<p>Arguments which name a register have the form "<code>v<i>X</i></code>".
+The prefix "<code>v</code>" was chosen instead of the more common
+"<code>r</code>" exactly to avoid conflicting with (non-virtual) architectures
+on which the Dalvik Executable format might be implemented which themselves
+use the prefix "<code>r</code>" for their registers. (That is, this
+decision makes it possible to talk about both virtual and real registers
+together without the need for circumlocution.)</p>
+
+<p>Arguments which indicate a literal value have the form
+"<code>#+<i>X</i></code>". Some formats indicate literals that only
+have non-zero bits in their high-order bits; for these, the zeroes
+are represented explicitly in the syntax, even though they do not
+appear in the bitwise representation.</p>
+
+<p>Arguments which indicate a relative instruction address offset have the
+form "<code>+<i>X</i></code>".</p>
+
+<p>Arguments which indicate a literal constant pool index have the form
+"<code><i>kind</i>@<i>X</i></code>", where "<code><i>kind</i></code>"
+indicates which constant pool is being referred to. Each opcode that
+uses such a format explicitly allows only one kind of constant; see
+the opcode reference to figure out the correspondence. The four
+kinds of constant pool are "<code>string</code>" (string pool index),
+"<code>type</code>" (type pool index), "<code>field</code>" (field
+pool index), and "<code>meth</code>" (method pool index).</p>
+
+<p>Similar to the representation of constant pool indices, there are
+also suggested (optional) forms that indicate prelinked offsets or
+indices. There are two types of suggested prelinked value: vtable offsets
+(indicated as "<code>vtaboff</code>") and field offsets (indicated as
+"<code>fieldoff</code>").</p>
+
+<p>In the cases where a format value isn't explicitly part of the syntax
+but instead picks a variant, each variant is listed with the prefix
+"<code>[<i>X</i>=<i>N</i>]</code>" (e.g., "<code>[A=2]</code>") to indicate
+the correspondence.</p>
+
+<h2 id="formats">The formats</h2>
+
+<table class="format">
+<thead>
+<tr>
+  <th>Format</th>
+  <th>ID</th>
+  <th>Syntax</th>
+  <th>Notable Opcodes Covered</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><i>N/A</i></td>
+  <td>00x</td>
+  <td><i><code>N/A</code></i></td>
+  <td><i>pseudo-format used for unused opcodes; suggested for use as the
+    nominal format for a breakpoint opcode</i></td>
+</tr>
+<tr>
+  <td>&Oslash;&Oslash;|<i>op</i></td>
+  <td>10x</td>
+  <td><i><code>op</code></i></td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td rowspan="2">B|A|<i>op</i></td>
+  <td>12x</td>
+  <td><i><code>op</code></i> vA, vB</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>11n</td>
+  <td><i><code>op</code></i> vA, #+B</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td rowspan="2">AA|<i>op</i></td>
+  <td>11x</td>
+  <td><i><code>op</code></i> vAA</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>10t</td>
+  <td><i><code>op</code></i> +AA</td>
+  <td>goto</td>
+</tr>
+<tr>
+  <td>&Oslash;&Oslash;|<i>op</i> AAAA</td></td>
+  <td>20t</td>
+  <td><i><code>op</code></i> +AAAA</td>
+  <td>goto/16</td>
+</tr>
+<tr>
+  <td>AA|<i>op</i> BBBB</td></td>
+  <td>20bc</td>
+  <td><i><code>op</code></i> AA, kind@BBBB</td>
+  <td><i>suggested format for statically determined verification errors;
+    A is the type of error and B is an index into a type-appropriate
+    table (e.g. method references for a no-such-method error)</i></td>
+</tr>
+<tr>
+  <td rowspan="5">AA|<i>op</i> BBBB</td>
+  <td>22x</td>
+  <td><i><code>op</code></i> vAA, vBBBB</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>21t</td>
+  <td><i><code>op</code></i> vAA, +BBBB</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>21s</td>
+  <td><i><code>op</code></i> vAA, #+BBBB</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>21h</td>
+  <td><i><code>op</code></i> vAA, #+BBBB0000<br/>
+    <i><code>op</code></i> vAA, #+BBBB000000000000
+  </td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>21c</td>
+  <td><i><code>op</code></i> vAA, type@BBBB<br/>
+    <i><code>op</code></i> vAA, field@BBBB<br/>
+    <i><code>op</code></i> vAA, string@BBBB
+  </td>
+  <td>check-cast<br/>
+    const-class<br/>
+    const-string
+  </td>
+</tr>
+<tr>
+  <td rowspan="2">AA|<i>op</i> CC|BB</td>
+  <td>23x</td>
+  <td><i><code>op</code></i> vAA, vBB, vCC</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>22b</td>
+  <td><i><code>op</code></i> vAA, vBB, #+CC</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td rowspan="4">B|A|<i>op</i> CCCC</td>
+  <td>22t</td>
+  <td><i><code>op</code></i> vA, vB, +CCCC</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>22s</td>
+  <td><i><code>op</code></i> vA, vB, #+CCCC</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>22c</td>
+  <td><i><code>op</code></i> vA, vB, type@CCCC<br/>
+    <i><code>op</code></i> vA, vB, field@CCCC
+  </td>
+  <td>instance-of</td>
+</tr>
+<tr>
+  <td>22cs</td>
+  <td><i><code>op</code></i> vA, vB, fieldoff@CCCC</td>
+  <td><i>suggested format for statically linked field access instructions of
+    format 22c</i>
+  </td>
+</tr>
+<tr>
+  <td>&Oslash;&Oslash;|<i>op</i> AAAA<sub>lo</sub> AAAA<sub>hi</sub></td></td>
+  <td>30t</td>
+  <td><i><code>op</code></i> +AAAAAAAA</td>
+  <td>goto/32</td>
+</tr>
+<tr>
+  <td>&Oslash;&Oslash;|<i>op</i> AAAA BBBB</td>
+  <td>32x</td>
+  <td><i><code>op</code></i> vAAAA, vBBBB</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td rowspan="3">AA|<i>op</i> BBBB<sub>lo</sub> BBBB<sub>hi</sub></td>
+  <td>31i</td>
+  <td><i><code>op</code></i> vAA, #+BBBBBBBB</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>31t</td>
+  <td><i><code>op</code></i> vAA, +BBBBBBBB</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>31c</td>
+  <td><i><code>op</code></i> vAA, string@BBBBBBBB</td>
+  <td>const-string/jumbo</td>
+</tr>
+<tr>
+  <td rowspan="3">A|G|<i>op</i> BBBB F|E|D|C</td>
+  <td>35c</td>
+  <td><i>[<code>A=5</code>] <code>op</code></i> {vC, vD, vE, vF, vG},
+    meth@BBBB<br/>
+    <i>[<code>A=5</code>] <code>op</code></i> {vC, vD, vE, vF, vG},
+    type@BBBB<br/>
+    <i>[<code>A=4</code>] <code>op</code></i> {vC, vD, vE, vF},
+    <i><code>kind</code></i>@BBBB<br/>
+    <i>[<code>A=3</code>] <code>op</code></i> {vC, vD, vE},
+    <i><code>kind</code></i>@BBBB<br/>
+    <i>[<code>A=2</code>] <code>op</code></i> {vC, vD},
+    <i><code>kind</code></i>@BBBB<br/>
+    <i>[<code>A=1</code>] <code>op</code></i> {vC},
+    <i><code>kind</code></i>@BBBB<br/>
+    <i>[<code>A=0</code>] <code>op</code></i> {},
+    <i><code>kind</code></i>@BBBB<br/>
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the count and the reference index have the same label as in format
+    3rc.</i></p>
+  </td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>35ms</td>
+  <td><i>[<code>A=5</code>] <code>op</code></i> {vC, vD, vE, vF, vG},
+    vtaboff@BBBB<br/>
+    <i>[<code>A=4</code>] <code>op</code></i> {vC, vD, vE, vF},
+    vtaboff@BBBB<br/>
+    <i>[<code>A=3</code>] <code>op</code></i> {vC, vD, vE},
+    vtaboff@BBBB<br/>
+    <i>[<code>A=2</code>] <code>op</code></i> {vC, vD},
+    vtaboff@BBBB<br/>
+    <i>[<code>A=1</code>] <code>op</code></i> {vC},
+    vtaboff@BBBB<br/>
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the count and the reference index have the same label as in format
+    3rms.</i></p>
+  </td>
+  <td><i>suggested format for statically linked <code>invoke-virtual</code>
+    and <code>invoke-super</code> instructions of format 35c</i>
+  </td>
+</tr>
+<tr>
+  <td>35mi</td>
+  <td><i>[<code>A=5</code>] <code>op</code></i> {vC, vD, vE, vF, vG},
+    inline@BBBB<br/>
+    <i>[<code>A=4</code>] <code>op</code></i> {vC, vD, vE, vF},
+    inline@BBBB<br/>
+    <i>[<code>A=3</code>] <code>op</code></i> {vC, vD, vE},
+    inline@BBBB<br/>
+    <i>[<code>A=2</code>] <code>op</code></i> {vC, vD},
+    inline@BBBB<br/>
+    <i>[<code>A=1</code>] <code>op</code></i> {vC},
+    inline@BBBB<br/>
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the count and the reference index have the same label as in format
+    3rmi.</i></p>
+  </td>
+  <td><i>suggested format for inline linked <code>invoke-static</code>
+    and <code>invoke-virtual</code> instructions of format 35c</i>
+  </td>
+</tr>
+<tr>
+  <td rowspan="3">AA|<i>op</i> BBBB CCCC</td>
+  <td>3rc</td>
+  <td><i><code>op</code></i> {vCCCC .. vNNNN}, meth@BBBB<br/>
+    <i><code>op</code></i> {vCCCC .. vNNNN}, type@BBBB<br/>
+    <p><i>where <code>NNNN = CCCC+AA-1</code>, that is <code>A</code>
+    determines the count <code>0..255</code>, and <code>C</code>
+    determines the first register</i></p>
+  </td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>3rms</td>
+  <td><i><code>op</code></i> {vCCCC .. vNNNN}, vtaboff@BBBB<br/>
+    <p><i>where <code>NNNN = CCCC+AA-1</code>, that is <code>A</code>
+    determines the count <code>0..255</code>, and <code>C</code>
+    determines the first register</i></p>
+  </td>
+  <td><i>suggested format for statically linked <code>invoke-virtual</code>
+    and <code>invoke-super</code> instructions of format <code>3rc</code></i>
+  </td>
+</tr>
+<tr>
+  <td>3rmi</td>
+  <td><i><code>op</code></i> {vCCCC .. vNNNN}, inline@BBBB<br/>
+    <p><i>where <code>NNNN = CCCC+AA-1</code>, that is <code>A</code>
+    determines the count <code>0..255</code>, and <code>C</code>
+    determines the first register</i></p>
+  </td>
+  <td><i>suggested format for inline linked <code>invoke-static</code>
+    and <code>invoke-virtual</code> instructions of format 3rc</i>
+  </td>
+</tr>
+<tr>
+  <td>AA|<i>op</i> BBBB<sub>lo</sub> BBBB BBBB BBBB<sub>hi</sub></td>
+  <td>51l</td>
+  <td><i><code>op</code></i> vAA, #+BBBBBBBBBBBBBBBB</td>
+  <td>const-wide</td>
+</tr>
+</tbody>
+</table>
+
+    </div>
+
+      <div class="content-footer-sac"
+                    itemscope itemtype="http://schema.org/SiteNavigationElement">
+        <div class="layout-content-col col-9" style="padding-top:4px">
+        </div>
+        
+        <div class="paging-links layout-content-col col-4">
+          
+        </div>
+        
+      </div>
+      
+      
+    </div> <!-- end jd-content -->
+  <div id="footer" class="wrap" >
+  <style>.feedback { float: right !Important }</style>
+  <div class="feedback">
+    <a href="#" class="button" onclick=" try {
+      userfeedback.api.startFeedback({'productId':'715571','authuser':'1'});return false;}catch(e){}">Site Feedback</a>
+  </div>
+  <div id="copyright">
+    
+  Except as noted, this content is 
+  licensed under <a href="http://creativecommons.org/licenses/by/2.5/">
+  Creative Commons Attribution 2.5</a>. For details and 
+  restrictions, see the <a href="/license.html">Content 
+  License</a>.
+  </div>
+    <div id="footerlinks">
+    
+  <p>
+    <a href="/source/index.html">About Android</a>&nbsp;&nbsp;|&nbsp;
+    <a href="/source/community.html">Community</a>&nbsp;&nbsp;|&nbsp;
+    <a href="/legal.html">Legal</a>&nbsp;&nbsp;|&nbsp;
+  </p>
+  </div>
+
+</div><!-- end doc-content -->
+
+</div> <!-- end body-content --> 
+
+
+
+
+
+
+</body>
+</html>
+
+
+
