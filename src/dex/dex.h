@@ -576,6 +576,79 @@ class DexFile {
   }
   
   /*
+   * ParseEncodedMethodList() - Parses encoded method list metadata
+   */
+  uint8_t *ParseEncodedMethodList(std::vector<MethodInfo> *method_list_p, 
+                                  uint8_t *p, 
+                                  uint32_t count) {
+    MethodId method_id = 0x00000000;
+    for(uint32_t i = 0;i < count;i++) {
+      MethodInfo *info_p = &method_list_p->at(i);
+      
+      info_p->id = (method_id += EncodingUtility::ReadLEB128(&p));
+      info_p->access_flags = EncodingUtility::ReadLEB128(&p);
+      
+      // Stores an absolute pointer to the code section
+      uint32_t code_offset = EncodingUtility::ReadLEB128(&p);
+      if(code_offset == NO_OFFSET) {
+        info_p->code_p = nullptr;
+      } else {
+        info_p->code_p = header_p->start + code_offset;
+      }
+      
+      // TODO: PARSE CODE SECTION HERE
+    }
+    
+    return p;
+  }
+  
+  /*
+   * VerifyClassData() - Makes sure all methods and fields actually referes to
+   *                     the containing class
+   *
+   * This function always returns true if verification succeeds
+   */
+  bool VerifyClassData(ClassInfo *info_p) {
+    for(const FieldInfo &info : info_p->static_field_list) {
+      TypeId class_id = \
+        static_cast<TypeId>(field_list[info.id].class_type_id);
+      
+      if(class_id != info_p->id) {
+        ReportError(INCORRECT_FIELD_DATA);
+      }
+    }
+    
+    for(const FieldInfo &info : info_p->instance_field_list) {
+      TypeId class_id = \
+        static_cast<TypeId>(field_list[info.id].class_type_id);
+      
+      if(class_id != info_p->id) {
+        ReportError(INCORRECT_FIELD_DATA);
+      }
+    }
+    
+    for(const MethodInfo &info : info_p->direct_method_list) {
+      TypeId class_id = \
+        static_cast<TypeId>(method_list[info.id].class_type_id);
+      
+      if(class_id != info_p->id) {
+        ReportError(INCORRECT_METHOD_DATA);
+      }
+    }
+    
+    for(const MethodInfo &info : info_p->virtual_method_list) {
+      TypeId class_id = \
+        static_cast<TypeId>(method_list[info.id].class_type_id);
+      
+      if(class_id != info_p->id) {
+        ReportError(INCORRECT_METHOD_DATA);
+      }
+    }
+    
+    return true;
+  }
+  
+  /*
    * ParseClassData() - Parses class field and method metadata and store
    *                    them into class ClassInfo
    */
@@ -602,6 +675,19 @@ class DexFile {
       ParseEncodedFieldList(&class_p->instance_field_list, 
                             class_data_p, 
                             instance_field_count);
+                            
+    class_data_p = \
+      ParseEncodedMethodList(&class_p->direct_method_list, 
+                             class_data_p, 
+                             direct_method_count);
+                            
+    class_data_p = \
+      ParseEncodedMethodList(&class_p->virtual_method_list, 
+                             class_data_p, 
+                             virtual_method_count);
+    
+    // This only has effect under debug mode
+    assert(VerifyClassData(class_p) == true);
     
     return;
   }

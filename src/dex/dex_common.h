@@ -51,6 +51,8 @@ class MethodInfo {
   MethodId id;
   
   uint32_t access_flags;
+  
+  uint8_t *code_p;
   CodeInfo code;
 };
 
