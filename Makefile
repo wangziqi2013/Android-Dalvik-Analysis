@@ -29,7 +29,7 @@ $(BIN)/res_table_test: $(TEST)/res_table_test.cpp $(BUILD)/test_suite.o $(BUILD)
 	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/res_table_test.cpp $(BUILD)/common.o $(BUILD)/res_base.o $(BUILD)/res_table.o $(BUILD)/package_group.o $(BUILD)/xml.o -o $(BIN)/res_table_test
 	ln -sf $(BIN)/res_table_test ./res_table_test-bin
 
-$(BIN)/dex_test: $(TEST)/dex_test.cpp $(TEST)/test_suite.h $(BUILD)/test_suite.o $(BUILD)/common.o $(BUILD)/dex.o $(BUILD)/inst_format.o $(BUILD)/inst.o
+$(BIN)/dex_test: $(TEST)/dex_test.cpp $(TEST)/test_suite.h $(BUILD)/test_suite.o $(BUILD)/dex.o $(BUILD)/inst.o
 	g++ $(CXX_FLAG) $(BUILD)/test_suite.o $(TEST)/dex_test.cpp $(BUILD)/common.o $(BUILD)/dex.o $(BUILD)/inst_format.o $(BUILD)/inst.o -o $(BIN)/dex_test
 	ln -sf $(BIN)/dex_test ./dex_test-bin
 
@@ -40,25 +40,25 @@ encoding_test: $(BIN)/encoding_test
 res_table_test: $(BIN)/res_table_test
 dex_test: $(BIN)/dex_test
 
-$(BUILD)/common.o: $(SRC)/common/common.cpp $(SRC)/common/common.h $(SRC)/common/utf.h $(SRC)/common/buffer.h
+$(BUILD)/common.o: $(SRC)/common/common.cpp $(SRC)/common/common.h $(SRC)/common/utf.h $(SRC)/common/buffer.h 
 	g++ -c $(CXX_FLAG) $(SRC)/common/common.cpp -o $(BUILD)/common.o
 
-$(BUILD)/test_suite.o: $(TEST)/test_suite.cpp $(TEST)/test_suite.h
+$(BUILD)/test_suite.o: $(TEST)/test_suite.cpp $(TEST)/test_suite.h $(BUILD)/common.o
 	g++ -c $(CXX_FLAG) $(TEST)/test_suite.cpp -o $(BUILD)/test_suite.o
 
-$(BUILD)/apk.o: $(SRC)/apk/apk.cpp $(SRC)/apk/apk.h
+$(BUILD)/apk.o: $(SRC)/apk/apk.cpp $(SRC)/apk/apk.h $(BUILD)/common.o
 	g++ -c $(CXX_FLAG) $(SRC)/apk/apk.cpp -o $(BUILD)/apk.o
 
-$(BUILD)/xml.o: $(SRC)/res/xml.cpp $(SRC)/res/xml.h $(SRC)/res/res_base.h
+$(BUILD)/xml.o: $(SRC)/res/xml.cpp $(SRC)/res/xml.h $(SRC)/res/res_base.h $(BUILD)/common.o
 	g++ -c $(CXX_FLAG) $(SRC)/res/xml.cpp -o $(BUILD)/xml.o
 
-$(BUILD)/res_table.o: $(SRC)/res/res_table.cpp $(SRC)/res/res_table.h $(SRC)/res/res_base.h $(SRC)/res/res_value.h $(SRC)/res/type_config.h $(SRC)/common/utf.h
+$(BUILD)/res_table.o: $(SRC)/res/res_table.cpp $(SRC)/res/res_table.h $(SRC)/res/res_base.h $(SRC)/res/res_value.h $(SRC)/res/type_config.h $(BUILD)/common.o
 	g++ -c $(CXX_FLAG) $(SRC)/res/res_table.cpp -o $(BUILD)/res_table.o
 
-$(BUILD)/package_group.o: $(SRC)/res/package_group.cpp $(SRC)/res/package_group.h
+$(BUILD)/package_group.o: $(SRC)/res/package_group.cpp $(SRC)/res/package_group.h $(BUILD)/common.o
 	g++ -c $(CXX_FLAG) $(SRC)/res/package_group.cpp -o $(BUILD)/package_group.o
 
-$(BUILD)/res_base.o: $(SRC)/res/res_base.cpp $(SRC)/res/res_base.h $(SRC)/res/res_value.h $(SRC)/res/type_config.h $(SRC)/common/utf.h
+$(BUILD)/res_base.o: $(SRC)/res/res_base.cpp $(SRC)/res/res_base.h $(SRC)/res/res_value.h $(SRC)/res/type_config.h $(BUILD)/common.o
 	g++ -c $(CXX_FLAG) $(SRC)/res/res_base.cpp -o $(BUILD)/res_base.o
 
 $(BUILD)/dex.o: $(SRC)/dex/dex.h $(SRC)/dex/dex.cpp $(SRC)/dex/dex_common.h $(BUILD)/common.o 

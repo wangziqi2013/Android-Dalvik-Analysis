@@ -80,6 +80,7 @@ class ArgumentPack {
 };
     // Jump table declaration
 extern uint8_t *(*op_jump_table[31])(ArgumentPack *, uint8_t *);
+extern InstFormat bytecode_type_list[256];
 
 } // namespace dex
 } // namespace android_dalvik_analysis

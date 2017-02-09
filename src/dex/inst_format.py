@@ -5,12 +5,15 @@
 
 from lxml import html
 
-HTML_FILE_NAME = "./html/inst_format.html"
+INST_FORMAT_HTML_FILE_NAME = "./html/inst_format.html"
+BYTECODE_HTML_FILE_NAME = "./html/bytecode.html"
+
 CPP_FILE_NAME = "./inst_format.cpp"
 HEADER_FILE_NAME = "./inst_format.h"
 
 ARG_PACK_CLASS_NAME = "ArgumentPack"
 INST_FORMAT_ENUM_NAME = "InstFormat"
+BYTE_CODE_TYPE_LIST_NAME = "bytecode_type_list"
 
 DISCLAIMER = \
     """
@@ -22,14 +25,14 @@ DISCLAIMER = \
 //
     """
 
-def write_disclaimer(fp, target_name):
+def write_disclaimer(fp, html_name, target_name):
     """
     Write the machine generated disclaimer
 
     :param fp: An opened file object
     :return: None
     """
-    fp.write(DISCLAIMER % (__file__, HTML_FILE_NAME, target_name))
+    fp.write(DISCLAIMER % (__file__, html_name, target_name))
 
     return
 
@@ -84,7 +87,7 @@ def transform_desc_to_function_name(s):
 def write_header_file():
     fp = open(HEADER_FILE_NAME, "w")
 
-    write_disclaimer(fp, HEADER_FILE_NAME)
+    write_disclaimer(fp, INST_FORMAT_HTML_FILE_NAME, HEADER_FILE_NAME)
 
     fp.write("""
 #pragma once
@@ -109,7 +112,7 @@ namespace dex {
 
     fp.write("enum %s {\n" % (INST_FORMAT_ENUM_NAME, ))
 
-    fp2 = open(HTML_FILE_NAME)
+    fp2 = open(INST_FORMAT_HTML_FILE_NAME)
     s = fp2.read()
     fp2.close()
 
@@ -172,6 +175,7 @@ class %s {
     fp.write("// Jump table declaration\n")
     fp.write("extern uint8_t *(*op_jump_table[%d])(%s *, uint8_t *);\n" %
              (len(name_desc_list), ARG_PACK_CLASS_NAME, ))
+    fp.write("extern %s %s[256];\n" % (INST_FORMAT_ENUM_NAME, BYTE_CODE_TYPE_LIST_NAME))
 
     fp.write("""
 } // namespace dex
@@ -258,11 +262,14 @@ def write_cpp_file(name_desc_list):
     parsing different instruction formats as well as the jumping table
 
     :param name_desc_list:
-    :return: None
+    :return: The opened file pointer of the CPP file for printing remaining
+             definitions
     """
     fp = open(CPP_FILE_NAME, "w")
 
-    write_disclaimer(fp, CPP_FILE_NAME)
+    write_disclaimer(fp,
+                     INST_FORMAT_HTML_FILE_NAME + " and " + BYTECODE_HTML_FILE_NAME,
+                     CPP_FILE_NAME)
 
     fp.write("\n")
     fp.write("#include \"common.h\"\n")
@@ -315,10 +322,55 @@ def write_cpp_file(name_desc_list):
 
     fp.write("};\n")
 
-    fp.close()
+    return fp
+
+def write_bytecode_file(fp):
+    """
+    Writes the bytecode mapping (from bytecode to instruction format)
+
+    :param fp: Opened file pointer for writing the bytecode
+    :return: None
+    """
+    fp2 = open(BYTECODE_HTML_FILE_NAME, "r")
+    s = fp2.read()
+    fp2.close()
+
+    # Build the html parse tree
+    tree = html.fromstring(s)
+    tr_list = tree.xpath("//table[@class='instruc']/tbody/tr")
+
+    fp.write("\n")
+    fp.write("// Byte code value to format identifier mapping\n")
+    fp.write("%s %s[] = {\n" % (INST_FORMAT_ENUM_NAME, BYTE_CODE_TYPE_LIST_NAME))
+
+    for tr in tr_list:
+        td = tr.xpath("td")[0]
+        token_list = td.text.split()
+
+        # The first is range and the second is type
+        assert(len(token_list) == 2)
+
+        bytecode_range = token_list[0]
+        name = "i" + token_list[1]
+
+        if ".." in bytecode_range:
+            range_list = bytecode_range.split("..")
+            assert(len(range_list) == 2)
+            range_low = int(range_list[0], 16)
+            range_high = int(range_list[1], 16)
+        else:
+            range_low = int(bytecode_range, 16)
+            range_high = range_low
+
+        for i in range(range_low, range_high + 1):
+            fp.write("  [%d] = %s, /* %s */\n" % (i, name, hex(i)))
+
+    fp.write("};\n")
 
     return
 
 if __name__ == "__main__":
     name_desc_list = write_header_file()
-    write_cpp_file(name_desc_list)
+    fp = write_cpp_file(name_desc_list)
+    # Bytecode reside in the same file as the parser
+    write_bytecode_file(fp)

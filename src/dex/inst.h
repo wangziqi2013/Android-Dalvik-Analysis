@@ -15,7 +15,9 @@ namespace dex {
  * class InstructionInfo - Contains metadata about instructions
  */
 class InstructionInfo {
-  uint8_t opcode;
+  // The relative address of the instruction inside the current method
+  uint32_t addr;
+  uint8_t op;
 };
 
 } // namespace dex
