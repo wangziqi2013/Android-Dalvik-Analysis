@@ -113,10 +113,47 @@ void TestSLEB128() {
   return;
 }
 
+/*
+ * TestGetByte() - Tests whether we could get bytes corectly
+ */
+void TestGetByte() {
+  _PrintTestName();
+  
+  uint8_t test[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0}; 
+  
+  uint8_t byte = EncodingUtility::GetLow4Bit(test);
+  dbg_printf("0x%lX\n", static_cast<uint64_t>(byte));
+  assert(byte == 0x02);
+  
+  byte = EncodingUtility::GetHigh4Bit(test);
+  dbg_printf("0x%lX\n", static_cast<uint64_t>(byte));
+  assert(byte = 0x10);
+  
+  byte = EncodingUtility::Get8Bit(test);
+  dbg_printf("0x%lX\n", static_cast<uint64_t>(byte));
+  assert(byte == 0x12);
+  
+  uint16_t word = EncodingUtility::Get16Bit(test);
+  dbg_printf("0x%lX\n", static_cast<uint64_t>(word));
+  assert(word == 0x3412);
+  
+  uint32_t dword = EncodingUtility::Get32Bit(test);
+  dbg_printf("0x%lX\n", static_cast<uint64_t>(dword));
+  assert(dword == 0x78563412);
+  
+  uint64_t qword = EncodingUtility::Get64Bit(test);
+  dbg_printf("0x%lX\n", static_cast<uint64_t>(qword));
+  assert(qword == 0xF0DEBC9A78563412UL);
+  
+  return;
+}
+
 
 int main() {
   TestULEB128();
   TestSLEB128();
+  TestGetByte();
+  
   return 0; 
 }
 

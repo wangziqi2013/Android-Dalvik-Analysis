@@ -857,43 +857,43 @@ class EncodingUtility {
   /*
    * Get64Bit() - Returns the 8 byte value
    */
-  inline static uint64_t Get64Bit(uint8_t *data_p) {
-    return *reinterpret_cast<uint64_t *>(data_p);
+  inline static uint64_t Get64Bit(const uint8_t *data_p) {
+    return *reinterpret_cast<const uint64_t *>(data_p);
   }
   
   /*
    * Get32Bit() - Returns the 4 byte value
    */
-  inline static uint32_t Get32Bit(uint8_t *data_p) {
-    return *reinterpret_cast<uint32_t *>(data_p);
+  inline static uint32_t Get32Bit(const uint8_t *data_p) {
+    return *reinterpret_cast<const uint32_t *>(data_p);
   }
   
   /*
    * Get16Bit() - Returns the 2 byte value
    */
-  inline static uint16_t Get16Bit(uint8_t *data_p) {
-    return *reinterpret_cast<uint16_t *>(data_p);
+  inline static uint16_t Get16Bit(const uint8_t *data_p) {
+    return *reinterpret_cast<const uint16_t *>(data_p);
   }
   
   /*
    * Get8Bit() - Returns the 1 byte value
    */
-  inline static uint8_t Get8Bit(uint8_t *data_p) {
-    return *reinterpret_cast<uint8_t *>(data_p);
+  inline static uint8_t Get8Bit(const uint8_t *data_p) {
+    return *reinterpret_cast<const uint8_t *>(data_p);
   }
   
   /*
    * GetLow4Bit() - Returns the low 0.5 byte value
    */
-  inline static uint8_t GetLow4Bit(uint8_t *data_p) {
-    return (*reinterpret_cast<uint8_t *>(data_p)) & 0x0F;
+  inline static uint8_t GetLow4Bit(const uint8_t *data_p) {
+    return (*reinterpret_cast<const uint8_t *>(data_p)) & 0x0F;
   }
   
   /*
    * GetHigh4Bit() - Returns the high 0.5 byte value
    */
-  inline static uint8_t GetHigh4Bit(uint8_t *data_p) {
-    return ((*reinterpret_cast<uint8_t *>(data_p)) & 0xF0) >> 4;
+  inline static uint8_t GetHigh4Bit(const uint8_t *data_p) {
+    return ((*reinterpret_cast<const uint8_t *>(data_p)) & 0xF0) >> 4;
   }
 };
 

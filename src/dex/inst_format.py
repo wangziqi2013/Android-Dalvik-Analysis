@@ -1,4 +1,8 @@
 
+#
+# Auto C++ code generator for Dalvik bytecode parser
+#
+
 from lxml import html
 
 HTML_FILE_NAME = "./html/inst_format.html"
@@ -11,9 +15,7 @@ DISCLAIMER = \
 // This file is auto-generated using Python script %s and
 // HTML documentation %s, in order to automate coding process.
 //
-// Target file(s): %s
-//
-// Author: Ziqi Wang (wangziqi2013)
+// Target file: %s
 //
     """
 
@@ -48,6 +50,16 @@ def transform_format_string(desc):
     desc = desc.replace("hi", "")
     desc = desc.replace("|", " ")
 
+    token_list = desc.split()
+    desc = ""
+    prev = ""
+    for i in token_list:
+        if i == prev:
+            desc += i
+        else:
+            prev = i
+            desc += (" " + i)
+
     return desc
 
 def write_header_file():
@@ -79,6 +91,7 @@ def write_header_file():
     tr_list = tree.xpath("//table[@class='format']/tbody/tr")
 
     num = 0
+    name_desc_list = []
     for tr in tr_list:
         td_list = tr.xpath("td")
 
@@ -87,20 +100,60 @@ def write_header_file():
 
             print desc
 
-            # This prints the hex representation
+            # Uncomment this to print the hex representation
             #print ":".join("{:02x}".format(ord(c)) for c in desc)
 
         # This is the name we are using as the human readable name
         name = "i" + td_list[-3].text
 
-        fp.write("    %s = %d, /* %s */\n" % (name, num, desc))
+        fp.write("  %s = %d, /* %s */\n" % (name, num, desc))
+
+        # Associate the name and desc and its index in the table
+        # and store it into a list and return
+        name_desc_list.append((name, desc, num))
+
         num += 1
 
     fp.write("};\n")
 
-    fp.close()
-    return;
+    fp.write("""
+/*
+ * class ArgumentPack - This is used to parse the byte code arguments
+ *                      according to different bytecode types
+ *
+ * All arguments remain in the same format as they were in the compact form
+ * of the byte code. In the case where the member is larger than the actual
+ * number, only zero-extension is performed
+ */
+class ArgumentPack {
+ public:
+  uint64_t B;
+  uint32_t A;
+  uing16_t C;
 
+  // This is to main the correct alignment
+  uint16_t padding;
+
+  uint8_t D;
+  uint8_t E;
+  uint8_t F;
+  uint8_t G;
+};
+    """)
+
+    fp.close()
+    return name_desc_list
+
+
+def write_cpp_file(name_desc_list):
+    """
+    Writes the CPP file that contains routines to generate the routine for
+    parsing different instruction formats as well as the jumping table
+
+    :param name_desc_list:
+    :return:
+    """
 
 if __name__ == "__main__":
-    write_header_file()
+    name_desc_list = write_header_file()
+    write_cpp_file(name_desc_list)
