@@ -10,6 +10,7 @@ CPP_FILE_NAME = "./inst_format.cpp"
 HEADER_FILE_NAME = "./inst_format.h"
 
 ARG_PACK_CLASS_NAME = "ArgumentPack"
+INST_FORMAT_ENUM_NAME = "InstFormat"
 
 DISCLAIMER = \
     """
@@ -106,7 +107,7 @@ namespace dex {
 """
     )
 
-    fp.write("enum class InstFormat {\n")
+    fp.write("enum %s {\n" % (INST_FORMAT_ENUM_NAME, ))
 
     fp2 = open(HTML_FILE_NAME)
     s = fp2.read()
@@ -154,7 +155,7 @@ class %s {
  public:
   uint64_t B;
   uint32_t A;
-  uing16_t C;
+  uint16_t C;
 
   // This is the opcode
   uint8_t op;
@@ -253,7 +254,7 @@ def write_cpp_file(name_desc_list):
     parsing different instruction formats as well as the jumping table
 
     :param name_desc_list:
-    :return:
+    :return: None
     """
     fp = open(CPP_FILE_NAME, "w")
 
@@ -294,6 +295,21 @@ def write_cpp_file(name_desc_list):
 
         fp.write("\n")
         fp.write("  return data_p;\n}\n")
+
+    # Next we need to print the jump table
+    fp.write("\n\n// This is the jump table that defines parsing functions\n")
+    fp.write("uint8_t *(*op_jump_table[])(%s *, uint8_t *) = {\n" % (ARG_PACK_CLASS_NAME, ))
+
+    for i in name_desc_list:
+        if i[1] == "N/A":
+            func_name = "nullptr"
+        else:
+            # This is the name of the function
+            func_name = transform_desc_to_function_name(i[1])
+
+        fp.write("  [%s::%s] = %s,\n" % (INST_FORMAT_ENUM_NAME, i[0], func_name))
+
+    fp.write("};\n")
 
     fp.close()
 
