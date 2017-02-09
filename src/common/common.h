@@ -769,6 +769,41 @@ class EncodingUtility {
     
     return value;
   }
+  
+  /*
+   * ReadSLEB128() - Read signed LEB128 representation as a int32_t
+   */
+  static int32_t ReadSLEB128(uint8_t **data_p_p) {
+    // Save the pointer before reading ULEB128
+    uint8_t *before_p = *data_p_p;
+    uint32_t value = ReadULEB128(data_p_p);
+    
+    // Computer the difference of two pointers
+    int byte_count = *data_p_p - before_p;
+    switch(byte_count) {
+      case 1:
+        value |= ((value & 0x00000040) ? 0xFFFFFF80 : 0);
+        break;
+      case 2:
+        value |= ((value & 0x00002000) ? 0xFFFFC000 : 0);
+        break;
+      case 3:
+        value |= ((value & 0x00100000) ? 0xFF700000 : 0);
+        break;
+      case 4:
+        value |= ((value & 0x08000000) ? 0xF0000000 : 0);
+        break;
+      case 5: 
+        // For 5 bytes its most significant bit is already the highest bit
+        // so we do not do any transformation
+        break;
+      default:
+        assert(false);
+        break;
+    }
+    
+    return static_cast<int32_t>(value);
+  }
  
   /*
    * ReadLEB128() - Read a 32-bit unsigned value encoded in LEB128 or ULEB128

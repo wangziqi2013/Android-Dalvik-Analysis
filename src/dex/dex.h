@@ -568,8 +568,8 @@ class DexFile {
     for(uint32_t i = 0;i < count;i++) {
       FieldInfo *info_p = &field_list_p->at(i);
       
-      info_p->id = (type_id += EncodingUtility::ReadLEB128(&p));
-      info_p->access_flags = EncodingUtility::ReadLEB128(&p);
+      info_p->id = (type_id += EncodingUtility::ReadULEB128(&p));
+      info_p->access_flags = EncodingUtility::ReadULEB128(&p);
     }
     
     return p;
@@ -585,11 +585,11 @@ class DexFile {
     for(uint32_t i = 0;i < count;i++) {
       MethodInfo *info_p = &method_list_p->at(i);
       
-      info_p->id = (method_id += EncodingUtility::ReadLEB128(&p));
-      info_p->access_flags = EncodingUtility::ReadLEB128(&p);
+      info_p->id = (method_id += EncodingUtility::ReadULEB128(&p));
+      info_p->access_flags = EncodingUtility::ReadULEB128(&p);
       
       // Stores an absolute pointer to the code section
-      uint32_t code_offset = EncodingUtility::ReadLEB128(&p);
+      uint32_t code_offset = EncodingUtility::ReadULEB128(&p);
       if(code_offset == NO_OFFSET) {
         info_p->code_p = nullptr;
       } else {
@@ -654,10 +654,10 @@ class DexFile {
    */
   void ParseClassData(ClassInfo *class_p, uint8_t *class_data_p) {
     // It will move class data pointer
-    uint32_t static_field_count = EncodingUtility::ReadLEB128(&class_data_p); 
-    uint32_t instance_field_count = EncodingUtility::ReadLEB128(&class_data_p);
-    uint32_t direct_method_count = EncodingUtility::ReadLEB128(&class_data_p);
-    uint32_t virtual_method_count = EncodingUtility::ReadLEB128(&class_data_p);
+    uint32_t static_field_count = EncodingUtility::ReadULEB128(&class_data_p); 
+    uint32_t instance_field_count = EncodingUtility::ReadULEB128(&class_data_p);
+    uint32_t direct_method_count = EncodingUtility::ReadULEB128(&class_data_p);
+    uint32_t virtual_method_count = EncodingUtility::ReadULEB128(&class_data_p);
     
     // Optimization: Allocate a chunk of memory and extend the vector first
     // Such that we could directly access internal data using index
