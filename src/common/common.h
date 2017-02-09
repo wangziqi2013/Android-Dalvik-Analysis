@@ -746,11 +746,10 @@ class EncodingUtility {
                      ((word & 0x80000000) >> 28);
     assert(index < 16);
     int length = length_table[index];
-    
     uint32_t value = 0x00000000;
     switch(length) {
       case 5:
-        value |= (((*data_p_p)[5] & 0x7F) << 28);
+        value |= (static_cast<uint32_t>((*data_p_p)[4] & 0x7F) << 28);
       case 4:
         value |= ((word & 0x7F000000) >> 3);
       case 3:
