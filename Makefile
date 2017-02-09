@@ -65,7 +65,7 @@ $(BUILD)/dex.o: $(SRC)/dex/dex.h $(SRC)/dex/dex.cpp $(SRC)/dex/dex_common.h $(BU
 	g++ -c $(CXX_FLAG) $(SRC)/dex/dex.cpp -o $(BUILD)/dex.o
 
 $(BUILD)/inst_format.o: $(SRC)/dex/inst_format.h $(SRC)/dex/inst_format.cpp $(BUILD)/common.o $(SRC)/dex/inst_format.py
-	cd ./src/dex && python inst_format.py && cd ../../
+	cd ./src/dex && python inst_format.py && unix2dos ./inst_format.h ./inst_format.cpp && cd ../../
 	g++ -c $(CXX_FLAG) $(SRC)/dex/inst_format.cpp -o $(BUILD)/inst_format.o
 
 $(BUILD)/inst.o: $(SRC)/dex/inst.h $(SRC)/dex/inst.cpp $(BUILD)/common.o $(BUILD)/inst_format.o
