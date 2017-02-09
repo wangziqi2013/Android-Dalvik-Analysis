@@ -788,14 +788,13 @@ class EncodingUtility {
         value |= ((value & 0x00002000) ? 0xFFFFC000 : 0);
         break;
       case 3:
-        value |= ((value & 0x00100000) ? 0xFF700000 : 0);
+        value |= ((value & 0x00100000) ? 0xFFE00000 : 0);
         break;
       case 4:
         value |= ((value & 0x08000000) ? 0xF0000000 : 0);
         break;
       case 5: 
-        // For 5 bytes its most significant bit is already the highest bit
-        // so we do not do any transformation
+        // For 5 bytes its most significant bit is not reflected in the number
         break;
       default:
         assert(false);
@@ -832,9 +831,6 @@ class EncodingUtility {
         byte_count++;
     } while(byte & 0x80);
     
-    // Write back
-    *data_p_p = ptr;
-    
     // When we are here, byte is the last byte we have read
     // whose MSB must be 0, LSB must be sign bit
     // and ptr is the next byte potentially to be read
@@ -848,9 +844,12 @@ class EncodingUtility {
       int shift_num = msb_index > 31 ? 0 : 31 - msb_index;
       // Cast to signed int for arithmetic shift, and then cast back
       // for bitwise operation
-      uint32_t mask = (uint32_t)((uint32_t)0x80000000 >> shift_num);
+      uint32_t mask = (uint32_t)((int32_t)0x80000000 >> shift_num);
       value |= mask;
     }
+    
+    // Write back
+    *data_p_p = ptr;
     
     return value;
   }
