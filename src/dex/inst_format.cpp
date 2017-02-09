@@ -33,6 +33,7 @@ uint8_t *AA_op_BBBBBBBBBBBBBBBB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 uint8_t *xx_op(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
+  arg_pack_p->xx = EncodingUtility::Get8Bit(data_p);
   data_p++;
 
   return data_p;
@@ -101,6 +102,7 @@ uint8_t *AA_op_CC_BB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 uint8_t *xx_op_AAAAAAAA(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
+  arg_pack_p->xx = EncodingUtility::Get8Bit(data_p);
   data_p++;
   arg_pack_p->A = EncodingUtility::Get32Bit(data_p);
   data_p += 4;
@@ -143,6 +145,7 @@ uint8_t *B_A_op(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 uint8_t *xx_op_AAAA(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
+  arg_pack_p->xx = EncodingUtility::Get8Bit(data_p);
   data_p++;
   arg_pack_p->A = EncodingUtility::Get16Bit(data_p);
   data_p += 2;
@@ -156,6 +159,7 @@ uint8_t *xx_op_AAAA(ArgumentPack *arg_pack_p, uint8_t *data_p) {
 uint8_t *xx_op_AAAA_BBBB(ArgumentPack *arg_pack_p, uint8_t *data_p) {
   arg_pack_p->op = EncodingUtility::Get8Bit(data_p);
   data_p++;
+  arg_pack_p->xx = EncodingUtility::Get8Bit(data_p);
   data_p++;
   arg_pack_p->A = EncodingUtility::Get16Bit(data_p);
   data_p += 2;

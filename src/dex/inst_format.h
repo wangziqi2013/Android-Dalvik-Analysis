@@ -70,8 +70,10 @@ class ArgumentPack {
 
   // This is the opcode
   uint8_t op;
-  // This is to main the correct alignment
-  uint8_t padding;
+  // This is the high order bit of opcode word
+  // In some cases this is used as a type identifier for
+  // data bearing instruction
+  uint8_t xx;
 
   uint8_t D;
   uint8_t E;
