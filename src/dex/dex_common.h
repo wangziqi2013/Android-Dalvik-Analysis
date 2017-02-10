@@ -55,6 +55,9 @@ class CodeInfo {
   // Add a list of try items and thus its number could be 
   // implicitly expressed
   std::vector<TryInfo> try_list;
+  
+  // A list of instructions
+  std::vector<InstInfo> inst_list;
 };
 
 /*

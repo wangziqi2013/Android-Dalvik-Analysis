@@ -1,9 +1,9 @@
 
 #include "inst.h"
 
-using namespace wangziqi2013;
-using namespace android_dalvik_analysis;
-using namespace dex;
+namespace wangziqi2013 {
+namespace android_dalvik_analysis {
+namespace dex {
 
 /*
  * BuildInst() - Fills the opcode and the address of the instruction
@@ -58,4 +58,8 @@ uint8_t *BuildInst(uint32_t addr, uint8_t *data_p, InstInfo *info_p) {
   } // if
   
   return data_p;
+}
+
+}
+}
 }

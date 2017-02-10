@@ -557,14 +557,43 @@ class DexFile {
   /*
    * ParseCodeInfo() - Parses method byte code and assocoiated metadata
    */
-  void ParseCodeInfo(CodeInfo *code_p, uint8_t *p) {
-    uint16_t *p1 = reinterpret_cast<uint16_t *>(p);
-    code_p->register_count = p1[0];
-    code_p->input_word_count = p1[1];
-    code_p->output_word_count = p1[2];
+  void ParseCodeInfo(CodeInfo *code_p, uint8_t *data_p) {
+    code_p->register_count = EncodingUtility::Get16Bit(data_p);
+    data_p += sizeof(uint16_t);
+    code_p->input_word_count = EncodingUtility::Get16Bit(data_p);
+    data_p += sizeof(uint16_t);
+    code_p->output_word_count = EncodingUtility::Get16Bit(data_p);
+    data_p += sizeof(uint16_t);
     
-    uint16_t try_count = p1[3];
+    // Read number of try items
+    uint16_t try_count = EncodingUtility::Get16Bit(data_p);
+    data_p += sizeof(uint16_t);
     code_p->try_list.resize(try_count);
+    
+    // TODO: Make use of it
+    uint32_t debug_offset = EncodingUtility::Get32Bit(data_p);
+    data_p += sizeof(uint32_t);
+    
+    // Since the file stores numbre of 16 bit words we need to 
+    // multiply it by 2 to get the byte length
+    uint32_t inst_count = EncodingUtility::Get32Bit(data_p);
+    data_p += sizeof(uint32_t);
+    size_t inst_length = inst_count * 2;
+    
+    // This is the end of the data pointer
+    uint8_t *data_end_p = data_p + inst_length;
+    uint8_t * const data_start_p = data_p;
+    
+    uint32_t addr = 0x0;
+    while(data_p < data_end_p) {
+      code_p->inst_list.emplace_back();
+      InstInfo *inst_info_p = &code_p->inst_list.back();
+      
+      data_p = BuildInst(addr, data_p, inst_info_p);
+      addr = data_p - data_start_p;
+    }
+    
+    assert(data_p == data_end_p);
     
     return; 
   }
