@@ -1,6 +1,6 @@
 
 //
-// This file is auto-generated using Python script inst_format.py and
+// This file is auto-generated using Python script ./inst_format.py and
 // HTML documentation ./html/inst_format.html, in order to automate coding process.
 //
 // Target file: ./inst_format.h

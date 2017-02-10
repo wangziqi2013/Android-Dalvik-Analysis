@@ -419,8 +419,20 @@ def write_bytecode_file(fp):
     fp.write("\n")
     fp.write("// Byte code value to identifier mapping\n")
     fp.write("const char *%s[256] = {\n" % (BYTE_CODE_NAME_LIST_NAME, ))
+
+    count = 0
     for i in name_template_list:
-        fp.write("  [0x%s] = \"%s\", \n" % (i[0], i[1]))
+        bytecode_num = int(i[0], 16)
+        while count < bytecode_num:
+            fp.write("  nullptr, /* 0x%s */ \n" % (hex(count)))
+            count += 1
+
+        fp.write("  \"%s\", /* 0x%s */ \n" % (i[1], hex(count)))
+        count += 1
+
+    while count < 256:
+        fp.write("  nullptr, /* 0x%s */ \n" % (hex(count)))
+        count += 1
 
     fp.write("};\n")
 
