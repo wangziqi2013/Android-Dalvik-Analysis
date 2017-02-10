@@ -146,6 +146,7 @@ enum ErrorCode : uint64_t {
   NO_SAVED_STDERR,
   INCORRECT_FIELD_DATA,
   INCORRECT_METHOD_DATA,
+  CORRUPT_BYTECODE,
 };
 
 // Error string table

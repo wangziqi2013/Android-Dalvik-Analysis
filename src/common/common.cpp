@@ -119,6 +119,7 @@ const char *error_str_table[] = {
   "There is no stderr file handler saved while restoring it\n",
   "Validation fails: Incorrect field data\n",
   "Validation fails: Incorrect method data\n",
+  "Corrupt bytecode - unexpected end of code data section\n",
 };
 
 /*

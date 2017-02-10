@@ -593,7 +593,11 @@ class DexFile {
       addr = data_p - data_start_p;
     }
     
-    assert(data_p == data_end_p);
+    // It must be the case that the code data pointer being exactly
+    // the end of data segment
+    if(data_p != data_end_p) {
+      ReportError(CORRUPT_BYTECODE);
+    }
     
     return; 
   }

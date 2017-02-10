@@ -14,6 +14,7 @@ HEADER_FILE_NAME = "./inst_format.h"
 ARG_PACK_CLASS_NAME = "ArgumentPack"
 INST_FORMAT_ENUM_NAME = "InstFormat"
 BYTE_CODE_TYPE_LIST_NAME = "bytecode_type_list"
+BYTE_CODE_NAME_LIST_NAME = "bytecode_name_list"
 
 DISCLAIMER = \
     """
@@ -178,6 +179,7 @@ class %s {
     fp.write("extern uint8_t *(*op_jump_table[%d])(%s *, uint8_t *);\n" %
              (len(name_desc_list), ARG_PACK_CLASS_NAME, ))
     fp.write("extern %s %s[256];\n" % (INST_FORMAT_ENUM_NAME, BYTE_CODE_TYPE_LIST_NAME))
+    fp.write("extern const char *%s[256];\n" % (BYTE_CODE_NAME_LIST_NAME, ))
 
     fp.write("""
 } // namespace dex
@@ -367,6 +369,58 @@ def write_bytecode_file(fp):
 
         for i in range(range_low, range_high + 1):
             fp.write("  [%d] = %s, /* %s */\n" % (i, name, hex(i)))
+
+    fp.write("};\n")
+
+    # This is the name template list
+    name_template_list = []
+
+    for tr in tr_list:
+        td_list = tr.xpath("td")
+        td_code = td_list[0].text
+        td_format = td_list[1].text_content()
+
+        # Jump over unused byte code
+        if "unused" in td_format:
+            continue
+
+        if ".." in td_code:
+            td_format_list = td_format.splitlines()
+            for line in td_format_list[1:]:
+                line = line.strip()
+                if line == "":
+                    continue
+
+                if '(' in line:
+                    # Trim off the trailing "("
+                    line = line[:line.find("(")]
+
+                assert(':' in line)
+                line_list = line.split(':')
+                line = line_list[1].strip()
+                bytecode = line_list[0].strip()
+
+                template = td_format_list[0].replace(",", "")
+                name_template_list.append((bytecode, line, template.split()[1:]))
+
+        else:
+            if '(' in td_format:
+                # Trim off the trailing "("
+                td_format = td_format[:td_format.find("(")]
+
+            bytecode = td_code.split()[0]
+            td_format_list = td_format.replace(",", "").split()
+            name_template_list.append((bytecode, td_format_list[0], td_format_list[1:]))
+
+    # Check whether opcodes, mnemonics and templates are all correct
+    for i in name_template_list:
+        print i
+
+    fp.write("\n")
+    fp.write("// Byte code value to identifier mapping\n")
+    fp.write("const char *%s[256] = {\n" % (BYTE_CODE_NAME_LIST_NAME, ))
+    for i in name_template_list:
+        fp.write("  [0x%s] = \"%s\", \n" % (i[0], i[1]))
 
     fp.write("};\n")
 
